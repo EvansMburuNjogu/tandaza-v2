@@ -28,6 +28,9 @@ export default function SettlementInvoicePage() {
   const settlement = settlementsQuery.data?.find(s => s.id === params.id)
   if (!settlement) return <ErrorState title="Settlement not found" message="The requested settlement could not be found." />
   const isDisbursed = settlement.status === "disbursed"
+  const hasBankDetails = settlement.payoutMethod === "bank" && Boolean(settlement.bankName || settlement.accountNumber || settlement.accountName)
+  const hasMobileDetails = settlement.payoutMethod === "mobile_money" && Boolean(settlement.mobileProvider || settlement.mobileNumber || settlement.accountName)
+  const hasPayoutDetails = hasBankDetails || hasMobileDetails || settlement.payoutMethod === "manual"
 
   const handlePrint = () => {
     window.print()
@@ -115,17 +118,69 @@ export default function SettlementInvoicePage() {
               </div>
 
               <div className="border-t border-border pt-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">Bank Details</p>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-elevated/50">
-                    <p className="text-sm text-slate-500">Bank Name</p>
-                    <p className="mt-1 font-medium">{settlement.bankName}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">Payout Details</p>
+                {hasPayoutDetails ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl bg-elevated/50 p-4">
+                      <p className="text-sm text-slate-500">Payment Method</p>
+                      <p className="mt-1 font-medium capitalize">{(settlement.payoutMethod || "manual").replaceAll("_", " ")}</p>
+                    </div>
+                    {settlement.accountName ? (
+                      <div className="rounded-xl bg-elevated/50 p-4">
+                        <p className="text-sm text-slate-500">Account Name</p>
+                        <p className="mt-1 font-medium">{settlement.accountName}</p>
+                      </div>
+                    ) : null}
+                    {settlement.payoutMethod === "bank" ? (
+                      <>
+                        <div className="rounded-xl bg-elevated/50 p-4">
+                          <p className="text-sm text-slate-500">Bank Name</p>
+                          <p className="mt-1 font-medium">{settlement.bankName || "Not provided"}</p>
+                        </div>
+                        <div className="rounded-xl bg-elevated/50 p-4">
+                          <p className="text-sm text-slate-500">Account Number</p>
+                          <p className="mt-1 font-mono font-medium">{settlement.accountNumber || "Not provided"}</p>
+                        </div>
+                        {settlement.bankBranch ? (
+                          <div className="rounded-xl bg-elevated/50 p-4">
+                            <p className="text-sm text-slate-500">Branch</p>
+                            <p className="mt-1 font-medium">{settlement.bankBranch}</p>
+                          </div>
+                        ) : null}
+                        {settlement.swiftCode ? (
+                          <div className="rounded-xl bg-elevated/50 p-4">
+                            <p className="text-sm text-slate-500">SWIFT Code</p>
+                            <p className="mt-1 font-mono font-medium">{settlement.swiftCode}</p>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : null}
+                    {settlement.payoutMethod === "mobile_money" ? (
+                      <>
+                        <div className="rounded-xl bg-elevated/50 p-4">
+                          <p className="text-sm text-slate-500">Provider</p>
+                          <p className="mt-1 font-medium">{settlement.mobileProvider || "Not provided"}</p>
+                        </div>
+                        <div className="rounded-xl bg-elevated/50 p-4">
+                          <p className="text-sm text-slate-500">Mobile Number</p>
+                          <p className="mt-1 font-mono font-medium">{settlement.mobileNumber || "Not provided"}</p>
+                        </div>
+                      </>
+                    ) : null}
+                    {settlement.payoutNotes ? (
+                      <div className="rounded-xl bg-elevated/50 p-4 sm:col-span-2">
+                        <p className="text-sm text-slate-500">Payout Notes</p>
+                        <p className="mt-1 whitespace-pre-line font-medium">{settlement.payoutNotes}</p>
+                      </div>
+                    ) : null}
                   </div>
-                  <div className="p-4 rounded-xl bg-elevated/50">
-                    <p className="text-sm text-slate-500">Account Number</p>
-                    <p className="mt-1 font-mono font-medium">{settlement.accountNumber}</p>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border bg-elevated/40 p-4">
+                    <p className="text-sm text-slate-500">
+                      No payout method is configured yet. Add payout details in Organizer Settings before settlement disbursement.
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="bg-elevated/50 p-4 rounded-xl">

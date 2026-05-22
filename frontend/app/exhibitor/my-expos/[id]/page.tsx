@@ -2908,7 +2908,6 @@ export default function MyExpoPage() {
                               </div>
                               {thread.unreadCount > 0 && <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">{thread.unreadCount}</span>}
                             </div>
-                            <p className={cn("mt-3 line-clamp-2 text-xs leading-5", active ? "text-white/75" : "text-slate-500")}>{thread.lastMessage}</p>
                             <p className={cn("mt-2 text-[11px] font-semibold", active ? "text-white/65" : "text-slate-400")}>{formatDate(thread.lastMessageAt)}</p>
                           </button>
                         )
@@ -2945,15 +2944,24 @@ export default function MyExpoPage() {
                             conversationMessageMutation.mutate()
                           }}
                         >
-                          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-                            <Input
+                          <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+                            <textarea
                               value={conversationMessage}
                               onChange={(event) => setConversationMessage(event.target.value)}
-                              placeholder="Write a follow-up message"
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" && !event.shiftKey) {
+                                  event.preventDefault()
+                                  conversationMessageMutation.mutate()
+                                }
+                              }}
+                              rows={1}
+                              placeholder="Write a message..."
+                              aria-label="Conversation message"
+                              className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-slate-400"
                             />
-                            <Button type="submit" disabled={conversationMessageMutation.isPending}>
+                            <Button type="submit" size="sm" className="h-10 shrink-0 rounded-xl px-4" disabled={conversationMessageMutation.isPending || conversationMessage.trim().length < 3}>
                               <ChatIcon className="h-4 w-4" />
-                              Send
+                              <span className="hidden sm:inline">{conversationMessageMutation.isPending ? "Sending" : "Send"}</span>
                             </Button>
                           </div>
                         </form>

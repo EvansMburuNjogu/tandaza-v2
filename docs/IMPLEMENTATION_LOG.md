@@ -680,3 +680,15 @@
 ### Deployment Runbook
 
 - Added `docs/DEPLOYMENT_RUNBOOK.md` with the demo server bare-repo deployment flow, targeted file push workflow, verification commands, Nginx/SSL notes, rollback commands, and deployment safety rules.
+- Added `scripts/deploy-demo.sh` as a single frontend/backend demo deployment command with local checks, server temp clone, safe excludes, commit/push, and post-deploy health verification.
+- Updated the demo deploy script to mark the server temporary clone as a Git safe directory before inspecting, committing, or pushing changes.
+
+### Exhibitor Workspace Conversations Polish
+
+- Removed last-message previews from the exhibitor workspace Conversations thread list so visitor identity and recency stay focused and compact.
+
+### Organizer Payout Details
+
+- Added persisted organizer payout payment method fields for bank transfer, mobile money, and manual settlement instructions.
+- Added a Payout Payment Method tab to organizer settings so organizers can save payout details used by finance.
+- Updated organizer settlement invoice details to display the saved payout method and account information instead of empty bank placeholders.

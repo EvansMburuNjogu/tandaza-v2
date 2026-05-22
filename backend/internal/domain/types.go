@@ -121,26 +121,46 @@ type AIAnalyticsSummary struct {
 }
 
 type OrganizerProfile struct {
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	Email              string `json:"email"`
-	CompanyName        string `json:"companyName"`
-	CountryCode        string `json:"countryCode"`
-	Phone              string `json:"phone"`
-	Address            string `json:"address"`
-	EmailNotifications bool   `json:"emailNotifications"`
-	SMSNotifications   bool   `json:"smsNotifications"`
-	PushNotifications  bool   `json:"pushNotifications"`
+	ID                   string `json:"id"`
+	Name                 string `json:"name"`
+	Email                string `json:"email"`
+	CompanyName          string `json:"companyName"`
+	CountryCode          string `json:"countryCode"`
+	LogoURL              string `json:"logoUrl"`
+	Phone                string `json:"phone"`
+	Address              string `json:"address"`
+	PayoutMethod         string `json:"payoutMethod"`
+	PayoutAccountName    string `json:"payoutAccountName"`
+	PayoutBankName       string `json:"payoutBankName"`
+	PayoutAccountNumber  string `json:"payoutAccountNumber"`
+	PayoutBankBranch     string `json:"payoutBankBranch"`
+	PayoutSwiftCode      string `json:"payoutSwiftCode"`
+	PayoutMobileProvider string `json:"payoutMobileProvider"`
+	PayoutMobileNumber   string `json:"payoutMobileNumber"`
+	PayoutNotes          string `json:"payoutNotes"`
+	EmailNotifications   bool   `json:"emailNotifications"`
+	SMSNotifications     bool   `json:"smsNotifications"`
+	PushNotifications    bool   `json:"pushNotifications"`
 }
 
 type OrganizerProfileInput struct {
-	Name               string `json:"name"`
-	CompanyName        string `json:"companyName"`
-	Phone              string `json:"phone"`
-	Address            string `json:"address"`
-	EmailNotifications bool   `json:"emailNotifications"`
-	SMSNotifications   bool   `json:"smsNotifications"`
-	PushNotifications  bool   `json:"pushNotifications"`
+	Name                 string `json:"name"`
+	CompanyName          string `json:"companyName"`
+	LogoURL              string `json:"logoUrl"`
+	Phone                string `json:"phone"`
+	Address              string `json:"address"`
+	PayoutMethod         string `json:"payoutMethod"`
+	PayoutAccountName    string `json:"payoutAccountName"`
+	PayoutBankName       string `json:"payoutBankName"`
+	PayoutAccountNumber  string `json:"payoutAccountNumber"`
+	PayoutBankBranch     string `json:"payoutBankBranch"`
+	PayoutSwiftCode      string `json:"payoutSwiftCode"`
+	PayoutMobileProvider string `json:"payoutMobileProvider"`
+	PayoutMobileNumber   string `json:"payoutMobileNumber"`
+	PayoutNotes          string `json:"payoutNotes"`
+	EmailNotifications   bool   `json:"emailNotifications"`
+	SMSNotifications     bool   `json:"smsNotifications"`
+	PushNotifications    bool   `json:"pushNotifications"`
 }
 
 type OrganizerTeamMember struct {
@@ -475,8 +495,15 @@ type SettlementRecord struct {
 	CreatedAt  string `json:"createdAt"`
 
 	CommissionRate int    `json:"commissionRate,omitempty"`
+	PayoutMethod   string `json:"payoutMethod,omitempty"`
 	BankName       string `json:"bankName,omitempty"`
+	AccountName    string `json:"accountName,omitempty"`
 	AccountNumber  string `json:"accountNumber,omitempty"`
+	BankBranch     string `json:"bankBranch,omitempty"`
+	SwiftCode      string `json:"swiftCode,omitempty"`
+	MobileProvider string `json:"mobileProvider,omitempty"`
+	MobileNumber   string `json:"mobileNumber,omitempty"`
+	PayoutNotes    string `json:"payoutNotes,omitempty"`
 }
 
 type ExpoExhibitor struct {

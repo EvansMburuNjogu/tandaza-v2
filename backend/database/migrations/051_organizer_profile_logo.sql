@@ -1,0 +1,3 @@
+ALTER TABLE organizer_profiles
+ADD COLUMN IF NOT EXISTS logo_url TEXT NOT NULL DEFAULT '';
+

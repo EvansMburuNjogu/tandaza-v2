@@ -290,6 +290,15 @@ export interface SettlementRecord {
   amount: number
   commission: number
   status: "pending review" | "pending approval" | "approved" | "disbursed"
+  payoutMethod?: "bank" | "mobile_money" | "manual" | ""
+  accountName?: string
+  bankName?: string
+  accountNumber?: string
+  bankBranch?: string
+  swiftCode?: string
+  mobileProvider?: string
+  mobileNumber?: string
+  payoutNotes?: string
   createdAt: string
 }
 
@@ -419,8 +428,18 @@ export interface OrganizerProfile {
   email: string
   companyName: string
   countryCode: string
+  logoUrl?: string
   phone: string
   address: string
+  payoutMethod?: "bank" | "mobile_money" | "manual" | ""
+  payoutAccountName?: string
+  payoutBankName?: string
+  payoutAccountNumber?: string
+  payoutBankBranch?: string
+  payoutSwiftCode?: string
+  payoutMobileProvider?: string
+  payoutMobileNumber?: string
+  payoutNotes?: string
   emailNotifications: boolean
   smsNotifications: boolean
   pushNotifications: boolean
@@ -498,8 +517,15 @@ export interface OrganizerSettlementRecord {
   commission: number
   netAmount: number
   status: "pending review" | "pending approval" | "approved" | "disbursed"
+  payoutMethod?: "bank" | "mobile_money" | "manual" | ""
+  accountName?: string
   bankName: string
   accountNumber: string
+  bankBranch?: string
+  swiftCode?: string
+  mobileProvider?: string
+  mobileNumber?: string
+  payoutNotes?: string
   createdAt: string
 }
 

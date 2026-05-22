@@ -382,22 +382,31 @@ export default function VisitorExpoDetailPage() {
               )}
             </div>
             <form
-              className="mt-3 flex gap-2"
+              className="mt-3"
               onSubmit={(event) => {
                 event.preventDefault()
                 chatMutation.mutate()
               }}
             >
-              <input
-                aria-label="Chat message"
-                value={chatMessage}
-                onChange={(event) => setChatMessage(event.target.value)}
-                placeholder="Hi, I would like to know more..."
-                className="h-11 min-w-0 flex-1 rounded-xl border border-border/80 bg-elevated px-3 text-sm outline-none focus:border-primary"
-              />
-              <Button type="submit" disabled={chatMutation.isPending || !selectedExhibitor}>
-                Send
-              </Button>
+              <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+                <textarea
+                  aria-label="Chat message"
+                  value={chatMessage}
+                  onChange={(event) => setChatMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault()
+                      chatMutation.mutate()
+                    }
+                  }}
+                  rows={1}
+                  placeholder="Write a message..."
+                  className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-slate-400"
+                />
+                <Button type="submit" size="sm" className="h-10 shrink-0 rounded-xl px-4" disabled={chatMutation.isPending || !selectedExhibitor || chatMessage.trim().length < 1}>
+                  {chatMutation.isPending ? "Sending" : "Send"}
+                </Button>
+              </div>
             </form>
           </Card>
         </div>

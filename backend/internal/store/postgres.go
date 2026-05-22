@@ -3197,9 +3197,9 @@ func (s *PostgresStore) OrganizerProfile(ctx context.Context, organizerID string
 	if err != nil || user.Role != domain.RoleOrganizer {
 		return domain.OrganizerProfile{}, ErrNotFound
 	}
-	profile := domain.OrganizerProfile{ID: user.ID, Name: user.Name, Email: user.Email, CompanyName: user.CompanyName, CountryCode: user.CountryCode, EmailNotifications: true, PushNotifications: true}
-	err = s.pool.QueryRow(ctx, `SELECT phone, address, email_notifications, sms_notifications, push_notifications FROM organizer_profiles WHERE organizer_id=$1`, organizerID).
-		Scan(&profile.Phone, &profile.Address, &profile.EmailNotifications, &profile.SMSNotifications, &profile.PushNotifications)
+	profile := domain.OrganizerProfile{ID: user.ID, Name: user.Name, Email: user.Email, CompanyName: user.CompanyName, CountryCode: user.CountryCode, LogoURL: user.AvatarURL, EmailNotifications: true, PushNotifications: true}
+	err = s.pool.QueryRow(ctx, `SELECT phone, address, COALESCE(logo_url,''), COALESCE(payout_method,''), COALESCE(payout_account_name,''), COALESCE(payout_bank_name,''), COALESCE(payout_account_number,''), COALESCE(payout_bank_branch,''), COALESCE(payout_swift_code,''), COALESCE(payout_mobile_provider,''), COALESCE(payout_mobile_number,''), COALESCE(payout_notes,''), email_notifications, sms_notifications, push_notifications FROM organizer_profiles WHERE organizer_id=$1`, organizerID).
+		Scan(&profile.Phone, &profile.Address, &profile.LogoURL, &profile.PayoutMethod, &profile.PayoutAccountName, &profile.PayoutBankName, &profile.PayoutAccountNumber, &profile.PayoutBankBranch, &profile.PayoutSwiftCode, &profile.PayoutMobileProvider, &profile.PayoutMobileNumber, &profile.PayoutNotes, &profile.EmailNotifications, &profile.SMSNotifications, &profile.PushNotifications)
 	if err != nil && err != pgx.ErrNoRows {
 		return domain.OrganizerProfile{}, err
 	}
@@ -3216,14 +3216,15 @@ func (s *PostgresStore) UpdateOrganizerProfile(ctx context.Context, organizerID 
 	if nameValue == "" || companyValue == "" {
 		return domain.OrganizerProfile{}, ErrInvalidCredentials
 	}
-	if _, err := s.pool.Exec(ctx, `UPDATE users SET name=$1, company_name=$2, name_cipher=$3, company_name_cipher=$4, updated_at=NOW() WHERE id=$5 AND role='organizer'`,
-		storagePIIValue(s.pii, nameValue), storagePIIValue(s.pii, companyValue), s.pii.MustEncrypt(nameValue), s.pii.MustEncrypt(companyValue), organizerID); err != nil {
+	logoURL := strings.TrimSpace(input.LogoURL)
+	if _, err := s.pool.Exec(ctx, `UPDATE users SET name=$1, company_name=$2, avatar_url=COALESCE(NULLIF($3,''), avatar_url), name_cipher=$4, company_name_cipher=$5, updated_at=NOW() WHERE id=$6 AND role='organizer'`,
+		storagePIIValue(s.pii, nameValue), storagePIIValue(s.pii, companyValue), logoURL, s.pii.MustEncrypt(nameValue), s.pii.MustEncrypt(companyValue), organizerID); err != nil {
 		return domain.OrganizerProfile{}, err
 	}
-	if _, err := s.pool.Exec(ctx, `INSERT INTO organizer_profiles (organizer_id, phone, address, email_notifications, sms_notifications, push_notifications, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,NOW())
-		ON CONFLICT (organizer_id) DO UPDATE SET phone=EXCLUDED.phone, address=EXCLUDED.address, email_notifications=EXCLUDED.email_notifications, sms_notifications=EXCLUDED.sms_notifications, push_notifications=EXCLUDED.push_notifications, updated_at=NOW()`,
-		organizerID, strings.TrimSpace(input.Phone), strings.TrimSpace(input.Address), input.EmailNotifications, input.SMSNotifications, input.PushNotifications); err != nil {
+	if _, err := s.pool.Exec(ctx, `INSERT INTO organizer_profiles (organizer_id, phone, address, logo_url, payout_method, payout_account_name, payout_bank_name, payout_account_number, payout_bank_branch, payout_swift_code, payout_mobile_provider, payout_mobile_number, payout_notes, email_notifications, sms_notifications, push_notifications, updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,NOW())
+		ON CONFLICT (organizer_id) DO UPDATE SET phone=EXCLUDED.phone, address=EXCLUDED.address, logo_url=EXCLUDED.logo_url, payout_method=EXCLUDED.payout_method, payout_account_name=EXCLUDED.payout_account_name, payout_bank_name=EXCLUDED.payout_bank_name, payout_account_number=EXCLUDED.payout_account_number, payout_bank_branch=EXCLUDED.payout_bank_branch, payout_swift_code=EXCLUDED.payout_swift_code, payout_mobile_provider=EXCLUDED.payout_mobile_provider, payout_mobile_number=EXCLUDED.payout_mobile_number, payout_notes=EXCLUDED.payout_notes, email_notifications=EXCLUDED.email_notifications, sms_notifications=EXCLUDED.sms_notifications, push_notifications=EXCLUDED.push_notifications, updated_at=NOW()`,
+		organizerID, strings.TrimSpace(input.Phone), strings.TrimSpace(input.Address), logoURL, strings.TrimSpace(input.PayoutMethod), strings.TrimSpace(input.PayoutAccountName), strings.TrimSpace(input.PayoutBankName), strings.TrimSpace(input.PayoutAccountNumber), strings.TrimSpace(input.PayoutBankBranch), strings.TrimSpace(input.PayoutSwiftCode), strings.TrimSpace(input.PayoutMobileProvider), strings.TrimSpace(input.PayoutMobileNumber), strings.TrimSpace(input.PayoutNotes), input.EmailNotifications, input.SMSNotifications, input.PushNotifications); err != nil {
 		return domain.OrganizerProfile{}, err
 	}
 	return s.OrganizerProfile(ctx, organizerID)

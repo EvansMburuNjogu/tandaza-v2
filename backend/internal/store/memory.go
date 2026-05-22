@@ -171,7 +171,7 @@ func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
 			{ID: "spay_001", Reference: "SP-PAY-001", AdID: "sa_001", AdName: "Homepage Banner", Amount: 15000, Currency: "KES", PaymentMethod: "paystack", Status: "paid", PaidAt: time.Now().UTC().Add(-89 * time.Hour).Format(time.RFC3339)},
 		},
 		organizerProfiles: map[string]domain.OrganizerProfile{
-			"usr_organizer_001": {ID: "usr_organizer_001", Name: "Demo Organizer", Email: "organizer@tandaza.demo", CompanyName: "Expo Group Africa", CountryCode: "KE", Phone: "+254700000100", Address: "Nairobi, Kenya", EmailNotifications: true, SMSNotifications: false, PushNotifications: true},
+			"usr_organizer_001": {ID: "usr_organizer_001", Name: "Demo Organizer", Email: "organizer@tandaza.demo", CompanyName: "Expo Group Africa", CountryCode: "KE", Phone: "+254700000100", Address: "Nairobi, Kenya", PayoutMethod: "bank", PayoutAccountName: "Expo Group Africa", PayoutBankName: "Demo Bank", PayoutAccountNumber: "0000000000", PayoutBankBranch: "Nairobi", EmailNotifications: true, SMSNotifications: false, PushNotifications: true},
 		},
 		exhibitorProfiles: map[string]domain.ExhibitorProfile{
 			"usr_exhibitor_001": {ID: "usr_exhibitor_001", CompanyName: "TechCorp Africa", Logo: "/avatars/exhibitor.svg", LogoURL: "/avatars/exhibitor.svg", Description: "Cloud analytics and visitor engagement tools for expo teams.", Website: "https://techcorp.example", Phone: "+254700000300", Email: "exhibitor@tandaza.demo", Address: "Nairobi, Kenya", Categories: []string{"Technology"}, SocialLinks: map[string]string{"linkedin": "", "twitter": "", "instagram": ""}, TeamMembers: []map[string]string{{"id": "usr_exhibitor_001", "name": "Demo Exhibitor", "email": "exhibitor@tandaza.demo", "role": "owner"}}},
@@ -2459,6 +2459,16 @@ func (s *MemoryStore) UpdateOrganizerProfile(ctx context.Context, organizerID st
 	}
 	profile.Phone = strings.TrimSpace(input.Phone)
 	profile.Address = strings.TrimSpace(input.Address)
+	profile.LogoURL = strings.TrimSpace(input.LogoURL)
+	profile.PayoutMethod = strings.TrimSpace(input.PayoutMethod)
+	profile.PayoutAccountName = strings.TrimSpace(input.PayoutAccountName)
+	profile.PayoutBankName = strings.TrimSpace(input.PayoutBankName)
+	profile.PayoutAccountNumber = strings.TrimSpace(input.PayoutAccountNumber)
+	profile.PayoutBankBranch = strings.TrimSpace(input.PayoutBankBranch)
+	profile.PayoutSwiftCode = strings.TrimSpace(input.PayoutSwiftCode)
+	profile.PayoutMobileProvider = strings.TrimSpace(input.PayoutMobileProvider)
+	profile.PayoutMobileNumber = strings.TrimSpace(input.PayoutMobileNumber)
+	profile.PayoutNotes = strings.TrimSpace(input.PayoutNotes)
 	profile.EmailNotifications = input.EmailNotifications
 	profile.SMSNotifications = input.SMSNotifications
 	profile.PushNotifications = input.PushNotifications
@@ -3364,7 +3374,7 @@ func validCountryRecord(country domain.Country) bool {
 
 func organizerProfileFromUser(user domain.User) domain.OrganizerProfile {
 	return domain.OrganizerProfile{
-		ID: user.ID, Name: user.Name, Email: user.Email, CompanyName: user.CompanyName, CountryCode: user.CountryCode,
+		ID: user.ID, Name: user.Name, Email: user.Email, CompanyName: user.CompanyName, CountryCode: user.CountryCode, LogoURL: user.AvatarURL,
 		EmailNotifications: true, PushNotifications: true,
 	}
 }

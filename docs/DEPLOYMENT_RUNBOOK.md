@@ -47,6 +47,33 @@ The hook:
 - restarts `tandaza-backend.service`
 - restarts `tandaza-frontend.service`
 
+## One-Command Deploy Script
+
+Use the root deploy script when deploying frontend and backend together from this machine:
+
+```bash
+./scripts/deploy-demo.sh "Commit message"
+```
+
+The script prefers the local deploy key at `.dev/tandaza_demo_deploy_key`. If the key is unavailable, it can use password auth through `sshpass`:
+
+```bash
+TANDAZA_DEMO_SSH_PASSWORD='your-server-password' ./scripts/deploy-demo.sh "Commit message"
+```
+
+The password must not be committed into the repository. The script reads it from the environment or prompts securely.
+
+The script:
+
+- runs a focused backend compile check
+- runs `npm run build`
+- clones `/opt/tandaza-demo/repo.git` into a server temp directory
+- marks the server temp clone as a Git safe directory
+- syncs frontend and backend source while excluding caches, builds, `.dev`, `.git`, and `node_modules`
+- commits and pushes to `main`
+- lets the server `post-receive` hook deploy
+- verifies backend/frontend services and backend health
+
 ## Local Remote Setup
 
 Use this only when the local Git repository is healthy and tracking the same history as the server repo.
@@ -298,4 +325,3 @@ ssh -o ConnectTimeout=10 \
 - Always run at least a focused backend compile or frontend build for the changed area.
 - Always confirm services restart after the deploy hook completes.
 - Never kill unrelated processes or change unrelated Nginx apps on the server.
-

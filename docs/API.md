@@ -238,8 +238,8 @@ Currently country-scoped admin collections include overview, reports, expos, org
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v1/organizer/profile` | Load organizer profile, company details, and notification preferences |
-| `PATCH` | `/api/v1/organizer/profile` | Update organizer profile and notification preferences |
+| `GET` | `/api/v1/organizer/profile` | Load organizer profile, company details, logo, payout payment method, and notification preferences |
+| `PATCH` | `/api/v1/organizer/profile` | Update organizer profile, logo, payout payment method, and notification preferences |
 | `GET` | `/api/v1/organizer/visitors` | List visitors who have engaged with exhibitor workspaces or leads in the organizer's expos |
 | `GET` | `/api/v1/organizer/feedback` | List visitor engagement feedback derived from owned-expo lead activity |
 | `POST` | `/api/v1/organizer/exhibitors` | Invite an exhibitor, create their temporary-password login, and optionally assign them to an owned expo |

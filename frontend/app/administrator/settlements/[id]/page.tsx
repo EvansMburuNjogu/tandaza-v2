@@ -26,6 +26,7 @@ export default function SettlementDetailPage() {
 
   const { settlement, exhibitorPayments, paidExhibitorCount, collected } = query.data
   const net = collected - settlement.commission
+  const payoutMethod = settlement.payoutMethod ? settlement.payoutMethod.replaceAll("_", " ") : "Not configured"
 
   return (
     <div className="space-y-6">
@@ -42,6 +43,9 @@ export default function SettlementDetailPage() {
         { label: "Currency", value: settlement.currency },
         { label: "Amount", value: formatCurrency(settlement.amount, settlement.currency) },
         { label: "Commission", value: formatCurrency(settlement.commission, settlement.currency) },
+        { label: "Payout Method", value: payoutMethod },
+        { label: "Account Name", value: settlement.accountName || "Not configured" },
+        { label: "Payout Account", value: payoutAccountLabel(settlement) },
         { label: "Status", value: <StatusBadge value={settlement.status} /> },
         { label: "Created", value: formatDate(settlement.createdAt) }
       ]} />
@@ -60,3 +64,8 @@ export default function SettlementDetailPage() {
 function SummaryCard({ label, value }: { label: string; value: string }) { return <Card className="p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">{label}</p><p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">{value}</p></Card> }
 function SectionTitle({ title, description }: { title: string; description: string }) { return <div><p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">{title}</p><p className="mt-2 text-sm text-slate-500">{description}</p></div> }
 function RowItem({ title, subtitle, trailing }: { title: string; subtitle: string; trailing: ReactNode }) { return <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-elevated/60 p-4"><div><p className="text-sm font-semibold text-foreground">{title}</p><p className="mt-1 text-xs text-slate-500">{subtitle}</p></div><div>{trailing}</div></div> }
+function payoutAccountLabel(settlement: { payoutMethod?: string; bankName?: string; accountNumber?: string; mobileProvider?: string; mobileNumber?: string }) {
+  if (settlement.payoutMethod === "bank") return [settlement.bankName, settlement.accountNumber].filter(Boolean).join(" · ") || "Not configured"
+  if (settlement.payoutMethod === "mobile_money") return [settlement.mobileProvider, settlement.mobileNumber].filter(Boolean).join(" · ") || "Not configured"
+  return "Manual settlement"
+}
