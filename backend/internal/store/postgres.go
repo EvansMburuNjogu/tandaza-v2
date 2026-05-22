@@ -3762,6 +3762,18 @@ func (s *PostgresStore) OrganizerTeamMemberByID(ctx context.Context, organizerID
 	return item, nil
 }
 
+func (s *PostgresStore) EffectiveOrganizerID(ctx context.Context, userID string) (string, error) {
+	var organizerID string
+	err := s.pool.QueryRow(ctx, `SELECT organizer_id FROM organizer_team_members WHERE id=$1 AND status='active' LIMIT 1`, userID).Scan(&organizerID)
+	if err == pgx.ErrNoRows {
+		return userID, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return organizerID, nil
+}
+
 func (s *PostgresStore) CreateOrganizerTeamMember(ctx context.Context, organizerID string, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error) {
 	id := fmt.Sprintf("otm_%d", time.Now().UnixNano())
 	member, err := organizerTeamMemberFromInput(id, organizerID, input)
@@ -3774,6 +3786,74 @@ func (s *PostgresStore) CreateOrganizerTeamMember(ctx context.Context, organizer
 		return domain.OrganizerTeamMember{}, err
 	}
 	return s.OrganizerTeamMemberByID(ctx, organizerID, id)
+}
+
+func (s *PostgresStore) CreateOrganizerTeamMemberAccount(ctx context.Context, organizer domain.User, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error) {
+	temporaryPassword := strings.TrimSpace(input.TemporaryPassword)
+	if organizer.Role != domain.RoleOrganizer || temporaryPassword == "" {
+		return domain.OrganizerTeamMember{}, ErrInvalidCredentials
+	}
+	id := fmt.Sprintf("usr_%d", time.Now().UnixNano())
+	member, err := organizerTeamMemberFromInput(id, organizer.ID, input)
+	if err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	passwordHash, err := security.HashPassword(temporaryPassword)
+	if err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	defer tx.Rollback(ctx)
+	emailValue := strings.TrimSpace(strings.ToLower(member.Email))
+	nameValue := strings.TrimSpace(member.Name)
+	companyValue := strings.TrimSpace(organizer.CompanyName)
+	countryCode := strings.ToUpper(strings.TrimSpace(organizer.CountryCode))
+	if countryCode == "" {
+		countryCode = "KE"
+	}
+	emailHash := s.pii.Hash(emailValue)
+	var alreadyTeamMember bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM organizer_team_members WHERE organizer_id=$1 AND lower(email)=lower($2))`, organizer.ID, emailValue).Scan(&alreadyTeamMember); err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	if alreadyTeamMember {
+		return domain.OrganizerTeamMember{}, ErrInvalidCredentials
+	}
+	var existingID string
+	var existingRole domain.Role
+	var existingStatus string
+	err = tx.QueryRow(ctx, `SELECT id, role, COALESCE(status,'active') FROM users WHERE lower(email)=lower($1) OR ($2 <> '' AND email_hash=$2)`, emailValue, emailHash).Scan(&existingID, &existingRole, &existingStatus)
+	if err == nil {
+		if existingRole != domain.RoleOrganizer || existingStatus == "active" {
+			return domain.OrganizerTeamMember{}, ErrInvalidCredentials
+		}
+		id = existingID
+		member.ID = id
+		if _, err := tx.Exec(ctx, `UPDATE users SET password_hash=$1, name=$2, company_name=$3, country_code=$4, email_verified=TRUE, status='active', must_change_password=TRUE, name_cipher=$5, company_name_cipher=$6, updated_at=NOW() WHERE id=$7`,
+			passwordHash, storagePIIValue(s.pii, nameValue), storagePIIValue(s.pii, companyValue), countryCode, s.pii.MustEncrypt(nameValue), s.pii.MustEncrypt(companyValue), id); err != nil {
+			return domain.OrganizerTeamMember{}, err
+		}
+	} else if err == pgx.ErrNoRows {
+		if _, err := tx.Exec(ctx, `INSERT INTO users (id, email, password_hash, name, role, avatar_url, company_name, country_code, email_verified, status, must_change_password, email_hash, email_cipher, name_cipher, company_name_cipher)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,TRUE,'active',TRUE,$9,$10,$11,$12)`,
+			id, storagePIIValue(s.pii, emailValue), passwordHash, storagePIIValue(s.pii, nameValue), domain.RoleOrganizer, "/avatars/organizer.svg",
+			storagePIIValue(s.pii, companyValue), countryCode, emailHash, s.pii.MustEncrypt(emailValue), s.pii.MustEncrypt(nameValue), s.pii.MustEncrypt(companyValue)); err != nil {
+			return domain.OrganizerTeamMember{}, err
+		}
+	} else {
+		return domain.OrganizerTeamMember{}, err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO organizer_team_members (id, organizer_id, name, email, role, status, permissions) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+		member.ID, member.OrganizerID, member.Name, member.Email, member.Role, member.Status, member.Permissions); err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	return s.OrganizerTeamMemberByID(ctx, organizer.ID, id)
 }
 
 func (s *PostgresStore) UpdateOrganizerTeamMember(ctx context.Context, organizerID string, id string, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error) {
@@ -3793,6 +3873,24 @@ func (s *PostgresStore) UpdateOrganizerTeamMember(ctx context.Context, organizer
 		return domain.OrganizerTeamMember{}, ErrNotFound
 	}
 	return s.OrganizerTeamMemberByID(ctx, organizerID, id)
+}
+
+func (s *PostgresStore) DeleteOrganizerTeamMember(ctx context.Context, organizerID string, id string) error {
+	if id == organizerID {
+		return ErrInvalidCredentials
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `DELETE FROM organizer_team_members WHERE id=$1 AND organizer_id=$2`, id, organizerID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE users SET status='inactive', updated_at=NOW() WHERE id=$1 AND role='organizer'`, id); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s *PostgresStore) ListOrganizerSponsors(ctx context.Context, organizerID string) ([]domain.OrganizerSponsor, error) {

@@ -487,6 +487,9 @@ export const httpApi: ApiDriver = {
   updateOrganizerTeamMember(token, id, data: OrganizerTeamMemberPayload): Promise<OrganizerTeamMember> {
     return request(`/api/v1/organizer/team/${id}`, { method: "PATCH", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
   },
+  deleteOrganizerTeamMember(token, id): Promise<void> {
+    return request(`/api/v1/organizer/team/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
+  },
   getOrganizerSponsors(token): Promise<OrganizerSponsor[]> {
     return request("/api/v1/organizer/sponsors", { headers: { Authorization: `Bearer ${token}` } })
   },

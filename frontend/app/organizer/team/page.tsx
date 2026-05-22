@@ -1,7 +1,6 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ResourcePage } from "@/components/admin/resource-page"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { Spinner } from "@/components/ui/spinner"
@@ -10,16 +9,25 @@ import { OrganizerTeamMember } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 import { AvatarCell } from "@/components/admin/cells"
 import { ErrorState } from "@/components/ui/error-state"
-import { PillBadge } from "@/components/admin/cells"
 import { toast } from "sonner"
 
 export default function OrganizerTeamPage() {
   const token = useSessionStore((s) => s.token)
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: ["organizer-team"],
     queryFn: () => api.getOrganizerTeam(token || ""),
     enabled: Boolean(token)
+  })
+  const removeMutation = useMutation({
+    mutationFn: (member: OrganizerTeamMember) => api.deleteOrganizerTeamMember(token || "", member.id),
+    onSuccess: async () => {
+      toast.success("Team member removed")
+      await queryClient.invalidateQueries({ queryKey: ["organizer-team"] })
+    },
+    onError: (error) => {
+      toast.error("Could not remove team member", { description: error instanceof Error ? error.message : "Try again." })
+    }
   })
 
   if (query.isError) return <ErrorState onRetry={() => query.refetch()} />
@@ -37,7 +45,7 @@ export default function OrganizerTeamPage() {
   return (
     <ResourcePage<OrganizerTeamMember>
       title="Team"
-      description="Manage your team members and their permissions."
+      description="Add organizer team members who can sign in and work under your company account."
       actionLabel="Add Team Member"
       actionHref="/organizer/team/new"
       stats={stats}
@@ -47,17 +55,17 @@ export default function OrganizerTeamPage() {
       searchText={(r) => `${r.name} ${r.email}`}
       statusAccessor={(r) => r.status}
       emptyTitle="No team members yet"
-      emptyDescription="Add team members to help manage your expos."
+      emptyDescription="Add team members to help manage the organizer portal."
       rowActions={[
-        { label: "View details", onClick: (r) => router.push(`/organizer/team/${r.id}`) },
         {
-          label: "Edit member",
+          label: "Delete member",
+          tone: "danger",
+          hidden: (r) => r.role === "owner",
           onClick: (r) => {
-            if (r.role === "owner") {
-              toast.info("Owner account details are managed from Settings.")
+            if (!window.confirm(`Remove ${r.name} from this organizer account?`)) {
               return
             }
-            router.push(`/organizer/team/${r.id}/edit`)
+            removeMutation.mutate(r)
           }
         }
       ]}
@@ -68,23 +76,8 @@ export default function OrganizerTeamPage() {
           render: (r) => <AvatarCell name={r.name} sub={r.email} />
         },
         {
-          key: "role", header: "Role", sortable: true, exportValue: (r) => r.role,
-          render: (r) => <PillBadge value={r.role} tone="primary" />
-        },
-        {
-          key: "permissions", header: "Permissions", 
-          render: (r) => (
-            <div className="flex flex-wrap gap-1">
-              {r.permissions.slice(0, 2).map((p) => (
-                <span key={p} className="rounded-full bg-elevated px-2 py-0.5 text-[10px] text-slate-500">
-                  {p.split(":")[0]}
-                </span>
-              ))}
-              {r.permissions.length > 2 && (
-                <span className="text-[10px] text-slate-400">+{r.permissions.length - 2}</span>
-              )}
-            </div>
-          )
+          key: "role", header: "Access", sortable: true, exportValue: (r) => r.role,
+          render: (r) => <span className="text-sm font-medium capitalize text-slate-600">{r.role === "owner" ? "Main organizer" : "Team member"}</span>
         },
         {
           key: "status", header: "Status", sortable: true, exportValue: (r) => r.status,

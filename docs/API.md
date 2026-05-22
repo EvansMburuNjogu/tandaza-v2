@@ -245,9 +245,10 @@ Currently country-scoped admin collections include overview, reports, expos, org
 | `GET` | `/api/v1/organizer/feedback` | List visitor engagement feedback and exhibitor-submitted organizer feedback for owned expos |
 | `POST` | `/api/v1/organizer/exhibitors` | Invite an exhibitor, create their temporary-password login, and optionally assign them to an owned expo |
 | `GET` | `/api/v1/organizer/team` | List organizer owner and invited team members |
-| `POST` | `/api/v1/organizer/team` | Add an organizer team member with a temporary-password login |
+| `POST` | `/api/v1/organizer/team` | Main organizer only: add an organizer team login, queue temporary password email, welcome email, and founder note |
 | `GET` | `/api/v1/organizer/team/{id}` | View one organizer team member |
-| `PATCH` | `/api/v1/organizer/team/{id}` | Update one organizer team member |
+| `PATCH` | `/api/v1/organizer/team/{id}` | Disabled: remove and re-add team members when login details need to change |
+| `DELETE` | `/api/v1/organizer/team/{id}` | Main organizer only: remove a team member and deactivate their organizer login |
 | `GET` | `/api/v1/organizer/sponsors` | List sponsor relationships created by the organizer |
 | `POST` | `/api/v1/organizer/sponsors` | Disabled: sponsor invitations are handled by the platform administrator |
 | `GET` | `/api/v1/organizer/sponsors/{id}` | View one sponsor relationship |

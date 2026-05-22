@@ -656,12 +656,20 @@ func TestOrganizerAccountMutationsAreDynamic(t *testing.T) {
 		t.Fatalf("profile update failed: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/organizer/team", bytes.NewBufferString(`{"name":"Marketing Lead","email":"marketing.lead@expogroup.demo","role":"assistant","status":"active"}`))
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/organizer/team", bytes.NewBufferString(`{"name":"Marketing Lead","email":"marketing.lead@expogroup.demo","role":"assistant","status":"active","temporaryPassword":"TempPass123!"}`))
 	req.Header.Set("Authorization", "Bearer "+organizerToken)
 	rec = httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusCreated || !bytes.Contains(rec.Body.Bytes(), []byte("Marketing Lead")) {
 		t.Fatalf("team create failed: status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	teamToken := loginForTest(t, handler, "marketing.lead@expogroup.demo", "TempPass123!")
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/organizer/expos", nil)
+	req.Header.Set("Authorization", "Bearer "+teamToken)
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte("Nairobi Tech Expo")) {
+		t.Fatalf("team member organizer workspace access failed: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/organizer/sponsors", bytes.NewBufferString(`{"company":"New Sponsor Ltd","contactName":"Sponsor Contact","email":"sponsor.contact@example.com","phone":"+254722000000","planTier":"silver","status":"pending"}`))

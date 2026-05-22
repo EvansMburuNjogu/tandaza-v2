@@ -34,7 +34,7 @@ export default function NewTeamMemberPage() {
     setSaving(true)
     try {
       await api.createOrganizerTeamMember(token || "", { ...form, role: "staff", status: "active" })
-      toast.success("Team member added")
+      toast.success("Team member added", { description: "Login details, welcome email, and founder note have been queued." })
       router.push("/organizer/team")
     } catch (error) {
       toast.error("Could not add team member", { description: error instanceof Error ? error.message : "Try again." })
@@ -47,7 +47,7 @@ export default function NewTeamMemberPage() {
     <div className="space-y-6">
       <PageHeader
         title="Add Team Member"
-        description="Invite a new team member to your organization"
+        description="Create a login for a team member in your organizer company."
         actions={<BackLink href="/organizer/team" label="Back to Team" />}
       />
 

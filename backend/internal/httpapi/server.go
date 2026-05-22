@@ -172,6 +172,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/organizer/team", s.organizerCreateTeamMember)
 	mux.HandleFunc("GET /api/v1/organizer/team/{id}", s.organizerTeamMember)
 	mux.HandleFunc("PATCH /api/v1/organizer/team/{id}", s.organizerUpdateTeamMember)
+	mux.HandleFunc("DELETE /api/v1/organizer/team/{id}", s.organizerDeleteTeamMember)
 	mux.HandleFunc("GET /api/v1/organizer/sponsors", s.organizerSponsors)
 	mux.HandleFunc("POST /api/v1/organizer/sponsors", s.organizerCreateSponsor)
 	mux.HandleFunc("GET /api/v1/organizer/sponsors/{id}", s.organizerSponsorDetail)
@@ -1318,7 +1319,8 @@ func (s *Server) organizerExpos(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	expos, err := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	expos, err := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: organizerID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "expos_failed", "Could not load expos.")
 		return
@@ -1331,12 +1333,13 @@ func (s *Server) organizerExpoDetail(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
 	expo, err := s.store.ExpoByID(r.Context(), r.PathValue("id"))
 	if err != nil {
 		writeExpoMutationError(w, err)
 		return
 	}
-	if expo.OrganizerID != claims.UserID {
+	if expo.OrganizerID != organizerID {
 		writeError(w, http.StatusForbidden, "forbidden", "Expo belongs to another organizer.")
 		return
 	}
@@ -1348,11 +1351,12 @@ func (s *Server) organizerCreateExpo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	workspace := s.organizerWorkspaceUser(r.Context(), actor)
 	input, ok := decodeExpoInput(w, r)
 	if !ok {
 		return
 	}
-	expo, err := s.store.CreateExpo(r.Context(), input, actor)
+	expo, err := s.store.CreateExpo(r.Context(), input, workspace)
 	if err != nil {
 		writeExpoMutationError(w, err)
 		return
@@ -1367,11 +1371,12 @@ func (s *Server) organizerUpdateExpo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	workspace := s.organizerWorkspaceUser(r.Context(), actor)
 	input, ok := decodeExpoInput(w, r)
 	if !ok {
 		return
 	}
-	expo, err := s.store.UpdateExpo(r.Context(), r.PathValue("id"), input, actor)
+	expo, err := s.store.UpdateExpo(r.Context(), r.PathValue("id"), input, workspace)
 	if err != nil {
 		writeExpoMutationError(w, err)
 		return
@@ -1385,7 +1390,8 @@ func (s *Server) organizerSubmitExpo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	expo, err := s.store.ChangeExpoStatus(r.Context(), r.PathValue("id"), domain.ExpoSubmittedForReview, actor)
+	workspace := s.organizerWorkspaceUser(r.Context(), actor)
+	expo, err := s.store.ChangeExpoStatus(r.Context(), r.PathValue("id"), domain.ExpoSubmittedForReview, workspace)
 	if err != nil {
 		writeExpoMutationError(w, err)
 		return
@@ -1440,7 +1446,8 @@ func (s *Server) organizerPayments(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	payments, err := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	payments, err := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: organizerID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "payments_failed", "Could not load payments.")
 		return
@@ -2499,10 +2506,11 @@ func (s *Server) organizerOverview(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	expos, _ := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: claims.UserID})
-	payments, _ := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: claims.UserID})
-	exhibitors, _ := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{OrganizerID: claims.UserID})
-	leads, _ := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	expos, _ := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: organizerID})
+	payments, _ := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: organizerID})
+	exhibitors, _ := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{OrganizerID: organizerID})
+	leads, _ := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: organizerID})
 	total := int64(0)
 	for _, payment := range payments {
 		if payment.Status == domain.PaymentPaid {
@@ -2530,7 +2538,8 @@ func (s *Server) organizerExhibitors(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	exhibitors, _ := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	exhibitors, _ := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{OrganizerID: organizerID})
 	records := []map[string]any{}
 	for _, item := range exhibitors {
 		records = append(records, map[string]any{"id": item.ExhibitorID, "company": item.ExhibitorName, "contact": item.ExhibitorName, "email": item.ExhibitorEmail, "assignedExpos": item.ExpoName, "status": item.ActivationStatus, "createdAt": item.CreatedAt.Format(time.RFC3339)})
@@ -2543,12 +2552,13 @@ func (s *Server) organizerAssignExhibitor(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
+	workspace := s.organizerWorkspaceUser(r.Context(), actor)
 	var input domain.ExpoExhibitorInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	assignment, err := s.store.AssignExpoExhibitor(r.Context(), input, actor)
+	assignment, err := s.store.AssignExpoExhibitor(r.Context(), input, workspace)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "assignment_failed", "Could not assign exhibitor to this expo.")
 		return
@@ -2570,6 +2580,7 @@ func (s *Server) organizerInviteExhibitor(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
+	workspace := s.organizerWorkspaceUser(r.Context(), actor)
 	var input organizerInviteExhibitorInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
@@ -2584,7 +2595,7 @@ func (s *Server) organizerInviteExhibitor(w http.ResponseWriter, r *http.Request
 	}
 	user, err := s.store.CreateAdminManagedUser(r.Context(), domain.AdminUserInput{
 		Name: name, Email: strings.TrimSpace(input.Email), Password: password, Role: domain.RoleExhibitor,
-		CompanyName: company, CountryCode: actor.CountryCode, Status: "active",
+		CompanyName: company, CountryCode: workspace.CountryCode, Status: "active",
 	}, actor)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "exhibitor_invite_failed", "Could not invite exhibitor. Check email, password, and duplicates.")
@@ -2600,7 +2611,8 @@ func (s *Server) organizerVisitors(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	leads, err := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	leads, err := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: organizerID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "visitors_failed", "Could not load organizer visitors.")
 		return
@@ -2613,12 +2625,13 @@ func (s *Server) organizerFeedback(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	leads, err := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	leads, err := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: organizerID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "feedback_failed", "Could not load organizer feedback.")
 		return
 	}
-	exhibitorFeedback, err := s.store.ListOrganizerFeedback(r.Context(), claims.UserID)
+	exhibitorFeedback, err := s.store.ListOrganizerFeedback(r.Context(), organizerID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "feedback_failed", "Could not load organizer feedback.")
 		return
@@ -2638,7 +2651,8 @@ func (s *Server) organizerProfile(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	profile, err := s.store.OrganizerProfile(r.Context(), claims.UserID)
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	profile, err := s.store.OrganizerProfile(r.Context(), organizerID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "profile_not_found", "Organizer profile was not found.")
 		return
@@ -2651,17 +2665,22 @@ func (s *Server) organizerUpdateProfile(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
+	ownerID := s.effectiveOrganizerID(r.Context(), actor.ID)
+	if ownerID != actor.ID {
+		writeError(w, http.StatusForbidden, "main_organizer_required", "Only the main organizer can update the company profile.")
+		return
+	}
 	var input domain.OrganizerProfileInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	profile, err := s.store.UpdateOrganizerProfile(r.Context(), actor.ID, input)
+	profile, err := s.store.UpdateOrganizerProfile(r.Context(), ownerID, input)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "profile_update_failed", "Could not update organizer profile.")
 		return
 	}
-	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, Action: "organizer_profile_updated", EntityType: "organizer_profile", EntityID: actor.ID})
+	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, Action: "organizer_profile_updated", EntityType: "organizer_profile", EntityID: ownerID})
 	writeJSON(w, http.StatusOK, profile)
 }
 
@@ -2670,7 +2689,8 @@ func (s *Server) organizerTeam(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	members, err := s.store.ListOrganizerTeam(r.Context(), claims.UserID)
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	members, err := s.store.ListOrganizerTeam(r.Context(), organizerID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "team_failed", "Could not load organizer team.")
 		return
@@ -2683,7 +2703,8 @@ func (s *Server) organizerTeamMember(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	member, err := s.store.OrganizerTeamMemberByID(r.Context(), claims.UserID, r.PathValue("id"))
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	member, err := s.store.OrganizerTeamMemberByID(r.Context(), organizerID, r.PathValue("id"))
 	if err != nil {
 		writeError(w, http.StatusNotFound, "team_member_not_found", "Team member was not found.")
 		return
@@ -2696,56 +2717,63 @@ func (s *Server) organizerCreateTeamMember(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
+	ownerID := s.effectiveOrganizerID(r.Context(), actor.ID)
+	if ownerID != actor.ID {
+		writeError(w, http.StatusForbidden, "main_organizer_required", "Only the main organizer can add team members.")
+		return
+	}
 	var input domain.OrganizerTeamMemberInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	var teamUser domain.User
 	password := strings.TrimSpace(input.TemporaryPassword)
-	if password != "" {
-		user, err := s.store.CreateAdminManagedUser(r.Context(), domain.AdminUserInput{
-			Name: strings.TrimSpace(input.Name), Email: strings.TrimSpace(input.Email), Password: password,
-			Role: domain.RoleOrganizer, CompanyName: actor.CompanyName, CountryCode: actor.CountryCode, Status: "active",
-		}, actor)
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "team_member_create_failed", "Could not create team member. Check email, password, and duplicates.")
-			return
-		}
-		teamUser = user
-	}
-	member, err := s.store.CreateOrganizerTeamMember(r.Context(), actor.ID, input)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "team_member_create_failed", "Could not create team member.")
+	if len(password) < 8 {
+		writeError(w, http.StatusBadRequest, "temporary_password_required", "Temporary password must be at least 8 characters.")
 		return
 	}
-	if strings.TrimSpace(input.TemporaryPassword) != "" {
-		if teamUser.ID != "" {
-			member.ID = teamUser.ID
-		}
-		s.sendOrganizerTeamMemberOnboardingEmails(r.Context(), actor, member, strings.TrimSpace(input.TemporaryPassword))
+	input.Role = "staff"
+	input.Status = "active"
+	input.Permissions = nil
+	member, err := s.store.CreateOrganizerTeamMemberAccount(r.Context(), actor, input)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "team_member_create_failed", "Could not create team member. Check email, password, and duplicates.")
+		return
 	}
+	s.sendOrganizerTeamMemberOnboardingEmails(r.Context(), actor, member, password)
 	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, Action: "organizer_team_member_created", EntityType: "organizer_team_member", EntityID: member.ID, Metadata: map[string]any{"role": member.Role}})
 	writeJSON(w, http.StatusCreated, member)
 }
 
 func (s *Server) organizerUpdateTeamMember(w http.ResponseWriter, r *http.Request) {
+	_, ok := s.requireUser(w, r, domain.RoleOrganizer)
+	if !ok {
+		return
+	}
+	writeError(w, http.StatusForbidden, "team_member_edit_disabled", "Team member edits are disabled. Remove and re-add the member if details change.")
+}
+
+func (s *Server) organizerDeleteTeamMember(w http.ResponseWriter, r *http.Request) {
 	actor, ok := s.requireUser(w, r, domain.RoleOrganizer)
 	if !ok {
 		return
 	}
-	var input domain.OrganizerTeamMemberInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+	ownerID := s.effectiveOrganizerID(r.Context(), actor.ID)
+	if ownerID != actor.ID {
+		writeError(w, http.StatusForbidden, "main_organizer_required", "Only the main organizer can remove team members.")
 		return
 	}
-	member, err := s.store.UpdateOrganizerTeamMember(r.Context(), actor.ID, r.PathValue("id"), input)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "team_member_update_failed", "Could not update team member.")
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" || id == actor.ID || id == ownerID {
+		writeError(w, http.StatusForbidden, "cannot_remove_owner", "You cannot remove the main organizer account.")
 		return
 	}
-	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, Action: "organizer_team_member_updated", EntityType: "organizer_team_member", EntityID: member.ID, Metadata: map[string]any{"role": member.Role, "status": member.Status}})
-	writeJSON(w, http.StatusOK, member)
+	if err := s.store.DeleteOrganizerTeamMember(r.Context(), ownerID, id); err != nil {
+		writeError(w, http.StatusBadRequest, "team_member_delete_failed", "Could not remove team member.")
+		return
+	}
+	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, Action: "organizer_team_member_removed", EntityType: "organizer_team_member", EntityID: id})
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) organizerSponsors(w http.ResponseWriter, r *http.Request) {
@@ -2753,7 +2781,8 @@ func (s *Server) organizerSponsors(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	sponsors, err := s.store.ListOrganizerSponsors(r.Context(), claims.UserID)
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	sponsors, err := s.store.ListOrganizerSponsors(r.Context(), organizerID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "sponsors_failed", "Could not load organizer sponsors.")
 		return
@@ -2766,7 +2795,8 @@ func (s *Server) organizerSponsorDetail(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	sponsor, err := s.store.OrganizerSponsorByID(r.Context(), claims.UserID, r.PathValue("id"))
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	sponsor, err := s.store.OrganizerSponsorByID(r.Context(), organizerID, r.PathValue("id"))
 	if err != nil {
 		writeError(w, http.StatusNotFound, "sponsor_not_found", "Sponsor was not found.")
 		return
@@ -2787,12 +2817,13 @@ func (s *Server) organizerUpdateSponsor(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
+	organizerID := s.effectiveOrganizerID(r.Context(), actor.ID)
 	var input domain.OrganizerSponsorInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	sponsor, err := s.store.UpdateOrganizerSponsor(r.Context(), actor.ID, r.PathValue("id"), input)
+	sponsor, err := s.store.UpdateOrganizerSponsor(r.Context(), organizerID, r.PathValue("id"), input)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "sponsor_update_failed", "Could not update sponsor.")
 		return
@@ -2806,12 +2837,13 @@ func (s *Server) organizerSettlements(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	payments, err := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	payments, err := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: organizerID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "settlements_failed", "Could not load settlements.")
 		return
 	}
-	writeJSON(w, http.StatusOK, paginatedItems(r, s.settlementRecords(r.Context(), payments, claims.UserID)))
+	writeJSON(w, http.StatusOK, paginatedItems(r, s.settlementRecords(r.Context(), payments, organizerID)))
 }
 
 func (s *Server) organizerReports(w http.ResponseWriter, r *http.Request) {
@@ -2819,9 +2851,10 @@ func (s *Server) organizerReports(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	expos, _ := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: claims.UserID})
-	payments, _ := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: claims.UserID})
-	leads, _ := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: claims.UserID})
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
+	expos, _ := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: organizerID})
+	payments, _ := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: organizerID})
+	leads, _ := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: organizerID})
 	writeJSON(w, http.StatusOK, organizerReportsFrom(expos, payments, leads))
 }
 
@@ -2830,6 +2863,7 @@ func (s *Server) organizerPaymentReceipt(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
+	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
 	payment, err := s.store.PaymentByID(r.Context(), r.PathValue("id"))
 	if err != nil {
 		writePaymentError(w, err)
@@ -2840,7 +2874,7 @@ func (s *Server) organizerPaymentReceipt(w http.ResponseWriter, r *http.Request)
 		writeExpoMutationError(w, err)
 		return
 	}
-	if expo.OrganizerID != claims.UserID {
+	if expo.OrganizerID != organizerID {
 		writeError(w, http.StatusForbidden, "forbidden", "Payment belongs to another organizer.")
 		return
 	}
@@ -5591,6 +5625,27 @@ func (s *Server) effectiveExhibitorID(ctx context.Context, userID string) string
 		return userID
 	}
 	return exhibitorID
+}
+
+func (s *Server) effectiveOrganizerID(ctx context.Context, userID string) string {
+	organizerID, err := s.store.EffectiveOrganizerID(ctx, userID)
+	if err != nil || strings.TrimSpace(organizerID) == "" {
+		return userID
+	}
+	return organizerID
+}
+
+func (s *Server) organizerWorkspaceUser(ctx context.Context, actor domain.User) domain.User {
+	organizerID := s.effectiveOrganizerID(ctx, actor.ID)
+	if organizerID == actor.ID {
+		return actor
+	}
+	workspace, err := s.store.UserByID(ctx, organizerID)
+	if err != nil || workspace.Role != domain.RoleOrganizer {
+		actor.ID = organizerID
+		return actor
+	}
+	return workspace
 }
 
 func (s *Server) exhibitorWorkspaceUser(ctx context.Context, actor domain.User) domain.User {

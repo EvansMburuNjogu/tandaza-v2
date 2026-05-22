@@ -713,3 +713,9 @@
 
 - Corrected settlement payout semantics so the organizer settlement amount is the organizer commission earned from paid expo payments, not gross revenue minus commission.
 - Updated organizer and administrator settlement labels to show gross revenue, organizer commission, platform retained amount, and payout due clearly.
+
+### Organizer Team Login Access
+
+- Changed organizer team-member creation into a real organizer login-user flow with temporary password, first-login password reset, welcome email, and founder note.
+- Scoped organizer team users to their main organizer company workspace so they can access the same expos, payments, visitors, feedback, reports, and profile data.
+- Made team creation and deletion main-organizer-only, disabled team editing, removed permissions UI, and added delete member actions in the organizer team list.

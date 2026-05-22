@@ -420,6 +420,7 @@ export type OrganizerTeamMemberPayload = {
   role: "staff" | "assistant" | "manager"
   status?: "active" | "inactive"
   permissions?: string[]
+  temporaryPassword?: string
 }
 
 export interface OrganizerProfile {
@@ -1284,6 +1285,7 @@ export interface ApiDriver {
   getOrganizerTeamMember(token: string, id: string): Promise<OrganizerTeamMember>
   createOrganizerTeamMember(token: string, data: OrganizerTeamMemberPayload): Promise<OrganizerTeamMember>
   updateOrganizerTeamMember(token: string, id: string, data: OrganizerTeamMemberPayload): Promise<OrganizerTeamMember>
+  deleteOrganizerTeamMember(token: string, id: string): Promise<void>
   getOrganizerSponsors(token: string): Promise<OrganizerSponsor[]>
   getOrganizerSponsor(token: string, id: string): Promise<OrganizerSponsor>
   createOrganizerSponsor(token: string, data: OrganizerSponsorPayload): Promise<OrganizerSponsor>

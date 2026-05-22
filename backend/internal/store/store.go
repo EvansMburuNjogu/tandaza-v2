@@ -112,7 +112,10 @@ type Store interface {
 	ListOrganizerTeam(ctx context.Context, organizerID string) ([]domain.OrganizerTeamMember, error)
 	OrganizerTeamMemberByID(ctx context.Context, organizerID string, id string) (domain.OrganizerTeamMember, error)
 	CreateOrganizerTeamMember(ctx context.Context, organizerID string, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error)
+	CreateOrganizerTeamMemberAccount(ctx context.Context, organizer domain.User, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error)
 	UpdateOrganizerTeamMember(ctx context.Context, organizerID string, id string, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error)
+	DeleteOrganizerTeamMember(ctx context.Context, organizerID string, id string) error
+	EffectiveOrganizerID(ctx context.Context, userID string) (string, error)
 	ListOrganizerSponsors(ctx context.Context, organizerID string) ([]domain.OrganizerSponsor, error)
 	OrganizerSponsorByID(ctx context.Context, organizerID string, id string) (domain.OrganizerSponsor, error)
 	CreateOrganizerSponsor(ctx context.Context, organizerID string, input domain.OrganizerSponsorInput) (domain.OrganizerSponsor, error)

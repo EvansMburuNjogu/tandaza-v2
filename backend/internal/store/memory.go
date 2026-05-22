@@ -2887,6 +2887,17 @@ func (s *MemoryStore) OrganizerTeamMemberByID(ctx context.Context, organizerID s
 	return domain.OrganizerTeamMember{}, ErrNotFound
 }
 
+func (s *MemoryStore) EffectiveOrganizerID(ctx context.Context, userID string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, member := range s.organizerTeam {
+		if member.ID == userID && member.Status == "active" {
+			return member.OrganizerID, nil
+		}
+	}
+	return userID, nil
+}
+
 func (s *MemoryStore) CreateOrganizerTeamMember(ctx context.Context, organizerID string, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -2898,6 +2909,63 @@ func (s *MemoryStore) CreateOrganizerTeamMember(ctx context.Context, organizerID
 		if existing.OrganizerID == organizerID && strings.EqualFold(existing.Email, member.Email) {
 			return domain.OrganizerTeamMember{}, ErrInvalidCredentials
 		}
+	}
+	s.organizerTeam = append([]domain.OrganizerTeamMember{member}, s.organizerTeam...)
+	return member, nil
+}
+
+func (s *MemoryStore) CreateOrganizerTeamMemberAccount(ctx context.Context, organizer domain.User, input domain.OrganizerTeamMemberInput) (domain.OrganizerTeamMember, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	temporaryPassword := strings.TrimSpace(input.TemporaryPassword)
+	if organizer.Role != domain.RoleOrganizer || temporaryPassword == "" {
+		return domain.OrganizerTeamMember{}, ErrInvalidCredentials
+	}
+	id := fmt.Sprintf("usr_%d", time.Now().UnixNano())
+	member, err := organizerTeamMemberFromInput(id, organizer.ID, input)
+	if err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	for _, existing := range s.organizerTeam {
+		if existing.OrganizerID == organizer.ID && strings.EqualFold(existing.Email, member.Email) {
+			return domain.OrganizerTeamMember{}, ErrInvalidCredentials
+		}
+	}
+	hash, err := security.HashPassword(temporaryPassword)
+	if err != nil {
+		return domain.OrganizerTeamMember{}, err
+	}
+	reusedUser := false
+	for index, existing := range s.users {
+		if !strings.EqualFold(existing.User.Email, member.Email) {
+			continue
+		}
+		if existing.User.Role != domain.RoleOrganizer || existing.User.Status == "active" {
+			return domain.OrganizerTeamMember{}, ErrInvalidCredentials
+		}
+		id = existing.User.ID
+		member.ID = id
+		s.users[index].User.Name = member.Name
+		s.users[index].User.CompanyName = organizer.CompanyName
+		s.users[index].User.CountryCode = defaultString(organizer.CountryCode, "KE")
+		s.users[index].User.Status = "active"
+		s.users[index].User.MustChangePassword = true
+		s.users[index].Password = hash
+		reusedUser = true
+		break
+	}
+	if !reusedUser {
+		s.users = append([]DemoUser{{User: domain.User{
+			ID:                 id,
+			Name:               member.Name,
+			Email:              member.Email,
+			Role:               domain.RoleOrganizer,
+			AvatarURL:          "/avatars/organizer.svg",
+			CompanyName:        organizer.CompanyName,
+			CountryCode:        defaultString(organizer.CountryCode, "KE"),
+			Status:             "active",
+			MustChangePassword: true,
+		}, Password: hash}}, s.users...)
 	}
 	s.organizerTeam = append([]domain.OrganizerTeamMember{member}, s.organizerTeam...)
 	return member, nil
@@ -2921,6 +2989,27 @@ func (s *MemoryStore) UpdateOrganizerTeamMember(ctx context.Context, organizerID
 		}
 	}
 	return domain.OrganizerTeamMember{}, ErrNotFound
+}
+
+func (s *MemoryStore) DeleteOrganizerTeamMember(ctx context.Context, organizerID string, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if id == organizerID {
+		return ErrInvalidCredentials
+	}
+	for index, existing := range s.organizerTeam {
+		if existing.ID == id && existing.OrganizerID == organizerID {
+			s.organizerTeam = append(s.organizerTeam[:index], s.organizerTeam[index+1:]...)
+			for userIndex, demo := range s.users {
+				if demo.User.ID == id {
+					s.users[userIndex].User.Status = "inactive"
+					break
+				}
+			}
+			return nil
+		}
+	}
+	return nil
 }
 
 func (s *MemoryStore) ListOrganizerSponsors(ctx context.Context, organizerID string) ([]domain.OrganizerSponsor, error) {
