@@ -42,6 +42,29 @@ type AdminUserInput struct {
 	Status      string `json:"status"`
 }
 
+type VisitorSettingsInput struct {
+	Name        string `json:"name"`
+	Phone       string `json:"phone"`
+	Company     string `json:"company"`
+	Email       bool   `json:"emailNotifications"`
+	Push        bool   `json:"pushNotifications"`
+	ExpoUpdates bool   `json:"expoUpdates"`
+	Reminders   bool   `json:"reminders"`
+}
+
+type VisitorSettings struct {
+	Name          string `json:"name"`
+	Email         string `json:"email"`
+	Phone         string `json:"phone"`
+	Company       string `json:"company"`
+	Notifications struct {
+		Email       bool `json:"email"`
+		Push        bool `json:"push"`
+		ExpoUpdates bool `json:"expoUpdates"`
+		Reminders   bool `json:"reminders"`
+	} `json:"notifications"`
+}
+
 type GoogleAuthInput struct {
 	IDToken string `json:"idToken"`
 	Email   string `json:"email"`

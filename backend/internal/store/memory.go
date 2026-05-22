@@ -47,6 +47,7 @@ type MemoryStore struct {
 	meetings                 []domain.MeetingRecord
 	activities               []domain.VisitorActivityItem
 	bookings                 []domain.VisitorBookingRecord
+	visitorProfiles          map[string]domain.VisitorSettingsInput
 	notifications            []domain.Notification
 	notificationAttempts     []domain.NotificationAttempt
 	sponsorPlans             []domain.SponsorPlanRecord
@@ -154,6 +155,9 @@ func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
 		},
 		bookings: []domain.VisitorBookingRecord{
 			{ID: "vb_001", ExpoID: "expo_001", ExpoName: "Nairobi Tech Expo", ExpoDate: start.Format("2006-01-02"), Venue: "KICC", TicketType: "Remote Access", TicketPrice: 0, Status: "upcoming", BookedAt: time.Now().UTC().Add(-72 * time.Hour).Format(time.RFC3339), QRCode: "VISITOR-expo_001-usr_visitor_001"},
+		},
+		visitorProfiles: map[string]domain.VisitorSettingsInput{
+			"usr_visitor_001": {Phone: "+254700000001", Email: true, Push: true, ExpoUpdates: true, Reminders: true},
 		},
 		notifications: []domain.Notification{
 			{ID: "ntf_001", UserID: "usr_visitor_001", Recipient: "Demo Visitor", RecipientEmail: "visitor@tandaza.demo", ExpoID: "expo_001", Role: domain.RoleVisitor, Channel: "email", TemplateKey: "expo_remote_access_booked", Payload: map[string]any{"subject": "Remote access booked"}, Status: "delivered", ScheduledAt: time.Now().UTC().Add(-70 * time.Hour), SentAt: timePtr(time.Now().UTC().Add(-69 * time.Hour))},
@@ -387,6 +391,40 @@ func (s *MemoryStore) Users(ctx context.Context) ([]domain.User, error) {
 		users = append(users, demo.User)
 	}
 	return users, nil
+}
+
+func (s *MemoryStore) VisitorSettings(ctx context.Context, visitorID string) (domain.VisitorSettings, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	user, ok := s.userByIDLocked(strings.TrimSpace(visitorID))
+	if !ok || user.Role != domain.RoleVisitor {
+		return domain.VisitorSettings{}, ErrNotFound
+	}
+	input := s.visitorProfiles[user.ID]
+	return visitorSettingsFrom(user, input), nil
+}
+
+func (s *MemoryStore) UpdateVisitorSettings(ctx context.Context, visitorID string, input domain.VisitorSettingsInput) (domain.VisitorSettings, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	id := strings.TrimSpace(visitorID)
+	for i, demo := range s.users {
+		if demo.User.ID != id || demo.User.Role != domain.RoleVisitor {
+			continue
+		}
+		name := strings.TrimSpace(input.Name)
+		if name == "" {
+			return domain.VisitorSettings{}, ErrInvalidCredentials
+		}
+		s.users[i].User.Name = name
+		s.users[i].User.CompanyName = strings.TrimSpace(input.Company)
+		input.Name = name
+		input.Company = strings.TrimSpace(input.Company)
+		input.Phone = strings.TrimSpace(input.Phone)
+		s.visitorProfiles[id] = input
+		return visitorSettingsFrom(s.users[i].User, input), nil
+	}
+	return domain.VisitorSettings{}, ErrNotFound
 }
 
 func (s *MemoryStore) BootstrapAdmin(ctx context.Context, input domain.AdminUserInput) (domain.User, bool, error) {
@@ -3912,6 +3950,15 @@ func validMeetingType(value string) string {
 
 func defaultMeetingSettings() domain.MeetingSettings {
 	return domain.MeetingSettings{CategoryTypes: []string{"Online demo", "Sales consultation", "Product walkthrough", "Partnership discussion", "Post-expo follow-up"}}
+}
+
+func visitorSettingsFrom(user domain.User, input domain.VisitorSettingsInput) domain.VisitorSettings {
+	settings := domain.VisitorSettings{Name: user.Name, Email: user.Email, Phone: strings.TrimSpace(input.Phone), Company: user.CompanyName}
+	settings.Notifications.Email = input.Email
+	settings.Notifications.Push = input.Push
+	settings.Notifications.ExpoUpdates = input.ExpoUpdates
+	settings.Notifications.Reminders = input.Reminders
+	return settings
 }
 
 func cleanMeetingCategories(values []string) []string {

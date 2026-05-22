@@ -18,6 +18,8 @@ type Store interface {
 	ChangePassword(ctx context.Context, userID string, currentPassword string, newPassword string) error
 	UserByID(ctx context.Context, id string) (domain.User, error)
 	Users(ctx context.Context) ([]domain.User, error)
+	VisitorSettings(ctx context.Context, visitorID string) (domain.VisitorSettings, error)
+	UpdateVisitorSettings(ctx context.Context, visitorID string, input domain.VisitorSettingsInput) (domain.VisitorSettings, error)
 	BootstrapAdmin(ctx context.Context, input domain.AdminUserInput) (domain.User, bool, error)
 	CreateAdminManagedUser(ctx context.Context, input domain.AdminUserInput, actor domain.User) (domain.User, error)
 	UpdateAdminManagedUser(ctx context.Context, id string, input domain.AdminUserInput, actor domain.User) (domain.User, error)

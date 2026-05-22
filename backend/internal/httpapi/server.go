@@ -264,6 +264,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/visitor/feedback", s.visitorSubmitFeedback)
 	mux.HandleFunc("GET /api/v1/visitor/orders", s.visitorOrders)
 	mux.HandleFunc("GET /api/v1/visitor/settings", s.visitorSettings)
+	mux.HandleFunc("PUT /api/v1/visitor/settings", s.updateVisitorSettings)
 	mux.HandleFunc("GET /api/v1/sponsor/dashboard", s.sponsorDashboard)
 	mux.HandleFunc("GET /api/v1/sponsor/reports", s.sponsorReports)
 	mux.HandleFunc("GET /api/v1/sponsor/reports/ai-summary", s.sponsorReportsAISummary)
@@ -4942,7 +4943,44 @@ func (s *Server) visitorSettings(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"name": user.Name, "email": user.Email, "phone": "", "company": user.CompanyName, "notifications": map[string]bool{"email": true, "push": true, "bookings": true, "reminders": true}})
+	settings, err := s.store.VisitorSettings(r.Context(), user.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "visitor_settings_failed", "Could not load visitor settings.")
+		return
+	}
+	writeJSON(w, http.StatusOK, settings)
+}
+
+func (s *Server) updateVisitorSettings(w http.ResponseWriter, r *http.Request) {
+	user, ok := s.requireUser(w, r, domain.RoleVisitor)
+	if !ok {
+		return
+	}
+	var payload struct {
+		Name          string `json:"name"`
+		Phone         string `json:"phone"`
+		Company       string `json:"company"`
+		Notifications struct {
+			Email       bool `json:"email"`
+			Push        bool `json:"push"`
+			ExpoUpdates bool `json:"expoUpdates"`
+			Reminders   bool `json:"reminders"`
+		} `json:"notifications"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	settings, err := s.store.UpdateVisitorSettings(r.Context(), user.ID, domain.VisitorSettingsInput{
+		Name: payload.Name, Phone: payload.Phone, Company: payload.Company,
+		Email: payload.Notifications.Email, Push: payload.Notifications.Push, ExpoUpdates: payload.Notifications.ExpoUpdates, Reminders: payload.Notifications.Reminders,
+	})
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "visitor_settings_failed", "Could not update visitor settings.")
+		return
+	}
+	s.recordAudit(r, domain.AuditLog{ActorID: user.ID, Actor: user.Name, ActorRole: user.Role, Action: "visitor_settings_updated", EntityType: "user", EntityID: user.ID})
+	writeJSON(w, http.StatusOK, settings)
 }
 
 func (s *Server) sponsorDashboard(w http.ResponseWriter, r *http.Request) {
