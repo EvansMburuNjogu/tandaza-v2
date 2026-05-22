@@ -661,3 +661,22 @@
 - Added an ROI performance section to exhibitor expo analytics with total investment, estimated return, ROI signal, cost per lead, spend breakdown, and recommended actions.
 - Expanded exhibitor ROI analytics with investment recovery, net return, revenue multiple, cost per meeting/pre-order, break-even guidance, average lead/pre-order value, and pipeline value by lead temperature/status.
 - Updated exhibitor activation checkout so the activation button shows an inline loading spinner while Paystack opens and exhibitors can choose Paystack channels, with card selected by default.
+
+### Exhibitor ROI Semantics Refresh
+
+- Kept ROI scoped to exhibitor workspaces only, per expo, and aligned the analytics language around exhibitor investment versus leads, meetings, pre-orders, and pre-order value.
+- Split exhibitor ROI analytics into realized return from tracked pre-orders and projected return from pipeline signals, instead of presenting one blended ROI number without context.
+- Added separate projected pipeline, realized ROI, projected ROI, realized/projected recovery percentages, and realized/projected return multiples to the exhibitor expo analytics response.
+- Refined pipeline projection so lead temperature, follow-up stage, meeting activity, scheduled follow-up presence, and pre-order intent influence projected value more transparently.
+- Added an explicit ROI calculation-method explanation and base lead value to the exhibitor workspace analytics UI so projected ROI is easier to interpret.
+- Updated exhibitor ROI API/frontend contracts and documentation to describe exhibitor-only, expo-specific ROI inputs and analytics more clearly.
+
+### Exhibitor Workspace Ad Upload UX
+
+- Removed the budget amount field from the exhibitor expo workspace ad form so ad submission stays focused on the required banner creative.
+- Kept exhibitor workspace ads locked to one fixed banner format and surfaced the requirement directly in the dialog with a dedicated preview slot.
+- Added clearer upload guidance in the exhibitor ads section for the required 728 x 90 px PNG/JPG banner and 2 MB maximum file size.
+
+### Deployment Runbook
+
+- Added `docs/DEPLOYMENT_RUNBOOK.md` with the demo server bare-repo deployment flow, targeted file push workflow, verification commands, Nginx/SSL notes, rollback commands, and deployment safety rules.

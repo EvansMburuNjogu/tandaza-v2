@@ -25,6 +25,9 @@ type TabType = "overview" | "leads" | "visitors" | "products" | "orders" | "meet
 
 const PAGE_SIZE = 10
 const DEFAULT_MEETING_CATEGORIES = ["Online demo", "Sales consultation", "Product walkthrough", "Partnership discussion", "Post-expo follow-up"]
+const AD_BANNER_WIDTH = 728
+const AD_BANNER_HEIGHT = 90
+const AD_BANNER_MAX_SIZE_BYTES = 2 * 1024 * 1024
 const PRE_ORDER_STATUSES: Array<{ value: PreOrder["status"]; label: string }> = [
   { value: "pending", label: "Pending" },
   { value: "confirmed", label: "Confirmed" },
@@ -124,7 +127,7 @@ export default function MyExpoPage() {
   const [orderStatusFilter, setOrderStatusFilter] = useState<PreOrder["status"] | "all">("all")
   const [orderSearch, setOrderSearch] = useState("")
   const [feedbackRatingFilter, setFeedbackRatingFilter] = useState("all")
-  const [boostForm, setBoostForm] = useState({ name: "", budget: "", imageUrl: "" })
+  const [boostForm, setBoostForm] = useState({ name: "", imageUrl: "" })
   const [boostDialogOpen, setBoostDialogOpen] = useState(false)
   const [editingBoost, setEditingBoost] = useState<AdCampaign | null>(null)
   const [roiDialogOpen, setRoiDialogOpen] = useState(false)
@@ -473,7 +476,7 @@ export default function MyExpoPage() {
         placement: "banner",
         imageUrl: boostForm.imageUrl.trim(),
         mediaUrl: boostForm.imageUrl.trim(),
-        budget: Number(boostForm.budget)
+        budget: editingBoost?.budget || 0
       }
       return editingBoost
         ? api.updateExpoAdCampaign(token || "", params.id, editingBoost.id, payload)
@@ -481,7 +484,7 @@ export default function MyExpoPage() {
     },
     onSuccess: () => {
       toast.success(editingBoost ? "Workspace ad updated." : "Workspace ad submitted.")
-      setBoostForm({ name: "", budget: "", imageUrl: "" })
+      setBoostForm({ name: "", imageUrl: "" })
       setEditingBoost(null)
       setBoostDialogOpen(false)
       client.invalidateQueries({ queryKey: ["expo-ads", params.id] })
@@ -1052,7 +1055,6 @@ export default function MyExpoPage() {
     setEditingBoost(ad || null)
     setBoostForm({
       name: ad?.name || "",
-      budget: ad?.budget ? String(ad.budget) : "",
       imageUrl: ad?.mediaUrl || ad?.imageUrl || ""
     })
     setBoostDialogOpen(true)
@@ -1061,7 +1063,7 @@ export default function MyExpoPage() {
     if (boostMutation.isPending || boostUploadMutation.isPending) return
     setBoostDialogOpen(false)
     setEditingBoost(null)
-    setBoostForm({ name: "", budget: "", imageUrl: "" })
+    setBoostForm({ name: "", imageUrl: "" })
   }
   const exportPreOrders = (format: "csv" | "excel") => {
     if (filteredPreOrders.length === 0) {
@@ -2004,17 +2006,6 @@ export default function MyExpoPage() {
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Budget amount</span>
-                    <Input
-                      value={boostForm.budget}
-                      onChange={(e) => setBoostForm(f => ({ ...f, budget: e.target.value }))}
-                      placeholder="1000"
-                      type="number"
-                      min="0"
-                      aria-label="Budget amount"
-                    />
-                  </label>
-                  <label className="space-y-1.5">
                     <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Banner image</span>
                     <input
                       aria-label="Banner image"
@@ -2026,8 +2017,39 @@ export default function MyExpoPage() {
                       }}
                       className="h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 py-2 text-sm"
                     />
-                    <span className="block text-xs leading-5 text-slate-500">Required: 728 x 90 px PNG or JPG, max 2 MB.</span>
+                    <span className="block text-xs leading-5 text-slate-500">Required: {AD_BANNER_WIDTH} x {AD_BANNER_HEIGHT} px PNG or JPG, max {formatFileSize(AD_BANNER_MAX_SIZE_BYTES)}.</span>
                   </label>
+                  <div className="rounded-2xl border border-border/80 bg-elevated/40 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Fixed banner slot</p>
+                    <div className="mt-3 overflow-hidden rounded-xl border border-border/70 bg-slate-950/90">
+                      <div className="relative mx-auto aspect-[728/90] w-full max-w-[728px]">
+                        {boostForm.imageUrl ? (
+                          <img src={mediaUrl(boostForm.imageUrl)} alt="Workspace ad banner preview" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-4 text-center">
+                            <div>
+                              <p className="text-sm font-semibold text-white">Banner preview</p>
+                              <p className="mt-1 text-xs text-slate-300">Upload exactly {AD_BANNER_WIDTH} x {AD_BANNER_HEIGHT} px.</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      <div className="rounded-xl bg-card px-3 py-2 text-xs text-slate-500">
+                        <span className="font-semibold text-foreground">Dimensions</span>
+                        <p className="mt-1">{AD_BANNER_WIDTH} x {AD_BANNER_HEIGHT} px</p>
+                      </div>
+                      <div className="rounded-xl bg-card px-3 py-2 text-xs text-slate-500">
+                        <span className="font-semibold text-foreground">Format</span>
+                        <p className="mt-1">PNG or JPG</p>
+                      </div>
+                      <div className="rounded-xl bg-card px-3 py-2 text-xs text-slate-500">
+                        <span className="font-semibold text-foreground">Max size</span>
+                        <p className="mt-1">{formatFileSize(AD_BANNER_MAX_SIZE_BYTES)}</p>
+                      </div>
+                    </div>
+                  </div>
                   {boostForm.imageUrl ? (
                     <div className="rounded-2xl border border-border/80 bg-elevated/60 p-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current banner</p>
@@ -2040,9 +2062,8 @@ export default function MyExpoPage() {
                   <Button
                     type="button"
                     onClick={() => {
-                      const budget = Number(boostForm.budget)
-                      if (!boostForm.name.trim() || !Number.isFinite(budget) || budget <= 0) {
-                        toast.error("Enter ad name and valid budget.")
+                      if (!boostForm.name.trim()) {
+                        toast.error("Enter an ad name.")
                         return
                       }
                       if (!boostForm.imageUrl.trim()) {
@@ -3261,12 +3282,12 @@ async function validateAdBannerFile(file: File) {
   if (!["image/png", "image/jpeg"].includes(file.type)) {
     throw new Error("Upload a PNG or JPG ad banner.")
   }
-  if (file.size > 2 * 1024 * 1024) {
-    throw new Error("Ad banner must be 2 MB or smaller.")
+  if (file.size > AD_BANNER_MAX_SIZE_BYTES) {
+    throw new Error(`Ad banner must be ${formatFileSize(AD_BANNER_MAX_SIZE_BYTES)} or smaller.`)
   }
   const dimensions = await imageDimensions(file)
-  if (dimensions.width !== 728 || dimensions.height !== 90) {
-    throw new Error("Ad banner must be exactly 728 x 90 px.")
+  if (dimensions.width !== AD_BANNER_WIDTH || dimensions.height !== AD_BANNER_HEIGHT) {
+    throw new Error(`Ad banner must be exactly ${AD_BANNER_WIDTH} x ${AD_BANNER_HEIGHT} px.`)
   }
 }
 
