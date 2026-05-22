@@ -45,9 +45,22 @@ export function LoginForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const trimmedEmail = email.trim().toLowerCase()
+    if (!trimmedEmail) {
+      toast.error("Could not sign in", { description: "Enter your email address." })
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error("Could not sign in", { description: "Enter a valid email address." })
+      return
+    }
+    if (!password) {
+      toast.error("Could not sign in", { description: "Enter your password." })
+      return
+    }
     setLoading(true)
     try {
-      const response = await login({ email, password })
+      const response = await login({ email: trimmedEmail, password })
       setSession({ token: httpOnlySessionToken, user: response.user })
       toast.success("Signed in", { description: "Welcome back to Tandaza." })
       if (mustChangeAdminPassword(response.user.role, response.user.mustChangePassword)) {
@@ -82,7 +95,7 @@ export function LoginForm() {
               Welcome back
             </h2>
             <p className="mt-1.5 text-[13px] text-slate-500">
-              Access your expo workspace
+              Sign in to continue to your expo workspace.
             </p>
           </div>
 
@@ -103,11 +116,11 @@ export function LoginForm() {
         </div>
 
         {/* Form */}
-        <form className="space-y-5" onSubmit={onSubmit}>
+        <form className="space-y-5" onSubmit={onSubmit} noValidate aria-busy={loading}>
           {/* Email */}
           <div className="space-y-1.5">
             <label htmlFor="email" className="block text-[13px] font-semibold text-foreground">
-              Email address
+              Email address <span className="text-primary" aria-hidden>*</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -117,10 +130,12 @@ export function LoginForm() {
                 id="email"
                 type="email"
                 required
+                aria-required="true"
+                inputMode="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com"
+                placeholder="name@example.com"
                 className="w-full rounded-xl border border-border bg-elevated py-3 pl-10 pr-4 text-[13.5px] text-foreground shadow-sm placeholder:text-slate-400/80 transition-all duration-150 focus:border-primary/60 focus:outline-none focus:ring-4 focus:ring-primary/10"
               />
             </div>
@@ -130,11 +145,11 @@ export function LoginForm() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="block text-[13px] font-semibold text-foreground">
-                Password
+                Password <span className="text-primary" aria-hidden>*</span>
               </label>
               <Link
                 href="/forgot-password"
-                className="text-[11px] font-semibold text-primary/80 transition hover:text-primary hover:underline"
+                className="rounded-md text-[11px] font-semibold text-primary/80 transition hover:text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 Forgot password?
               </Link>
@@ -147,16 +162,17 @@ export function LoginForm() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 required
+                aria-required="true"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter password"
                 className="w-full rounded-xl border border-border bg-elevated py-3 pl-10 pr-11 text-[13.5px] text-foreground shadow-sm placeholder:text-slate-400/80 transition-all duration-150 focus:border-primary/60 focus:outline-none focus:ring-4 focus:ring-primary/10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-3.5 flex items-center text-slate-400 transition hover:text-slate-600 focus:outline-none"
+                className="absolute inset-y-0 right-3.5 flex items-center rounded-md text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -204,7 +220,7 @@ export function LoginForm() {
           <div className="mt-4 text-center text-[13px] text-slate-500">
             Don&apos;t have an account?{" "}
             <Link href={registerHref} className="font-semibold text-primary transition hover:underline">
-              Create one
+              Create a visitor account
             </Link>
           </div>
         </div>
@@ -217,7 +233,7 @@ export function LoginForm() {
 
         {/* Back to homepage */}
         <div className="mt-4 text-center">
-          <Link href="/" className="inline-flex items-center gap-1 text-[11px] text-slate-400 transition hover:text-slate-700">
+          <Link href="/" className="inline-flex items-center gap-1 rounded-md text-[11px] text-slate-400 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20">
             <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
               <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

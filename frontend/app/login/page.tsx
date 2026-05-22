@@ -5,7 +5,7 @@ import { Spinner } from "@/components/ui/spinner"
 
 export const metadata: Metadata = {
   title: "Sign in to Tandaza",
-  description: "Access your Tandaza expo workspace for visitors, exhibitors, organizers, sponsors, and administrators."
+  description: "Sign in to your Tandaza expo workspace for visitor access, digital booths, organizer operations, sponsor visibility, and admin management."
 }
 
 export default function LoginPage() {
