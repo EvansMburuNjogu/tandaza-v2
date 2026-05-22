@@ -976,6 +976,19 @@ type ReportSeriesItem struct {
 	Value int64  `json:"value"`
 }
 
+type ExpoRankingReport struct {
+	ExpoID       string `json:"expoId"`
+	ExpoName     string `json:"expoName"`
+	Revenue      int64  `json:"revenue"`
+	Commission   int64  `json:"commission"`
+	Leads        int64  `json:"leads"`
+	Visitors     int64  `json:"visitors"`
+	Exhibitors   int64  `json:"exhibitors"`
+	Active       int64  `json:"activeExhibitors"`
+	Interactions int64  `json:"interactions"`
+	Score        int64  `json:"score"`
+}
+
 type AdministratorReportsResponse struct {
 	Performance      []ReportMetric     `json:"performance"`
 	RevenueSeries    []ReportSeriesItem `json:"revenueSeries"`
@@ -984,17 +997,19 @@ type AdministratorReportsResponse struct {
 }
 
 type OrganizerReportsResponse struct {
-	ExpoPerformance     []ReportMetric     `json:"expoPerformance"`
-	RevenueSeries       []ReportSeriesItem `json:"revenueSeries"`
-	EngagementSeries    []ReportSeriesItem `json:"engagementSeries"`
-	VisitorDemographics []ReportSeriesItem `json:"visitorDemographics"`
-	ExhibitorSeries     []ReportSeriesItem `json:"exhibitorSeries"`
-	LeadStatusSeries    []ReportSeriesItem `json:"leadStatusSeries"`
-	LeadTemperature     []ReportSeriesItem `json:"leadTemperatureSeries"`
-	PaymentStatusSeries []ReportSeriesItem `json:"paymentStatusSeries"`
-	SettlementSeries    []ReportSeriesItem `json:"settlementSeries"`
-	ExpoLifecycleSeries []ReportSeriesItem `json:"expoLifecycleSeries"`
-	TopInsights         []string           `json:"topInsights"`
+	ExpoPerformance     []ReportMetric      `json:"expoPerformance"`
+	RevenueSeries       []ReportSeriesItem  `json:"revenueSeries"`
+	EngagementSeries    []ReportSeriesItem  `json:"engagementSeries"`
+	VisitorDemographics []ReportSeriesItem  `json:"visitorDemographics"`
+	ExhibitorSeries     []ReportSeriesItem  `json:"exhibitorSeries"`
+	LeadStatusSeries    []ReportSeriesItem  `json:"leadStatusSeries"`
+	LeadTemperature     []ReportSeriesItem  `json:"leadTemperatureSeries"`
+	PaymentStatusSeries []ReportSeriesItem  `json:"paymentStatusSeries"`
+	SettlementSeries    []ReportSeriesItem  `json:"settlementSeries"`
+	ExpoLifecycleSeries []ReportSeriesItem  `json:"expoLifecycleSeries"`
+	ExpoDailySeries     []ReportSeriesItem  `json:"expoDailySeries"`
+	ExpoRankings        []ExpoRankingReport `json:"expoRankings"`
+	TopInsights         []string            `json:"topInsights"`
 }
 
 type SponsorPlanRecord struct {

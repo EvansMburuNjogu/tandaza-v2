@@ -90,6 +90,19 @@ export interface ReportSeriesItem {
 	value: number
 }
 
+export interface ExpoRankingReport {
+  expoId: string
+  expoName: string
+  revenue: number
+  commission: number
+  leads: number
+  visitors: number
+  exhibitors: number
+  activeExhibitors: number
+  interactions: number
+  score: number
+}
+
 export interface AdministratorReportsResponse {
 	performance: ReportMetric[]
 	revenueSeries: ReportSeriesItem[]
@@ -556,6 +569,8 @@ export interface OrganizerReportsResponse {
   paymentStatusSeries?: ReportSeriesItem[]
   settlementSeries?: ReportSeriesItem[]
   expoLifecycleSeries?: ReportSeriesItem[]
+  expoDailySeries?: ReportSeriesItem[]
+  expoRankings?: ExpoRankingReport[]
   topInsights: string[]
 }
 

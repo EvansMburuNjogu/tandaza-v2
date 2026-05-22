@@ -8283,6 +8283,8 @@ func organizerReportsFrom(expos []domain.Expo, payments []domain.Payment, leads 
 			{Label: "Pending Settlement", Value: settlementPending},
 		},
 		ExpoLifecycleSeries: expoLifecycleSeries(expos),
+		ExpoDailySeries:     expoDailyPerformanceSeries(expos, payments, leads),
+		ExpoRankings:        expoRankingReports(expos, payments, leads, exhibitors),
 		TopInsights:         organizerInsightText(expos, payments, leads, currency),
 	}
 }
@@ -8390,6 +8392,107 @@ func engagementSeriesFromLeads(leads []domain.LeadRecord) []domain.ReportSeriesI
 		grouped[when.Format("02 Jan")]++
 	}
 	return chronologicalReportSeries(grouped, "02 Jan")
+}
+
+func expoDailyPerformanceSeries(expos []domain.Expo, payments []domain.Payment, leads []domain.LeadRecord) []domain.ReportSeriesItem {
+	expoIDs := map[string]bool{}
+	for _, expo := range expos {
+		expoIDs[expo.ID] = true
+	}
+	grouped := map[string]int64{}
+	for _, lead := range leads {
+		if !expoIDs[lead.ExpoID] {
+			continue
+		}
+		when, err := time.Parse(time.RFC3339, lead.CapturedAt)
+		if err != nil {
+			continue
+		}
+		grouped[when.Format("02 Jan")] += 1
+	}
+	for _, payment := range payments {
+		if payment.Status != domain.PaymentPaid || !expoIDs[payment.ExpoID] {
+			continue
+		}
+		when := payment.CreatedAt
+		if payment.PaidAt != nil {
+			when = *payment.PaidAt
+		}
+		grouped[when.Format("02 Jan")] += 3
+	}
+	return chronologicalReportSeries(grouped, "02 Jan")
+}
+
+func expoRankingReports(expos []domain.Expo, payments []domain.Payment, leads []domain.LeadRecord, exhibitors []domain.ExpoExhibitor) []domain.ExpoRankingReport {
+	type aggregate struct {
+		expo       domain.Expo
+		revenue    int64
+		commission int64
+		leads      int64
+		visitors   map[string]bool
+		exhibitors map[string]bool
+		active     int64
+	}
+	grouped := map[string]*aggregate{}
+	for _, expo := range expos {
+		grouped[expo.ID] = &aggregate{expo: expo, visitors: map[string]bool{}, exhibitors: map[string]bool{}}
+	}
+	for _, payment := range payments {
+		group, ok := grouped[payment.ExpoID]
+		if !ok || payment.Status != domain.PaymentPaid {
+			continue
+		}
+		amount := majorFromMinor(payment.AmountMinor)
+		group.revenue += amount
+		split, err := platform.CalculateCommission(paymentCommissionBaseMinor(payment), group.expo.OrganizerCommissionBps, payment.CurrencyCode)
+		if err == nil {
+			group.commission += majorFromMinor(split.CommissionMinor)
+		}
+	}
+	for _, lead := range leads {
+		group, ok := grouped[lead.ExpoID]
+		if !ok {
+			continue
+		}
+		group.leads++
+		visitorKey := strings.ToLower(strings.TrimSpace(lead.VisitorEmail))
+		if visitorKey == "" {
+			visitorKey = strings.ToLower(strings.TrimSpace(lead.VisitorName))
+		}
+		if visitorKey == "" {
+			visitorKey = lead.ID
+		}
+		group.visitors[visitorKey] = true
+	}
+	for _, exhibitor := range exhibitors {
+		group, ok := grouped[exhibitor.ExpoID]
+		if !ok {
+			continue
+		}
+		if exhibitor.ExhibitorID != "" {
+			group.exhibitors[exhibitor.ExhibitorID] = true
+		}
+		if exhibitor.ActivationStatus == "active" {
+			group.active++
+		}
+	}
+	items := []domain.ExpoRankingReport{}
+	for _, group := range grouped {
+		interactions := group.leads
+		score := group.revenue + group.commission + group.leads*10 + int64(len(group.visitors))*8 + group.active*12
+		items = append(items, domain.ExpoRankingReport{
+			ExpoID: group.expo.ID, ExpoName: group.expo.Name, Revenue: group.revenue, Commission: group.commission,
+			Leads: group.leads, Visitors: int64(len(group.visitors)), Exhibitors: int64(len(group.exhibitors)),
+			Active: group.active, Interactions: interactions, Score: score,
+		})
+	}
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].Score == items[j].Score {
+			return items[i].ExpoName < items[j].ExpoName
+		}
+		return items[i].Score > items[j].Score
+	})
+	return items
 }
 
 func sortedReportSeries(grouped map[string]int64) []domain.ReportSeriesItem {

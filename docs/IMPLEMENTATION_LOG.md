@@ -746,3 +746,9 @@
 - Expanded organizer reports with aggregated expo lifecycle, exhibitor activation, lead status, lead temperature, payment status, and settlement breakdown series.
 - Added organizer reports UI sections for overview, exhibitors, leads, settlements, engagement, and visitors using current backend data.
 - Included organizer commission, platform retained value, and pending settlement signals in the reporting response.
+
+### Organizer Expo Performance Rankings
+
+- Added daily expo performance scoring from visitor leads and paid activation payments.
+- Added best-expo ranking data using revenue, commission, leads, unique visitors, assigned exhibitors, and active exhibitor workspaces.
+- Updated organizer reports to show a best expo card, per-day performance chart, and expo ranking table.

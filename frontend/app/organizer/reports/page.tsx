@@ -12,7 +12,7 @@ import { AIPerformanceSummaryCard } from "@/components/analytics/ai-performance-
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { cn } from "@/lib/utils"
-import { ReportSeriesItem } from "@/lib/api/contracts"
+import { ExpoRankingReport, ReportSeriesItem } from "@/lib/api/contracts"
 
 type ReportTab = "overview" | "expo" | "exhibitor" | "lead" | "settlement" | "engagement" | "visitor"
 
@@ -47,6 +47,7 @@ export default function OrganizerReportsPage() {
       case "expo":
         filename = "expo-report"
         content = "Metric,Value,Delta\n" + expoPerformance.map(m => `${m.label},${m.value},${m.delta}`).join("\n")
+        content += "\n\nExpo,Score,Revenue,Commission,Leads,Visitors,Exhibitors,Active Exhibitors\n" + (data.expoRankings || []).map((r) => `${r.expoName},${r.score},${r.revenue},${r.commission},${r.leads},${r.visitors},${r.exhibitors},${r.activeExhibitors}`).join("\n")
         break
       case "exhibitor":
         filename = "exhibitor-report"
@@ -89,6 +90,9 @@ export default function OrganizerReportsPage() {
   const paymentStatusSeries = query.data.paymentStatusSeries || []
   const settlementSeries = query.data.settlementSeries || []
   const expoLifecycleSeries = query.data.expoLifecycleSeries || []
+  const expoDailySeries = query.data.expoDailySeries || []
+  const expoRankings = query.data.expoRankings || []
+  const bestExpo = expoRankings[0]
 
   const tabs = [
     { id: "overview" as const, label: "Overview" },
@@ -151,6 +155,10 @@ export default function OrganizerReportsPage() {
             <SeriesCard title="Exhibitor Activation" subtitle="Workspace assignment health" data={exhibitorSeries} />
             <SeriesCard title="Payment Health" subtitle="Payment status distribution" data={paymentStatusSeries} />
           </div>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+            <SeriesCard title="Expo Per Day Performance" subtitle="Daily activity score from leads and paid activations" data={expoDailySeries} />
+            <BestExpoCard expo={bestExpo} />
+          </div>
           <div className="grid gap-5 xl:grid-cols-2">
             <SeriesCard title="Settlement Breakdown" subtitle="Revenue, commission, retained value, and pending payout" data={settlementSeries} />
             <SeriesCard title="Lead Temperature" subtitle="Sales-readiness across expo leads" data={leadTemperatureSeries} />
@@ -170,6 +178,8 @@ export default function OrganizerReportsPage() {
             ))}
           </div>
           <SeriesCard title="Expo Lifecycle" subtitle="Lifecycle distribution across your expos" data={expoLifecycleSeries} />
+          <SeriesCard title="Expo Per Day Performance" subtitle="Daily activity score from visitor leads and activation payments" data={expoDailySeries} />
+          <ExpoRankingTable rows={expoRankings} />
         </div>
       )}
 
@@ -228,6 +238,78 @@ export default function OrganizerReportsPage() {
           ))}
         </div>
       </Card>
+    </div>
+  )
+}
+
+function BestExpoCard({ expo }: { expo?: ExpoRankingReport }) {
+  return (
+    <Card className="p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Best Expo</p>
+      {!expo ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-border bg-elevated/50 p-6 text-center text-sm text-slate-500">
+          No expo performance data yet
+        </div>
+      ) : (
+        <div className="mt-5 space-y-5">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">{expo.expoName}</h2>
+            <p className="mt-1 text-sm text-slate-500">Ranked by revenue, commission, leads, visitors, and active exhibitors.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <MiniStat label="Score" value={expo.score.toLocaleString()} />
+            <MiniStat label="Revenue" value={expo.revenue.toLocaleString()} />
+            <MiniStat label="Leads" value={expo.leads.toLocaleString()} />
+            <MiniStat label="Visitors" value={expo.visitors.toLocaleString()} />
+          </div>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function ExpoRankingTable({ rows }: { rows: ExpoRankingReport[] }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="border-b border-border/70 px-6 py-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Expo Ranking</p>
+        <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">Best performing expos</h2>
+      </div>
+      {rows.length === 0 ? (
+        <div className="p-8 text-center text-sm text-slate-500">No expo performance data yet</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-elevated text-left text-xs uppercase tracking-[0.16em] text-slate-400">
+              <tr>
+                {["Expo", "Score", "Revenue", "Commission", "Leads", "Visitors", "Exhibitors"].map((header) => <th key={header} className="px-4 py-3">{header}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.expoId} className="border-t border-border">
+                  <td className="px-4 py-3 font-semibold text-foreground">{row.expoName}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.score.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.revenue.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.commission.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.leads.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.visitors.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.activeExhibitors.toLocaleString()} / {row.exhibitors.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-elevated/60 p-4">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-foreground">{value}</p>
     </div>
   )
 }
