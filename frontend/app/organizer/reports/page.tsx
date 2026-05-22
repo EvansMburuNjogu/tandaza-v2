@@ -12,12 +12,13 @@ import { AIPerformanceSummaryCard } from "@/components/analytics/ai-performance-
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { cn } from "@/lib/utils"
+import { ReportSeriesItem } from "@/lib/api/contracts"
 
-type ReportTab = "expo" | "settlement" | "engagement" | "visitor"
+type ReportTab = "overview" | "expo" | "exhibitor" | "lead" | "settlement" | "engagement" | "visitor"
 
 export default function OrganizerReportsPage() {
   const token = useSessionStore((state) => state.token)
-  const [activeTab, setActiveTab] = useState<ReportTab>("expo")
+  const [activeTab, setActiveTab] = useState<ReportTab>("overview")
   
   const query = useQuery({
     queryKey: ["organizer-reports"],
@@ -47,9 +48,17 @@ export default function OrganizerReportsPage() {
         filename = "expo-report"
         content = "Metric,Value,Delta\n" + expoPerformance.map(m => `${m.label},${m.value},${m.delta}`).join("\n")
         break
+      case "exhibitor":
+        filename = "exhibitor-report"
+        content = "Status,Count\n" + (data.exhibitorSeries || []).map(r => `${r.label},${r.value}`).join("\n")
+        break
+      case "lead":
+        filename = "lead-report"
+        content = "Status,Count\n" + (data.leadStatusSeries || []).map(r => `${r.label},${r.value}`).join("\n")
+        break
       case "settlement":
         filename = "settlement-report"
-        content = "Month,Revenue\n" + revenueSeries.map(r => `${r.label},${r.value}`).join("\n")
+        content = "Metric,Value\n" + ((data.settlementSeries || []).length ? data.settlementSeries || [] : revenueSeries).map(r => `${r.label},${r.value}`).join("\n")
         break
       case "engagement":
         filename = "engagement-report"
@@ -74,9 +83,18 @@ export default function OrganizerReportsPage() {
   if (query.isLoading || !query.data) return <Spinner className="mx-auto mt-32 h-8 w-8 text-primary" />
   const expoPerformance = Array.isArray(query.data.expoPerformance) ? query.data.expoPerformance : []
   const topInsights = Array.isArray(query.data.topInsights) ? query.data.topInsights : []
+  const exhibitorSeries = query.data.exhibitorSeries || []
+  const leadStatusSeries = query.data.leadStatusSeries || []
+  const leadTemperatureSeries = query.data.leadTemperatureSeries || []
+  const paymentStatusSeries = query.data.paymentStatusSeries || []
+  const settlementSeries = query.data.settlementSeries || []
+  const expoLifecycleSeries = query.data.expoLifecycleSeries || []
 
   const tabs = [
+    { id: "overview" as const, label: "Overview" },
     { id: "expo" as const, label: "Expo Reports" },
+    { id: "exhibitor" as const, label: "Exhibitors" },
+    { id: "lead" as const, label: "Leads" },
     { id: "settlement" as const, label: "Settlement Reports" },
     { id: "engagement" as const, label: "Engagement Reports" },
     { id: "visitor" as const, label: "Visitor Reports" }
@@ -117,6 +135,29 @@ export default function OrganizerReportsPage() {
         onGenerate={() => api.generateOrganizerReportsAISummary(token || "")}
       />
 
+      {activeTab === "overview" && (
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {expoPerformance.slice(0, 4).map((metric) => (
+              <Card key={metric.label} className="p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">{metric.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{metric.value}</p>
+                <p className="mt-1 text-xs text-slate-500">{metric.delta}</p>
+              </Card>
+            ))}
+          </div>
+          <div className="grid gap-5 xl:grid-cols-3">
+            <SeriesCard title="Expo Lifecycle" subtitle="Where your expos sit operationally" data={expoLifecycleSeries} />
+            <SeriesCard title="Exhibitor Activation" subtitle="Workspace assignment health" data={exhibitorSeries} />
+            <SeriesCard title="Payment Health" subtitle="Payment status distribution" data={paymentStatusSeries} />
+          </div>
+          <div className="grid gap-5 xl:grid-cols-2">
+            <SeriesCard title="Settlement Breakdown" subtitle="Revenue, commission, retained value, and pending payout" data={settlementSeries} />
+            <SeriesCard title="Lead Temperature" subtitle="Sales-readiness across expo leads" data={leadTemperatureSeries} />
+          </div>
+        </div>
+      )}
+
       {activeTab === "expo" && (
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -128,11 +169,27 @@ export default function OrganizerReportsPage() {
               </Card>
             ))}
           </div>
+          <SeriesCard title="Expo Lifecycle" subtitle="Lifecycle distribution across your expos" data={expoLifecycleSeries} />
+        </div>
+      )}
+
+      {activeTab === "exhibitor" && (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <SeriesCard title="Exhibitor Status" subtitle="Assigned exhibitors by activation state" data={exhibitorSeries} />
+          <SeriesCard title="Payment Status" subtitle="Payment outcomes connected to exhibitor activations" data={paymentStatusSeries} />
+        </div>
+      )}
+
+      {activeTab === "lead" && (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <SeriesCard title="Lead Status" subtitle="Post-expo lead pipeline stages" data={leadStatusSeries} />
+          <SeriesCard title="Lead Temperature" subtitle="Hot, warm, and cold lead mix" data={leadTemperatureSeries} />
         </div>
       )}
 
       {activeTab === "settlement" && (
         <div className="space-y-6">
+          <SeriesCard title="Settlement Breakdown" subtitle="Organizer commission and platform retained value" data={settlementSeries} />
           <OrganizerReportsCharts data={query.data} view="settlement" />
         </div>
       )}
@@ -172,5 +229,38 @@ export default function OrganizerReportsPage() {
         </div>
       </Card>
     </div>
+  )
+}
+
+function SeriesCard({ title, subtitle, data }: { title: string; subtitle: string; data: ReportSeriesItem[] }) {
+  const rows = Array.isArray(data) ? data : []
+  const max = Math.max(1, ...rows.map((item) => Number(item.value) || 0))
+  return (
+    <Card className="p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{title}</p>
+      <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">{subtitle}</h2>
+      <div className="mt-6 space-y-4">
+        {rows.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border bg-elevated/50 p-6 text-center text-sm text-slate-500">
+            No analytics data yet
+          </div>
+        )}
+        {rows.map((item) => {
+          const value = Number(item.value) || 0
+          const width = Math.max(4, Math.round((value / max) * 100))
+          return (
+            <div key={item.label}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-foreground">{item.label}</span>
+                <span className="text-sm font-semibold tabular-nums text-primary">{value.toLocaleString()}</span>
+              </div>
+              <div className="mt-2 h-2 rounded-full bg-elevated">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </Card>
   )
 }

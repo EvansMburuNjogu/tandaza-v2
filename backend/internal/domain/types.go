@@ -988,6 +988,12 @@ type OrganizerReportsResponse struct {
 	RevenueSeries       []ReportSeriesItem `json:"revenueSeries"`
 	EngagementSeries    []ReportSeriesItem `json:"engagementSeries"`
 	VisitorDemographics []ReportSeriesItem `json:"visitorDemographics"`
+	ExhibitorSeries     []ReportSeriesItem `json:"exhibitorSeries"`
+	LeadStatusSeries    []ReportSeriesItem `json:"leadStatusSeries"`
+	LeadTemperature     []ReportSeriesItem `json:"leadTemperatureSeries"`
+	PaymentStatusSeries []ReportSeriesItem `json:"paymentStatusSeries"`
+	SettlementSeries    []ReportSeriesItem `json:"settlementSeries"`
+	ExpoLifecycleSeries []ReportSeriesItem `json:"expoLifecycleSeries"`
 	TopInsights         []string           `json:"topInsights"`
 }
 

@@ -550,6 +550,12 @@ export interface OrganizerReportsResponse {
   revenueSeries: ReportSeriesItem[]
   engagementSeries: ReportSeriesItem[]
   visitorDemographics: ReportSeriesItem[]
+  exhibitorSeries?: ReportSeriesItem[]
+  leadStatusSeries?: ReportSeriesItem[]
+  leadTemperatureSeries?: ReportSeriesItem[]
+  paymentStatusSeries?: ReportSeriesItem[]
+  settlementSeries?: ReportSeriesItem[]
+  expoLifecycleSeries?: ReportSeriesItem[]
   topInsights: string[]
 }
 

@@ -2901,7 +2901,8 @@ func (s *Server) organizerReports(w http.ResponseWriter, r *http.Request) {
 	expos, _ := s.store.ListExpos(r.Context(), store.ExpoFilter{OrganizerID: organizerID})
 	payments, _ := s.store.ListPayments(r.Context(), store.PaymentFilter{OrganizerID: organizerID})
 	leads, _ := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: organizerID})
-	writeJSON(w, http.StatusOK, organizerReportsFrom(expos, payments, leads))
+	exhibitors, _ := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{OrganizerID: organizerID})
+	writeJSON(w, http.StatusOK, organizerReportsFrom(expos, payments, leads, exhibitors))
 }
 
 func (s *Server) organizerPaymentReceipt(w http.ResponseWriter, r *http.Request) {
@@ -8232,19 +8233,56 @@ func roiRecommendations(totalInvestment int64, leads int, hotLeads int, meetings
 	return items
 }
 
-func organizerReportsFrom(expos []domain.Expo, payments []domain.Payment, leads []domain.LeadRecord) domain.OrganizerReportsResponse {
+func organizerReportsFrom(expos []domain.Expo, payments []domain.Payment, leads []domain.LeadRecord, exhibitors []domain.ExpoExhibitor) domain.OrganizerReportsResponse {
 	paidVolume := paidPaymentVolume(payments)
 	currency := currencyFromPayments(payments, currencyFromExpos(expos, "KES"))
+	activeExhibitors := 0
+	uniqueExhibitors := map[string]bool{}
+	for _, exhibitor := range exhibitors {
+		if exhibitor.ExhibitorID != "" {
+			uniqueExhibitors[exhibitor.ExhibitorID] = true
+		}
+		if exhibitor.ActivationStatus == "active" {
+			activeExhibitors++
+		}
+	}
+	commissionAmount := organizerCommissionMajor(expos, payments)
+	settlementPending := commissionAmount
+	leadConversion := 0
+	if len(leads) > 0 {
+		converted := 0
+		for _, lead := range leads {
+			switch strings.ToLower(strings.TrimSpace(lead.Status)) {
+			case "meeting_booked", "proposal_sent", "won":
+				converted++
+			}
+		}
+		leadConversion = int(math.Round((float64(converted) / float64(len(leads))) * 100))
+	}
 	return domain.OrganizerReportsResponse{
 		ExpoPerformance: []domain.ReportMetric{
 			{Label: "Owned Expos", Value: strconv.Itoa(len(expos)), Delta: "all lifecycle states"},
 			{Label: "Activation Revenue", Value: strconv.FormatInt(paidVolume, 10), Delta: "confirmed value"},
+			{Label: "Organizer Commission", Value: strconv.FormatInt(commissionAmount, 10), Delta: "settlement earnings"},
+			{Label: "Assigned Exhibitors", Value: strconv.Itoa(len(uniqueExhibitors)), Delta: strconv.Itoa(activeExhibitors) + " active workspaces"},
 			{Label: "Leads Captured", Value: strconv.Itoa(len(leads)), Delta: "visitor interest"},
+			{Label: "Lead Conversion", Value: strconv.Itoa(leadConversion) + "%", Delta: "meeting/proposal/won leads"},
 			{Label: "Paid Exhibitors", Value: strconv.Itoa(paidPaymentCount(payments)), Delta: "activated workspaces"},
 		},
 		RevenueSeries:       seriesFromPayments(payments),
-		EngagementSeries:    []domain.ReportSeriesItem{{Label: "Leads", Value: int64(len(leads))}, {Label: "Payments", Value: int64(len(payments))}, {Label: "Expos", Value: int64(len(expos))}},
+		EngagementSeries:    engagementSeriesFromLeads(leads),
 		VisitorDemographics: reportSeriesFromLeadEmails(leads),
+		ExhibitorSeries:     exhibitorStatusSeries(exhibitors),
+		LeadStatusSeries:    leadFieldSeries(leads, "status"),
+		LeadTemperature:     leadFieldSeries(leads, "temperature"),
+		PaymentStatusSeries: paymentStatusSeries(payments),
+		SettlementSeries: []domain.ReportSeriesItem{
+			{Label: "Gross Revenue", Value: paidVolume},
+			{Label: "Organizer Commission", Value: commissionAmount},
+			{Label: "Platform Retained", Value: largerInt64(0, paidVolume-commissionAmount)},
+			{Label: "Pending Settlement", Value: settlementPending},
+		},
+		ExpoLifecycleSeries: expoLifecycleSeries(expos),
 		TopInsights:         organizerInsightText(expos, payments, leads, currency),
 	}
 }
@@ -8263,6 +8301,125 @@ func organizerInsightText(expos []domain.Expo, payments []domain.Payment, leads 
 		strconv.Itoa(len(leads)) + " leads are tied to activated exhibitor workspaces.",
 		strconv.Itoa(paidPaymentCount(payments)) + " confirmed exhibitor activation payments contributed " + formatMoneyMajor(paidPaymentVolume(payments), currency) + ".",
 	}
+}
+
+func organizerCommissionMajor(expos []domain.Expo, payments []domain.Payment) int64 {
+	expoMap := map[string]domain.Expo{}
+	for _, expo := range expos {
+		expoMap[expo.ID] = expo
+	}
+	totalMinor := int64(0)
+	for _, payment := range payments {
+		if payment.Status != domain.PaymentPaid {
+			continue
+		}
+		expo, ok := expoMap[payment.ExpoID]
+		if !ok {
+			continue
+		}
+		split, err := platform.CalculateCommission(paymentCommissionBaseMinor(payment), expo.OrganizerCommissionBps, payment.CurrencyCode)
+		if err != nil {
+			continue
+		}
+		totalMinor += split.CommissionMinor
+	}
+	return majorFromMinor(totalMinor)
+}
+
+func exhibitorStatusSeries(exhibitors []domain.ExpoExhibitor) []domain.ReportSeriesItem {
+	grouped := map[string]int64{}
+	for _, exhibitor := range exhibitors {
+		status := strings.TrimSpace(exhibitor.ActivationStatus)
+		if status == "" {
+			status = "unknown"
+		}
+		grouped[strings.ReplaceAll(status, "_", " ")]++
+	}
+	return sortedReportSeries(grouped)
+}
+
+func leadFieldSeries(leads []domain.LeadRecord, field string) []domain.ReportSeriesItem {
+	grouped := map[string]int64{}
+	for _, lead := range leads {
+		value := ""
+		if field == "temperature" {
+			value = lead.Temperature
+		} else {
+			value = lead.Status
+		}
+		value = strings.TrimSpace(value)
+		if value == "" {
+			value = "unknown"
+		}
+		grouped[strings.ReplaceAll(value, "_", " ")]++
+	}
+	return sortedReportSeries(grouped)
+}
+
+func paymentStatusSeries(payments []domain.Payment) []domain.ReportSeriesItem {
+	grouped := map[string]int64{}
+	for _, payment := range payments {
+		status := strings.TrimSpace(string(payment.Status))
+		if status == "" {
+			status = "unknown"
+		}
+		grouped[status]++
+	}
+	return sortedReportSeries(grouped)
+}
+
+func expoLifecycleSeries(expos []domain.Expo) []domain.ReportSeriesItem {
+	grouped := map[string]int64{}
+	for _, expo := range expos {
+		status := strings.TrimSpace(string(expo.Status))
+		if status == "" {
+			status = "unknown"
+		}
+		grouped[strings.ReplaceAll(status, "_", " ")]++
+	}
+	return sortedReportSeries(grouped)
+}
+
+func engagementSeriesFromLeads(leads []domain.LeadRecord) []domain.ReportSeriesItem {
+	grouped := map[string]int64{}
+	for _, lead := range leads {
+		when, err := time.Parse(time.RFC3339, lead.CapturedAt)
+		if err != nil {
+			continue
+		}
+		grouped[when.Format("02 Jan")]++
+	}
+	return chronologicalReportSeries(grouped, "02 Jan")
+}
+
+func sortedReportSeries(grouped map[string]int64) []domain.ReportSeriesItem {
+	items := make([]domain.ReportSeriesItem, 0, len(grouped))
+	for label, value := range grouped {
+		items = append(items, domain.ReportSeriesItem{Label: strings.Title(label), Value: value})
+	}
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].Value == items[j].Value {
+			return items[i].Label < items[j].Label
+		}
+		return items[i].Value > items[j].Value
+	})
+	return items
+}
+
+func chronologicalReportSeries(grouped map[string]int64, layout string) []domain.ReportSeriesItem {
+	items := make([]domain.ReportSeriesItem, 0, len(grouped))
+	for label, value := range grouped {
+		items = append(items, domain.ReportSeriesItem{Label: label, Value: value})
+	}
+	sort.SliceStable(items, func(i, j int) bool {
+		left, leftErr := time.Parse(layout, items[i].Label)
+		right, rightErr := time.Parse(layout, items[j].Label)
+		if leftErr != nil || rightErr != nil {
+			return items[i].Label < items[j].Label
+		}
+		return left.Before(right)
+	})
+	return items
 }
 
 func paidPaymentVolume(payments []domain.Payment) int64 {

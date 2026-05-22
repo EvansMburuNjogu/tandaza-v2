@@ -740,3 +740,9 @@
 - Reworked the organizer expo detail view into a richer operations workspace with activation, visitor, revenue, commission, feedback, and timeline signals.
 - Added expo-specific filtering for exhibitors, visitors, payments, and feedback so every tab shows data tied to the viewed expo.
 - Added lightweight progress visuals and analytics cards using current backend data rather than placeholder metrics.
+
+### Organizer Reports Expansion
+
+- Expanded organizer reports with aggregated expo lifecycle, exhibitor activation, lead status, lead temperature, payment status, and settlement breakdown series.
+- Added organizer reports UI sections for overview, exhibitors, leads, settlements, engagement, and visitors using current backend data.
+- Included organizer commission, platform retained value, and pending settlement signals in the reporting response.
