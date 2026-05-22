@@ -787,3 +787,9 @@
 ### Platform Button Gradient Polish
 
 - Added subtle gradients to the shared platform button variants so primary, secondary, outline, ghost, soft, and danger buttons feel more premium while keeping the existing sizing and behavior.
+
+### Visitor-Only Public Registration
+
+- Re-enabled public visitor registration with email verification while keeping sponsor self-registration hidden from the public UI.
+- Tightened the Next.js auth proxy and Go backend registration path so only visitors can self-register; sponsors remain admin-created accounts.
+- Updated registration copy and metadata to be visitor-focused with no sponsor signup language.

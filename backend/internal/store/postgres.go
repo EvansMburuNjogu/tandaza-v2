@@ -117,7 +117,7 @@ func (s *PostgresStore) Register(ctx context.Context, email string, password str
 	if input.Role == "" {
 		input.Role = domain.RoleVisitor
 	}
-	if input.Role != domain.RoleVisitor && input.Role != domain.RoleSponsor {
+	if input.Role != domain.RoleVisitor {
 		return domain.User{}, "", ErrInvalidCredentials
 	}
 	id := fmt.Sprintf("usr_%d", time.Now().UnixNano())
@@ -166,7 +166,30 @@ func (s *PostgresStore) AuthWithGoogle(ctx context.Context, input domain.GoogleA
 		token, err := s.tokenService.Sign(user)
 		return user, token, err
 	}
-	return domain.User{}, "", ErrInvalidCredentials
+	passwordHash, err := security.HashPassword(fmt.Sprintf("google:%s:%d", email, time.Now().UnixNano()))
+	if err != nil {
+		return domain.User{}, "", err
+	}
+	id := fmt.Sprintf("usr_%d", time.Now().UnixNano())
+	emailCipher := s.pii.MustEncrypt(email)
+	nameCipher := s.pii.MustEncrypt(name)
+	if _, err := s.pool.Exec(ctx, `
+		INSERT INTO users (id, email, email_cipher, email_hash, name, name_cipher, password_hash, role, avatar_url, company_name, company_name_cipher, country_code, status, email_verified)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,TRUE)
+	`, id, email, emailCipher, emailHash, name, nameCipher, passwordHash, string(domain.RoleVisitor), "/avatars/visitor.svg", "", "", "KE", "active"); err != nil {
+		return domain.User{}, "", err
+	}
+	user := domain.User{
+		ID:          id,
+		Name:        name,
+		Email:       email,
+		Role:        domain.RoleVisitor,
+		AvatarURL:   "/avatars/visitor.svg",
+		CountryCode: "KE",
+		Status:      "active",
+	}
+	token, err := s.tokenService.Sign(user)
+	return user, token, err
 }
 
 func (s *PostgresStore) CreateEmailVerification(ctx context.Context, userID string) (string, error) {

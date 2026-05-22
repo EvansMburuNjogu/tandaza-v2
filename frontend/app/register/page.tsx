@@ -4,8 +4,8 @@ import { RegisterForm } from "@/components/auth/register-form"
 import { Spinner } from "@/components/ui/spinner"
 
 export const metadata: Metadata = {
-  title: "Tandaza registration",
-  description: "Tandaza visitor registration is currently invite-only. Existing users can sign in to access expo discovery and exhibitor workspaces."
+  title: "Create a Tandaza visitor account",
+  description: "Register as a Tandaza visitor to discover expos, engage exhibitors remotely, request meetings, and keep your expo activity in one place."
 }
 
 export default function RegisterPage() {

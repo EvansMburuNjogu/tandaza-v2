@@ -5,7 +5,8 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { api } from "@/lib/api"
 import { availableCountries } from "@/lib/country-options"
 import { AuthShell } from "@/components/auth/auth-shell"
@@ -21,10 +22,50 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [submittedEmail, setSubmittedEmail] = useState("")
 
   const countries = useQuery({ queryKey: ["platform-countries"], queryFn: () => api.getCountries() })
   const countryOptions = availableCountries(countries.data?.items)
   const loginHref = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"
+
+  const registerMutation = useMutation({
+    mutationFn: async () => {
+      const trimmedName = name.trim()
+      const trimmedEmail = email.trim().toLowerCase()
+      if (!trimmedName) throw new Error("Enter your full name.")
+      if (!trimmedEmail) throw new Error("Enter your email address.")
+      if (password.length < 8) throw new Error("Password must be at least 8 characters.")
+      if (password !== confirmPassword) throw new Error("Passwords do not match.")
+
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: trimmedEmail,
+          password,
+          role: "visitor",
+          countryCode
+        })
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload.message || "Could not create your account.")
+      }
+      return { email: trimmedEmail }
+    },
+    onSuccess: ({ email }) => {
+      setSubmittedEmail(email)
+      toast.success("Check your email", {
+        description: "We sent you a verification link to activate your visitor account."
+      })
+    },
+    onError: (error) => {
+      toast.error("Could not create account", {
+        description: error instanceof Error ? error.message : "Please check your details and try again."
+      })
+    }
+  })
 
   useEffect(() => {
     if (!countryOptions.length) return
@@ -53,7 +94,7 @@ export function RegisterForm() {
               Join Tandaza
             </h2>
             <p className="mt-1.5 text-[13px] text-slate-500">
-              Visitor registration is currently invite-only.
+              Create a visitor account to discover expos, meet exhibitors, and keep your expo activity in one place.
             </p>
           </div>
           <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/15">
@@ -63,17 +104,35 @@ export function RegisterForm() {
 
         <div className="my-6 h-px w-full bg-border/50" />
 
-        <form className="space-y-4" onSubmit={(event) => event.preventDefault()} aria-describedby="registration-disabled-note">
-          <GoogleAuthButton label="Sign up with Google" nextPath={nextPath || undefined} disabled />
+        {submittedEmail ? (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-primary/15 bg-primary/5 px-5 py-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-white shadow-sm">
+                <MailIcon />
+              </div>
+              <h3 className="mt-4 text-lg font-bold tracking-tight text-foreground">Verify your email</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                We sent a verification link to <span className="font-semibold text-foreground">{submittedEmail}</span>. Open that link to activate your visitor account, then sign in to continue.
+              </p>
+            </div>
+            <Link
+              href={loginHref}
+              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[14px] font-semibold text-white shadow-sm transition hover:shadow-md"
+            >
+              Go to sign in
+            </Link>
+          </div>
+        ) : (
+        <form className="space-y-4" onSubmit={(event) => {
+          event.preventDefault()
+          registerMutation.mutate()
+        }} noValidate>
+          <GoogleAuthButton label="Sign up with Google" nextPath={nextPath || undefined} />
 
           <div className="flex items-center">
             <div className="h-px flex-1 bg-border/50" />
             <span className="mx-3 text-[11px] font-medium text-slate-400">or use email</span>
             <div className="h-px flex-1 bg-border/50" />
-          </div>
-
-          <div id="registration-disabled-note" className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-[13px] leading-6 text-slate-600">
-            New visitor registration is paused. You can review the form, but account creation is disabled for now.
           </div>
 
           <div className="space-y-1.5">
@@ -147,10 +206,15 @@ export function RegisterForm() {
 
           <button
             type="submit"
-            disabled
-            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary/45 py-3 text-[14px] font-semibold text-white opacity-70 shadow-sm"
+            disabled={registerMutation.isPending}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[14px] font-semibold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Create account
+            {registerMutation.isPending ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />
+                Creating account
+              </>
+            ) : "Create visitor account"}
           </button>
 
           <div className="relative flex items-center pt-1">
@@ -165,6 +229,7 @@ export function RegisterForm() {
             </Link>
           </p>
         </form>
+        )}
       </div>
     </AuthShell>
   )

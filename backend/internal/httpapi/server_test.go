@@ -156,6 +156,14 @@ func TestPublicRegisterRejectsOperationalRoles(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("register status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
 	}
+
+	sponsorReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"name":"Public Sponsor","role":"sponsorship","countryCode":"KE"}`))
+	sponsorReq.SetBasicAuth("public.sponsor@tandaza.demo", "sponsor456")
+	sponsorRec := httptest.NewRecorder()
+	testServer().ServeHTTP(sponsorRec, sponsorReq)
+	if sponsorRec.Code != http.StatusBadRequest {
+		t.Fatalf("sponsor register status = %d, want %d, body=%s", sponsorRec.Code, http.StatusBadRequest, sponsorRec.Body.String())
+	}
 }
 
 func TestForgotAndResetPasswordAcceptBasicAuth(t *testing.T) {

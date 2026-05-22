@@ -511,12 +511,15 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_registration_payload", "Provide Basic auth credentials and a JSON registration profile.")
 		return
 	}
-	if input.Role == "" || input.Role == domain.RoleVisitor {
+	if input.Role == "" {
+		input.Role = domain.RoleVisitor
+	}
+	if input.Role != domain.RoleVisitor {
 		s.recordAudit(r, domain.AuditLog{
 			Action: "register_failed", EntityType: "auth", EntityID: strings.ToLower(strings.TrimSpace(email)),
-			IPAddress: clientIP(r), Metadata: map[string]any{"reason": "visitor_registration_disabled"},
+			IPAddress: clientIP(r), Metadata: map[string]any{"reason": "public_registration_role_not_allowed", "role": input.Role},
 		})
-		writeError(w, http.StatusForbidden, "visitor_registration_disabled", "Visitor registration is currently invite-only.")
+		writeError(w, http.StatusBadRequest, "public_registration_role_not_allowed", "Only visitors can self-register.")
 		return
 	}
 	user, _, err := s.store.Register(r.Context(), email, password, input)

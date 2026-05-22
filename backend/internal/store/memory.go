@@ -250,7 +250,7 @@ func (s *MemoryStore) Register(ctx context.Context, email string, password strin
 	if input.Role == "" {
 		input.Role = domain.RoleVisitor
 	}
-	if input.Role != domain.RoleVisitor && input.Role != domain.RoleSponsor {
+	if input.Role != domain.RoleVisitor {
 		return domain.User{}, "", ErrInvalidCredentials
 	}
 	for _, demo := range s.users {
@@ -291,7 +291,22 @@ func (s *MemoryStore) AuthWithGoogle(ctx context.Context, input domain.GoogleAut
 			return demo.User, token, err
 		}
 	}
-	return domain.User{}, "", ErrInvalidCredentials
+	hash, err := security.HashPassword(fmt.Sprintf("google:%s:%d", email, time.Now().UnixNano()))
+	if err != nil {
+		return domain.User{}, "", err
+	}
+	user := domain.User{
+		ID:          fmt.Sprintf("usr_%d", time.Now().UnixNano()),
+		Name:        name,
+		Email:       email,
+		Role:        domain.RoleVisitor,
+		AvatarURL:   "/avatars/visitor.svg",
+		CountryCode: "KE",
+		Status:      "active",
+	}
+	s.users = append(s.users, DemoUser{User: user, Password: hash})
+	token, err := s.tokenService.Sign(user)
+	return user, token, err
 }
 
 func (s *MemoryStore) CreateEmailVerification(ctx context.Context, userID string) (string, error) {
