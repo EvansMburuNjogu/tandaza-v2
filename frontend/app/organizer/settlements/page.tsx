@@ -28,7 +28,7 @@ export default function OrganizerSettlementsPage() {
   const settlements = query.data
 
   const totalAmount = settlements.reduce((sum, s) => sum + s.amount, 0)
-  const totalNet = settlements.reduce((sum, s) => sum + s.netAmount, 0)
+  const totalPayout = settlements.reduce((sum, s) => sum + s.netAmount, 0)
   const totalCommission = settlements.reduce((sum, s) => sum + s.commission, 0)
   const pending = settlements.filter((s) => String(s.status || "").includes("pending")).length
   const currency = settlements[0]?.currency || "KES"
@@ -50,8 +50,8 @@ export default function OrganizerSettlementsPage() {
           <p className="mt-2 text-2xl font-semibold text-primary">{formatCurrency(totalCommission, currency)}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Net Payout</p>
-          <p className="mt-2 text-2xl font-semibold text-success">{formatCurrency(totalNet, currency)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Payout Due</p>
+          <p className="mt-2 text-2xl font-semibold text-success">{formatCurrency(totalPayout, currency)}</p>
         </Card>
         <Card className="p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Pending</p>
@@ -89,7 +89,7 @@ export default function OrganizerSettlementsPage() {
             render: (r) => <span className="font-mono text-primary">{formatCurrency(r.commission, r.currency)}</span>
           },
           {
-            key: "netAmount", header: "Net", sortable: true,
+            key: "netAmount", header: "Payout Due", sortable: true,
             render: (r) => <span className="font-mono font-semibold text-success">{formatCurrency(r.netAmount, r.currency)}</span>
           },
           {

@@ -25,7 +25,7 @@ export default function SettlementDetailPage() {
   if (!query.data) return <ErrorState title="Settlement not found" message="This settlement record does not exist in the current dataset." />
 
   const { settlement, exhibitorPayments, paidExhibitorCount, collected } = query.data
-  const net = collected - settlement.commission
+  const platformRetained = collected - settlement.commission
   const payoutMethod = settlement.payoutMethod ? settlement.payoutMethod.replaceAll("_", " ") : "Not configured"
 
   return (
@@ -34,15 +34,15 @@ export default function SettlementDetailPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <SummaryCard label="Paid Exhibitors" value={String(paidExhibitorCount)} />
         <SummaryCard label="Collected" value={formatCurrency(collected, settlement.currency)} />
-        <SummaryCard label="Commission" value={formatCurrency(settlement.commission, settlement.currency)} />
-        <SummaryCard label="Net Settlement" value={formatCurrency(net, settlement.currency)} />
+        <SummaryCard label="Organizer Payout" value={formatCurrency(settlement.commission, settlement.currency)} />
+        <SummaryCard label="Platform Retained" value={formatCurrency(platformRetained, settlement.currency)} />
       </div>
       <DetailCard title={settlement.reference} items={[
         { label: "Expo", value: settlement.expo },
         { label: "Organizer", value: settlement.organizer },
         { label: "Currency", value: settlement.currency },
         { label: "Amount", value: formatCurrency(settlement.amount, settlement.currency) },
-        { label: "Commission", value: formatCurrency(settlement.commission, settlement.currency) },
+        { label: "Organizer Commission", value: formatCurrency(settlement.commission, settlement.currency) },
         { label: "Payout Method", value: payoutMethod },
         { label: "Account Name", value: settlement.accountName || "Not configured" },
         { label: "Payout Account", value: payoutAccountLabel(settlement) },

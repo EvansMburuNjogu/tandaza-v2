@@ -7374,7 +7374,7 @@ func (s *Server) settlementRecords(ctx context.Context, payments []domain.Paymen
 			ID: "set_" + expoID, Reference: "SET-" + strings.ToUpper(strings.TrimPrefix(expoID, "expo_")),
 			Expo: group.expo.Name, Organizer: group.expo.OrganizerName, Period: group.createdAt.Format("Jan 2006"),
 			Currency: group.expo.CurrencyCode, Amount: majorFromMinor(group.amount), Commission: majorFromMinor(group.commission),
-			NetAmount: majorFromMinor(group.amount - group.commission), Status: settlementStatusLabel(s.store.SettlementStatus(ctx, "set_"+expoID)), CreatedAt: group.createdAt.Format(time.RFC3339),
+			NetAmount: majorFromMinor(group.commission), Status: settlementStatusLabel(s.store.SettlementStatus(ctx, "set_"+expoID)), CreatedAt: group.createdAt.Format(time.RFC3339),
 			CommissionRate: group.expo.OrganizerCommissionBps / 100,
 			PayoutMethod:   profile.PayoutMethod,
 			BankName:       profile.PayoutBankName,

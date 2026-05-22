@@ -708,3 +708,8 @@
 
 - Removed the organizer Sponsors page invite action and replaced the direct invite route with a disabled-state page.
 - Disabled the organizer sponsor invite API so sponsor onboarding is controlled from the administrator workspace.
+
+### Organizer Settlement Payout Correction
+
+- Corrected settlement payout semantics so the organizer settlement amount is the organizer commission earned from paid expo payments, not gross revenue minus commission.
+- Updated organizer and administrator settlement labels to show gross revenue, organizer commission, platform retained amount, and payout due clearly.

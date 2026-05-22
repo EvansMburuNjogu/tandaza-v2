@@ -62,7 +62,7 @@ export default function SettlementInvoicePage() {
                 </div>
               </div>
               <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4 text-left backdrop-blur sm:text-right">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Net Payout</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Payout Due</p>
                 <p className="mt-2 text-3xl font-bold tracking-tight">{formatCurrency(settlement.netAmount, settlement.currency)}</p>
                 <p className="mt-1 text-xs text-white/60">{settlement.reference}</p>
               </div>
@@ -117,11 +117,15 @@ export default function SettlementInvoicePage() {
                         <td className="px-5 py-3 text-right font-mono font-semibold text-slate-950">{formatCurrency(settlement.amount, settlement.currency)}</td>
                       </tr>
                       <tr>
-                        <td className="px-5 py-3 text-slate-700">Platform Commission ({settlement.commissionRate}%)</td>
-                        <td className="px-5 py-3 text-right font-mono font-semibold text-primary">-{formatCurrency(settlement.commission, settlement.currency)}</td>
+                        <td className="px-5 py-3 text-slate-700">Organizer Commission ({settlement.commissionRate}%)</td>
+                        <td className="px-5 py-3 text-right font-mono font-semibold text-primary">{formatCurrency(settlement.commission, settlement.currency)}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-5 py-3 text-slate-700">Platform Retained</td>
+                        <td className="px-5 py-3 text-right font-mono font-semibold text-slate-950">{formatCurrency(Math.max(settlement.amount - settlement.commission, 0), settlement.currency)}</td>
                       </tr>
                       <tr className="bg-purple-50/80">
-                        <td className="px-5 py-4 text-base font-semibold text-slate-950">Net Payout</td>
+                        <td className="px-5 py-4 text-base font-semibold text-slate-950">Payout Due To Organizer</td>
                         <td className="px-5 py-4 text-right font-mono text-xl font-bold text-primary">{formatCurrency(settlement.netAmount, settlement.currency)}</td>
                       </tr>
                     </tbody>
@@ -198,8 +202,8 @@ export default function SettlementInvoicePage() {
               <div className="rounded-2xl border border-purple-100 bg-purple-50/60 p-5">
                 <p className="text-sm text-slate-500">
                   {isDisbursed
-                    ? "This settlement has been processed and the net amount has been disbursed to your registered payout account."
-                    : "This settlement is still in review. The net amount will be released after administrator approval and payout processing."}
+                    ? "This settlement has been processed and the organizer commission has been disbursed to your registered payout account."
+                    : "This settlement is still in review. The organizer commission will be released after administrator approval and payout processing."}
                 </p>
               </div>
             </div>
