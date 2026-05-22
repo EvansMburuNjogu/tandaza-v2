@@ -783,3 +783,7 @@
 - Added CSV export for admin report metrics, revenue series, and activity series.
 - Added a data-backed AI performance summary fallback using aggregated admin report data without exposing provider or configuration wording.
 - Improved admin report charts with richer framing and varied chart colors for clearer platform-level comparison.
+
+### Platform Button Gradient Polish
+
+- Added subtle gradients to the shared platform button variants so primary, secondary, outline, ghost, soft, and danger buttons feel more premium while keeping the existing sizing and behavior.

@@ -8,12 +8,12 @@ const base =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-55"
 
 const styles: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primaryForeground shadow-card hover:-translate-y-px hover:bg-primary/95 hover:shadow-float active:translate-y-0",
-  secondary: "border border-border/75 bg-card text-foreground shadow-sm hover:border-primary/25 hover:bg-elevated",
-  outline: "border border-border/75 bg-transparent text-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
-  ghost: "bg-transparent text-slate-600 hover:bg-elevated hover:text-foreground",
-  soft: "border border-primary/15 bg-primary/8 text-primary hover:border-primary/25 hover:bg-primary/12",
-  danger: "bg-danger text-white shadow-card hover:-translate-y-px hover:bg-danger/90 hover:shadow-float active:translate-y-0"
+  primary: "bg-[linear-gradient(135deg,hsl(var(--primary)),hsl(var(--accent)))] text-primaryForeground shadow-card hover:-translate-y-px hover:brightness-[1.03] hover:shadow-float active:translate-y-0",
+  secondary: "border border-border/75 bg-[linear-gradient(180deg,hsl(var(--card)),hsl(var(--elevated)))] text-foreground shadow-sm hover:border-primary/25 hover:brightness-[1.02]",
+  outline: "border border-border/75 bg-[linear-gradient(180deg,transparent,rgba(99,102,241,0.04))] text-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
+  ghost: "bg-[linear-gradient(180deg,transparent,rgba(99,102,241,0.035))] text-slate-600 hover:bg-elevated hover:text-foreground",
+  soft: "border border-primary/15 bg-[linear-gradient(135deg,rgba(99,102,241,0.12),rgba(20,184,166,0.07))] text-primary hover:border-primary/25 hover:brightness-[1.02]",
+  danger: "bg-[linear-gradient(135deg,hsl(var(--danger)),#ef4444)] text-white shadow-card hover:-translate-y-px hover:brightness-[1.03] hover:shadow-float active:translate-y-0"
 }
 
 const sizes: Record<ButtonSize, string> = {
