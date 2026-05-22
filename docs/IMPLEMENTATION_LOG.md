@@ -724,3 +724,8 @@
 
 - Removed visitor-lead-derived placeholder feedback from the organizer feedback API so the page only shows feedback explicitly submitted by exhibitors.
 - Rebuilt organizer feedback as a paginated data table with exhibitor, expo, rating, category, comments, improvements, dislikes, and submitted date columns.
+
+### Organizer Visitor Expo Drilldown
+
+- Added visited-expo details to organizer visitor records so each visitor includes the exact expos they engaged with, interaction counts, and last activity per expo.
+- Updated the organizer Visitors table so the expo count opens a dialog listing the visitor's visited expos instead of being a static number.

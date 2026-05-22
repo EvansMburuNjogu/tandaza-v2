@@ -122,6 +122,12 @@ export interface VisitorRecord {
 	status: "active" | "inactive" | "flagged"
 	lastActivity: string
 	exposAttended: number
+	visitedExpos?: Array<{
+		id: string
+		name: string
+		interactions: number
+		lastActivity: string
+	}>
 	interactions: number
 	createdAt: string
 }

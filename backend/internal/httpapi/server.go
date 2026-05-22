@@ -6658,12 +6658,18 @@ func visitorRecord(user domain.User) map[string]any {
 }
 
 func organizerVisitorRecordsFromLeads(leads []domain.LeadRecord) []map[string]any {
+	type expoVisit struct {
+		id           string
+		name         string
+		interactions int
+		lastActivity string
+	}
 	type aggregate struct {
 		id           string
 		name         string
 		email        string
 		lastActivity string
-		expos        map[string]bool
+		expos        map[string]*expoVisit
 		interactions int
 	}
 	grouped := map[string]*aggregate{}
@@ -6677,12 +6683,20 @@ func organizerVisitorRecordsFromLeads(leads []domain.LeadRecord) []map[string]an
 		}
 		item, ok := grouped[key]
 		if !ok {
-			item = &aggregate{id: "visitor_" + slugifyForID(key), name: nonEmpty(lead.VisitorName, "Visitor"), email: lead.VisitorEmail, expos: map[string]bool{}}
+			item = &aggregate{id: "visitor_" + slugifyForID(key), name: nonEmpty(lead.VisitorName, "Visitor"), email: lead.VisitorEmail, expos: map[string]*expoVisit{}}
 			grouped[key] = item
 		}
 		item.interactions++
 		if lead.ExpoID != "" {
-			item.expos[lead.ExpoID] = true
+			visit, ok := item.expos[lead.ExpoID]
+			if !ok {
+				visit = &expoVisit{id: lead.ExpoID, name: lead.ExpoName}
+				item.expos[lead.ExpoID] = visit
+			}
+			visit.interactions++
+			if lead.CapturedAt > visit.lastActivity {
+				visit.lastActivity = lead.CapturedAt
+			}
 		}
 		if lead.CapturedAt > item.lastActivity {
 			item.lastActivity = lead.CapturedAt
@@ -6690,11 +6704,26 @@ func organizerVisitorRecordsFromLeads(leads []domain.LeadRecord) []map[string]an
 	}
 	records := []map[string]any{}
 	for _, item := range grouped {
+		expos := []map[string]any{}
+		for _, expo := range item.expos {
+			expos = append(expos, map[string]any{
+				"id":           expo.id,
+				"name":         nonEmpty(expo.name, expo.id),
+				"interactions": expo.interactions,
+				"lastActivity": expo.lastActivity,
+			})
+		}
+		sort.SliceStable(expos, func(i, j int) bool {
+			return fmt.Sprint(expos[i]["lastActivity"]) > fmt.Sprint(expos[j]["lastActivity"])
+		})
 		records = append(records, map[string]any{
 			"id": item.id, "name": item.name, "email": item.email, "status": "active", "lastActivity": item.lastActivity,
-			"exposAttended": len(item.expos), "interactions": item.interactions, "createdAt": item.lastActivity,
+			"exposAttended": len(item.expos), "visitedExpos": expos, "interactions": item.interactions, "createdAt": item.lastActivity,
 		})
 	}
+	sort.SliceStable(records, func(i, j int) bool {
+		return fmt.Sprint(records[i]["lastActivity"]) > fmt.Sprint(records[j]["lastActivity"])
+	})
 	return records
 }
 
