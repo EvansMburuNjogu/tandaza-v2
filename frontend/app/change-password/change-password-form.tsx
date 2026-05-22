@@ -26,6 +26,10 @@ export function ChangePasswordForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!currentPassword) {
+      toast.error("Check the password", { description: "Enter your temporary password." })
+      return
+    }
     if (newPassword.length < 8) {
       toast.error("Check the password", { description: "New password must be at least 8 characters." })
       return
@@ -104,11 +108,11 @@ export function ChangePasswordForm() {
 
         <div className="my-6 h-px w-full bg-border/50" />
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit} noValidate aria-busy={loading}>
           {/* Temporary password */}
           <div className="space-y-1.5">
             <label htmlFor="currentPassword" className="block text-[13px] font-semibold text-foreground">
-              Temporary password
+              Temporary password <span className="text-primary" aria-hidden>*</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -118,6 +122,7 @@ export function ChangePasswordForm() {
                 id="currentPassword"
                 type={showCurrent ? "text" : "password"}
                 required
+                aria-required="true"
                 autoComplete="current-password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
@@ -131,7 +136,7 @@ export function ChangePasswordForm() {
           {/* New password */}
           <div className="space-y-1.5">
             <label htmlFor="newPassword" className="block text-[13px] font-semibold text-foreground">
-              New password
+              New password <span className="text-primary" aria-hidden>*</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -141,6 +146,8 @@ export function ChangePasswordForm() {
                 id="newPassword"
                 type={showNew ? "text" : "password"}
                 required
+                aria-required="true"
+                aria-describedby="password-hint"
                 minLength={8}
                 autoComplete="new-password"
                 value={newPassword}
@@ -156,7 +163,7 @@ export function ChangePasswordForm() {
           {/* Confirm password */}
           <div className="space-y-1.5">
             <label htmlFor="confirmPassword" className="block text-[13px] font-semibold text-foreground">
-              Confirm new password
+              Confirm new password <span className="text-primary" aria-hidden>*</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -166,6 +173,8 @@ export function ChangePasswordForm() {
                 id="confirmPassword"
                 type={showConfirm ? "text" : "password"}
                 required
+                aria-required="true"
+                aria-describedby="password-hint"
                 minLength={8}
                 autoComplete="new-password"
                 value={confirmPassword}
@@ -176,19 +185,22 @@ export function ChangePasswordForm() {
               <ToggleBtn show={showConfirm} onToggle={() => setShowConfirm((v) => !v)} />
             </div>
             {confirmPassword.length > 0 && (
-              <p className={`flex items-center gap-1.5 text-[11px] font-medium ${newPassword === confirmPassword ? "text-success" : "text-danger"}`}>
+              <p className={`flex items-center gap-1.5 text-[11px] font-medium ${newPassword === confirmPassword ? "text-success" : "text-danger"}`} aria-live="polite">
                 {newPassword === confirmPassword ? <MatchIcon /> : <NoMatchIcon />}
                 {newPassword === confirmPassword ? "Passwords match" : "Passwords do not match"}
               </p>
             )}
           </div>
+          <p id="password-hint" className="-mt-1 text-xs leading-5 text-slate-500">
+            Use at least 8 characters. This replaces the temporary password on your account.
+          </p>
 
           {/* CTA */}
           <div className="pt-1">
             <button
               type="submit"
               disabled={loading}
-              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
               style={{
                 background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
                 boxShadow: "0 4px 18px hsl(var(--primary)/0.32)"
@@ -206,7 +218,7 @@ export function ChangePasswordForm() {
           <div className="flex items-center justify-center pt-1">
             <Link
               href="/login"
-              className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-primary"
+              className="flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-500 transition hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <BackArrowIcon />
               Back to sign in
@@ -240,7 +252,7 @@ function PasswordStrength({ password }: { password: string }) {
           <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < score ? color : "bg-border"}`} />
         ))}
       </div>
-      <p className="text-[11px] text-slate-400">Strength: <span className="font-semibold text-foreground">{label}</span></p>
+      <p className="text-[11px] text-slate-400" aria-live="polite">Strength: <span className="font-semibold text-foreground">{label}</span></p>
     </div>
   )
 }
@@ -250,7 +262,7 @@ const inputCls =
 
 function ToggleBtn({ show, onToggle }: { show: boolean; onToggle: () => void }) {
   return (
-    <button type="button" onClick={onToggle} className="absolute inset-y-0 right-3.5 flex items-center text-slate-400 transition hover:text-slate-600 focus:outline-none" aria-label={show ? "Hide" : "Show"}>
+    <button type="button" onClick={onToggle} className="absolute inset-y-0 right-3.5 flex items-center rounded-md text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20" aria-label={show ? "Hide password" : "Show password"}>
       {show ? <EyeOffIcon /> : <EyeIcon />}
     </button>
   )
