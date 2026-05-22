@@ -2540,10 +2540,61 @@ func (s *Server) organizerExhibitors(w http.ResponseWriter, r *http.Request) {
 	}
 	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
 	exhibitors, _ := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{OrganizerID: organizerID})
-	records := []map[string]any{}
-	for _, item := range exhibitors {
-		records = append(records, map[string]any{"id": item.ExhibitorID, "company": item.ExhibitorName, "contact": item.ExhibitorName, "email": item.ExhibitorEmail, "assignedExpos": item.ExpoName, "status": item.ActivationStatus, "createdAt": item.CreatedAt.Format(time.RFC3339)})
+	type exhibitorAggregate struct {
+		id        string
+		company   string
+		email     string
+		status    string
+		createdAt time.Time
+		expos     map[string]map[string]any
 	}
+	grouped := map[string]*exhibitorAggregate{}
+	for _, item := range exhibitors {
+		if strings.TrimSpace(item.ExhibitorID) == "" || strings.TrimSpace(item.ExpoID) == "" {
+			continue
+		}
+		record, ok := grouped[item.ExhibitorID]
+		if !ok {
+			record = &exhibitorAggregate{
+				id: item.ExhibitorID, company: item.ExhibitorName, email: item.ExhibitorEmail,
+				status: item.ActivationStatus, createdAt: item.CreatedAt, expos: map[string]map[string]any{},
+			}
+			grouped[item.ExhibitorID] = record
+		}
+		if item.ActivationStatus == "active" || record.status == "" {
+			record.status = item.ActivationStatus
+		}
+		if item.CreatedAt.After(record.createdAt) {
+			record.createdAt = item.CreatedAt
+		}
+		record.expos[item.ExpoID] = map[string]any{
+			"id":        item.ExpoID,
+			"name":      nonEmpty(item.ExpoName, item.ExpoID),
+			"status":    item.ActivationStatus,
+			"createdAt": item.CreatedAt.Format(time.RFC3339),
+		}
+	}
+	records := []map[string]any{}
+	for _, item := range grouped {
+		expoList := []map[string]any{}
+		expoNames := []string{}
+		for _, expo := range item.expos {
+			expoList = append(expoList, expo)
+			expoNames = append(expoNames, fmt.Sprint(expo["name"]))
+		}
+		sort.SliceStable(expoList, func(i, j int) bool {
+			return fmt.Sprint(expoList[i]["name"]) < fmt.Sprint(expoList[j]["name"])
+		})
+		sort.Strings(expoNames)
+		records = append(records, map[string]any{
+			"id": item.id, "company": item.company, "contact": item.company, "email": item.email,
+			"assignedExpos": strings.Join(expoNames, ", "), "assignedExpoCount": len(expoList), "assignedExpoList": expoList,
+			"status": item.status, "createdAt": item.createdAt.Format(time.RFC3339),
+		})
+	}
+	sort.SliceStable(records, func(i, j int) bool {
+		return fmt.Sprint(records[i]["company"]) < fmt.Sprint(records[j]["company"])
+	})
 	writeJSON(w, http.StatusOK, paginatedItems(r, records))
 }
 

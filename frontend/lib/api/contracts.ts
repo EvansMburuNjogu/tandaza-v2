@@ -138,6 +138,13 @@ export interface ExhibitorRecord {
   contact: string
   email: string
   assignedExpos: string
+  assignedExpoCount?: number
+  assignedExpoList?: Array<{
+    id: string
+    name: string
+    status: string
+    createdAt: string
+  }>
   assignmentId?: string
   boothNumber?: string
   boothLabel?: string

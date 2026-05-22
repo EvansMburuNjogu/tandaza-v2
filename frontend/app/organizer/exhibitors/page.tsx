@@ -25,14 +25,14 @@ export default function OrganizerExhibitorsPage() {
   return (
     <ResourcePage<ExhibitorRecord>
       title="Exhibitors"
-      description="View and manage exhibitors participating in your expos."
+      description="View exhibitors assigned to your organizer expos."
       actionLabel="Invite Exhibitor"
       actionHref="/organizer/exhibitors/invite"
       stats={query.data.stats}
       rows={query.data.items}
       exportFileName="exhibitors.csv"
       searchPlaceholder="Search by company or contact…"
-      searchText={(r) => `${safeDisplay(r.company)} ${safeDisplay(r.contact)} ${safeDisplay(r.email)}`}
+      searchText={(r) => `${safeDisplay(r.company)} ${safeDisplay(r.contact)} ${safeDisplay(r.email)} ${r.assignedExpos}`}
       statusAccessor={(r) => r.status}
       emptyTitle="No exhibitors yet"
       emptyDescription="Exhibitors will appear here after being assigned to your expos."
@@ -47,8 +47,15 @@ export default function OrganizerExhibitorsPage() {
           render: (r) => <span className="text-sm text-slate-500">{safeDisplay(r.email)}</span>
         },
         {
-          key: "assignedExpos", header: "Assigned Expo", sortable: true, exportValue: (r) => r.assignedExpos,
-          render: (r) => <span className="text-sm font-medium">{r.assignedExpos}</span>
+          key: "assignedExpos", header: "Assigned Expos", sortable: true, exportValue: (r) => r.assignedExpos,
+          render: (r) => (
+            <div className="max-w-xs">
+              <span className="line-clamp-2 text-sm font-medium text-foreground">{r.assignedExpos || "Not assigned"}</span>
+              {typeof r.assignedExpoCount === "number" && r.assignedExpoCount > 1 && (
+                <span className="mt-1 block text-xs text-slate-500">{r.assignedExpoCount} expos</span>
+              )}
+            </div>
+          )
         },
         {
           key: "status", header: "Status", sortable: true, exportValue: (r) => r.status,

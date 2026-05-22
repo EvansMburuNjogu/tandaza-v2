@@ -243,6 +243,7 @@ Currently country-scoped admin collections include overview, reports, expos, org
 | `PATCH` | `/api/v1/organizer/profile` | Update organizer profile, logo, payout payment method, and notification preferences |
 | `GET` | `/api/v1/organizer/visitors` | List visitors who engaged with the organizer's expos, including the specific expos visited |
 | `GET` | `/api/v1/organizer/feedback` | List exhibitor-submitted organizer feedback for owned expos |
+| `GET` | `/api/v1/organizer/exhibitors` | List unique exhibitors assigned to the organizer's expos |
 | `POST` | `/api/v1/organizer/exhibitors` | Invite an exhibitor, create their temporary-password login, and optionally assign them to an owned expo |
 | `GET` | `/api/v1/organizer/team` | List organizer owner and invited team members |
 | `POST` | `/api/v1/organizer/team` | Main organizer only: add an organizer team login, queue temporary password email, welcome email, and founder note |

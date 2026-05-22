@@ -729,3 +729,8 @@
 
 - Added visited-expo details to organizer visitor records so each visitor includes the exact expos they engaged with, interaction counts, and last activity per expo.
 - Updated the organizer Visitors table so the expo count opens a dialog listing the visitor's visited expos instead of being a static number.
+
+### Organizer Exhibitor Assignment List
+
+- Updated organizer exhibitor records to return one row per exhibitor assigned to the organizer's expos, with assigned expo names grouped into the table.
+- Adjusted the organizer Exhibitors page copy and assigned-expos column so it reflects expo participation, not all platform exhibitors.
