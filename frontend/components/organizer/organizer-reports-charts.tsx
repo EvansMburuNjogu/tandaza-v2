@@ -15,7 +15,7 @@ import {
 import { Card } from "@/components/ui/card"
 import { OrganizerReportsResponse, ReportSeriesItem } from "@/lib/api/contracts"
 
-const palette = ["hsl(var(--primary))", "hsl(var(--accent))", "#14b8a6", "#38bdf8"]
+const palette = ["hsl(var(--primary))", "#14b8a6", "#f59e0b", "#0ea5e9", "#ef4444", "#8b5cf6", "#06b6d4"]
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value?: number | string }[]; label?: string }) {
   if (!active || !payload?.length) return null
@@ -37,7 +37,7 @@ function EmptyChart() {
 
 function ChartFrame({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <Card className="p-6">
+    <Card className="overflow-hidden border-border/70 bg-card/90 p-6 shadow-card">
       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{title}</p>
       <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">{subtitle}</h2>
       <div className="mt-6 h-[300px]">{children}</div>
@@ -63,7 +63,8 @@ export function OrganizerReportsCharts({ data, view }: { data: OrganizerReportsR
             <AreaChart data={revenueSeries} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
               <defs>
                 <linearGradient id="organizerRevenueFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.32} />
+                  <stop offset="45%" stopColor="#14b8a6" stopOpacity={0.13} />
                   <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.03} />
                 </linearGradient>
               </defs>

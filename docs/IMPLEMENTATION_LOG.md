@@ -763,3 +763,9 @@
 ### Organizer Feedback Detail Action
 
 - Added a table row action on the organizer Feedback page so organizers can open full exhibitor feedback comments, improvements, dislikes, rating, expo, and submission date in a focused dialog.
+
+### Organizer Reports Visual Upgrade
+
+- Reworked organizer Reports & Analytics with a stronger performance cockpit, priority health signals, richer metric cards, and varied chart colors across report sections.
+- Added a data-backed AI performance summary fallback that uses the currently loaded organizer report metrics without mentioning provider configuration.
+- Improved report chart presentation so lifecycle, exhibitor, payment, settlement, lead, visitor, and daily expo performance sections feel more distinct and readable.
