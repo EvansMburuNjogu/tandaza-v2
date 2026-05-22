@@ -703,3 +703,8 @@
 - Added persisted exhibitor-to-organizer expo feedback with ratings, categories, improvements, dislikes, and audit logging.
 - Added an exhibitor workspace feedback form so exhibitors can send practical feedback to the organizer for that expo.
 - Updated the organizer Feedback page to show exhibitor feedback alongside visitor-derived feedback.
+
+### Organizer Sponsor Invite Disabled
+
+- Removed the organizer Sponsors page invite action and replaced the direct invite route with a disabled-state page.
+- Disabled the organizer sponsor invite API so sponsor onboarding is controlled from the administrator workspace.

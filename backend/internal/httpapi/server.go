@@ -2775,34 +2775,11 @@ func (s *Server) organizerSponsorDetail(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Server) organizerCreateSponsor(w http.ResponseWriter, r *http.Request) {
-	actor, ok := s.requireUser(w, r, domain.RoleOrganizer)
+	_, ok := s.requireUser(w, r, domain.RoleOrganizer)
 	if !ok {
 		return
 	}
-	var input domain.OrganizerSponsorInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
-		return
-	}
-	sponsor, err := s.store.CreateOrganizerSponsor(r.Context(), actor.ID, input)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "sponsor_invite_failed", "Could not invite sponsor.")
-		return
-	}
-	password := strings.TrimSpace(input.TemporaryPassword)
-	if password != "" {
-		user, err := s.store.CreateAdminManagedUser(r.Context(), domain.AdminUserInput{
-			Name: strings.TrimSpace(input.ContactName), Email: strings.TrimSpace(input.Email), Password: password,
-			Role: domain.RoleSponsor, CompanyName: strings.TrimSpace(input.Company), CountryCode: actor.CountryCode, Status: "active",
-		}, actor)
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "sponsor_invite_failed", "Sponsor was saved, but the login account could not be created. Check email, password, and duplicates.")
-			return
-		}
-		s.sendSponsorOnboardingEmails(r.Context(), user, password)
-	}
-	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, Action: "organizer_sponsor_invited", EntityType: "organizer_sponsor", EntityID: sponsor.ID, Metadata: map[string]any{"status": sponsor.Status, "commissionRate": sponsor.CommissionRate}})
-	writeJSON(w, http.StatusCreated, sponsor)
+	writeError(w, http.StatusForbidden, "sponsor_invite_disabled", "Sponsor invitations are currently handled by the platform administrator.")
 }
 
 func (s *Server) organizerUpdateSponsor(w http.ResponseWriter, r *http.Request) {

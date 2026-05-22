@@ -249,7 +249,7 @@ Currently country-scoped admin collections include overview, reports, expos, org
 | `GET` | `/api/v1/organizer/team/{id}` | View one organizer team member |
 | `PATCH` | `/api/v1/organizer/team/{id}` | Update one organizer team member |
 | `GET` | `/api/v1/organizer/sponsors` | List sponsor relationships created by the organizer |
-| `POST` | `/api/v1/organizer/sponsors` | Invite a sponsor with commission rate and optional temporary-password login |
+| `POST` | `/api/v1/organizer/sponsors` | Disabled: sponsor invitations are handled by the platform administrator |
 | `GET` | `/api/v1/organizer/sponsors/{id}` | View one sponsor relationship |
 | `PATCH` | `/api/v1/organizer/sponsors/{id}` | Update sponsor contact, commission rate, or status |
 

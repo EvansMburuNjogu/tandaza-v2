@@ -2,10 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { PageHeader } from "@/components/admin/page-header"
-import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { DataTable } from "@/components/admin/data-table"
 import { StatusBadge } from "@/components/admin/status-badge"
@@ -36,11 +34,6 @@ export default function OrganizerSponsorsPage() {
       <PageHeader
         title="Sponsors"
         description="Manage your invited sponsors and track commission earnings."
-        actions={
-          <Link href="/organizer/sponsors/invite">
-            <Button>Invite Sponsor</Button>
-          </Link>
-        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -91,7 +84,7 @@ export default function OrganizerSponsorsPage() {
           { label: "View details", onClick: (r) => router.push(`/organizer/sponsors/${r.id}`) }
         ]}
         emptyTitle="No sponsors yet"
-        emptyDescription="Invite your first sponsor to start earning commission."
+        emptyDescription="Sponsor invitations are currently handled by the platform administrator."
       />
     </div>
   )

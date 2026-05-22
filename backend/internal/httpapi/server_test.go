@@ -668,8 +668,8 @@ func TestOrganizerAccountMutationsAreDynamic(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+organizerToken)
 	rec = httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
-	if rec.Code != http.StatusCreated || !bytes.Contains(rec.Body.Bytes(), []byte("New Sponsor Ltd")) {
-		t.Fatalf("sponsor invite failed: status=%d body=%s", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusForbidden || !bytes.Contains(rec.Body.Bytes(), []byte("sponsor_invite_disabled")) {
+		t.Fatalf("sponsor invite disable failed: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/organizer/visitors", nil)
@@ -700,7 +700,7 @@ func TestOrganizerAccountMutationsAreDynamic(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+loginForTest(t, handler, "admin@tandaza.demo", "admin123"))
 	rec = httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte("organizer_sponsor_invited")) {
+	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte("organizer_team_member_created")) {
 		t.Fatalf("audit logs missing organizer mutation: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 }
