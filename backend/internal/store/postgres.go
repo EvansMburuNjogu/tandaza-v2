@@ -1770,6 +1770,71 @@ func (s *PostgresStore) CreateExhibitorFeedback(ctx context.Context, input domai
 	return domain.ExhibitorFeedbackRecord{}, ErrNotFound
 }
 
+func (s *PostgresStore) ListOrganizerFeedback(ctx context.Context, organizerID string) ([]domain.OrganizerFeedbackRecord, error) {
+	rows, err := s.pool.Query(ctx, `SELECT f.id, f.expo_id, e.name, f.organizer_id, f.exhibitor_id, f.exhibitor_name, f.rating, f.category, f.comment, f.improvements, f.dislikes, f.submitted_at
+		FROM organizer_feedback f
+		JOIN expos e ON e.id=f.expo_id
+		WHERE f.organizer_id=$1
+		ORDER BY f.submitted_at DESC`, organizerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []domain.OrganizerFeedbackRecord{}
+	for rows.Next() {
+		var item domain.OrganizerFeedbackRecord
+		var submittedAt time.Time
+		if err := rows.Scan(&item.ID, &item.ExpoID, &item.ExpoName, &item.OrganizerID, &item.ExhibitorID, &item.ExhibitorName, &item.Rating, &item.Category, &item.Comment, &item.Improvements, &item.Dislikes, &submittedAt); err != nil {
+			return nil, err
+		}
+		item.SubmittedAt = submittedAt.Format(time.RFC3339)
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func (s *PostgresStore) CreateOrganizerFeedback(ctx context.Context, expoID string, exhibitorID string, input domain.OrganizerFeedbackInput, actor domain.User) (domain.OrganizerFeedbackRecord, error) {
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	comment := strings.TrimSpace(input.Comment)
+	improvements := strings.TrimSpace(input.Improvements)
+	dislikes := strings.TrimSpace(input.Dislikes)
+	category := organizerFeedbackCategory(input.Category)
+	if actor.Role != domain.RoleExhibitor || expoID == "" || exhibitorID == "" || input.Rating < 1 || input.Rating > 5 || comment == "" {
+		return domain.OrganizerFeedbackRecord{}, ErrInvalidCredentials
+	}
+	expo, err := s.ExpoByID(ctx, expoID)
+	if err != nil || expo.OrganizerID == "" {
+		return domain.OrganizerFeedbackRecord{}, ErrNotFound
+	}
+	assignments, err := s.ListExpoExhibitors(ctx, ExpoExhibitorFilter{ExpoID: expoID, ExhibitorID: exhibitorID})
+	if err != nil {
+		return domain.OrganizerFeedbackRecord{}, err
+	}
+	if len(assignments) == 0 {
+		return domain.OrganizerFeedbackRecord{}, ErrNotFound
+	}
+	exhibitorName := strings.TrimSpace(actor.CompanyName)
+	if exhibitorName == "" {
+		exhibitorName = strings.TrimSpace(actor.Name)
+	}
+	id := fmt.Sprintf("ofb_%d", time.Now().UnixNano())
+	if _, err := s.pool.Exec(ctx, `INSERT INTO organizer_feedback (id, expo_id, organizer_id, exhibitor_id, exhibitor_name, rating, category, comment, improvements, dislikes)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, id, expo.ID, expo.OrganizerID, exhibitorID, exhibitorName, input.Rating, category, comment, improvements, dislikes); err != nil {
+		return domain.OrganizerFeedbackRecord{}, err
+	}
+	items, err := s.ListOrganizerFeedback(ctx, expo.OrganizerID)
+	if err != nil {
+		return domain.OrganizerFeedbackRecord{}, err
+	}
+	for _, item := range items {
+		if item.ID == id {
+			return item, nil
+		}
+	}
+	return domain.OrganizerFeedbackRecord{}, ErrNotFound
+}
+
 func (s *PostgresStore) ListExhibitorCampaignDrafts(ctx context.Context, filter ExhibitorCampaignDraftFilter) ([]domain.ExhibitorCampaignDraftRecord, error) {
 	sql := `SELECT id, expo_id, exhibitor_id, channel, name, audience, subject, message, status, created_at, updated_at
 		FROM exhibitor_campaign_drafts`

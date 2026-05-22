@@ -159,6 +159,7 @@ Currently country-scoped admin collections include overview, reports, expos, org
 | `POST` | `/api/v1/exhibitor/expos/{id}/meetings` | exhibitor | Create a meeting from a lead or visitor details, invite optional `ccEmails`, and queue confirmation/reminder notifications |
 | `DELETE` | `/api/v1/exhibitor/expos/{id}/meetings/{meetingId}` | exhibitor | Delete an exhibitor-owned meeting from the expo workspace calendar |
 | `GET` | `/api/v1/exhibitor/expos/{id}/visitors` | exhibitor | View unique visitors derived from captured leads |
+| `POST` | `/api/v1/exhibitor/expos/{id}/organizer-feedback` | exhibitor | Submit expo feedback to the organizer with rating, category, improvements, and dislikes |
 | `GET` | `/api/v1/exhibitor/expos/{id}/analytics` | exhibitor | View exhibitor-only expo analytics, including investment, leads, meetings, pre-orders, realized return, and projected ROI |
 | `GET` | `/api/v1/exhibitor/expos/{id}/roi` | exhibitor | View the exhibitor's saved expo-specific ROI estimate for one workspace |
 | `PATCH` | `/api/v1/exhibitor/expos/{id}/roi` | exhibitor | Update expo-specific exhibitor ROI estimate, currency, spend breakdown, and notes |
@@ -241,7 +242,7 @@ Currently country-scoped admin collections include overview, reports, expos, org
 | `GET` | `/api/v1/organizer/profile` | Load organizer profile, company details, logo, payout payment method, and notification preferences |
 | `PATCH` | `/api/v1/organizer/profile` | Update organizer profile, logo, payout payment method, and notification preferences |
 | `GET` | `/api/v1/organizer/visitors` | List visitors who have engaged with exhibitor workspaces or leads in the organizer's expos |
-| `GET` | `/api/v1/organizer/feedback` | List visitor engagement feedback derived from owned-expo lead activity |
+| `GET` | `/api/v1/organizer/feedback` | List visitor engagement feedback and exhibitor-submitted organizer feedback for owned expos |
 | `POST` | `/api/v1/organizer/exhibitors` | Invite an exhibitor, create their temporary-password login, and optionally assign them to an owned expo |
 | `GET` | `/api/v1/organizer/team` | List organizer owner and invited team members |
 | `POST` | `/api/v1/organizer/team` | Add an organizer team member with a temporary-password login |

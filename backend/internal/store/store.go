@@ -61,6 +61,8 @@ type Store interface {
 	UpdateExhibitorLiveStream(ctx context.Context, expoID string, exhibitorID string, input domain.ExhibitorLiveStreamInput, actor domain.User) (domain.ExhibitorLiveStreamRecord, error)
 	ListExhibitorFeedback(ctx context.Context, filter ExhibitorFeedbackFilter) ([]domain.ExhibitorFeedbackRecord, error)
 	CreateExhibitorFeedback(ctx context.Context, input domain.ExhibitorFeedbackInput, actor domain.User) (domain.ExhibitorFeedbackRecord, error)
+	ListOrganizerFeedback(ctx context.Context, organizerID string) ([]domain.OrganizerFeedbackRecord, error)
+	CreateOrganizerFeedback(ctx context.Context, expoID string, exhibitorID string, input domain.OrganizerFeedbackInput, actor domain.User) (domain.OrganizerFeedbackRecord, error)
 	ListExhibitorCampaignDrafts(ctx context.Context, filter ExhibitorCampaignDraftFilter) ([]domain.ExhibitorCampaignDraftRecord, error)
 	CreateExhibitorCampaignDraft(ctx context.Context, expoID string, exhibitorID string, input domain.ExhibitorCampaignDraftInput, actor domain.User) (domain.ExhibitorCampaignDraftRecord, error)
 	ListMeetings(ctx context.Context, filter MeetingFilter) ([]domain.MeetingRecord, error)
@@ -202,6 +204,15 @@ type MeetingFilter struct {
 	ExpoID      string
 	ExhibitorID string
 	VisitorID   string
+}
+
+func organizerFeedbackCategory(value string) string {
+	switch value {
+	case "venue", "logistics", "communication", "support", "payments", "overall":
+		return value
+	default:
+		return "overall"
+	}
 }
 
 type NotificationFilter struct {

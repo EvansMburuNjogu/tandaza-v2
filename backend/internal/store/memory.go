@@ -42,6 +42,7 @@ type MemoryStore struct {
 	chatMessages             []domain.ChatMessageRecord
 	exhibitorLiveStreams     []domain.ExhibitorLiveStreamRecord
 	exhibitorFeedback        []domain.ExhibitorFeedbackRecord
+	organizerFeedback        []domain.OrganizerFeedbackRecord
 	exhibitorCampaignDrafts  []domain.ExhibitorCampaignDraftRecord
 	meetings                 []domain.MeetingRecord
 	activities               []domain.VisitorActivityItem
@@ -1503,6 +1504,63 @@ func (s *MemoryStore) CreateExhibitorFeedback(ctx context.Context, input domain.
 		VisitorName: actor.Name, VisitorEmail: actor.Email, Rating: input.Rating, Comment: strings.TrimSpace(input.Comment), SubmittedAt: now,
 	}
 	s.exhibitorFeedback = append([]domain.ExhibitorFeedbackRecord{item}, s.exhibitorFeedback...)
+	return item, nil
+}
+
+func (s *MemoryStore) ListOrganizerFeedback(ctx context.Context, organizerID string) ([]domain.OrganizerFeedbackRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	items := []domain.OrganizerFeedbackRecord{}
+	for _, item := range s.organizerFeedback {
+		if organizerID != "" && item.OrganizerID != organizerID {
+			continue
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func (s *MemoryStore) CreateOrganizerFeedback(ctx context.Context, expoID string, exhibitorID string, input domain.OrganizerFeedbackInput, actor domain.User) (domain.OrganizerFeedbackRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	comment := strings.TrimSpace(input.Comment)
+	improvements := strings.TrimSpace(input.Improvements)
+	dislikes := strings.TrimSpace(input.Dislikes)
+	category := organizerFeedbackCategory(input.Category)
+	if actor.Role != domain.RoleExhibitor || expoID == "" || exhibitorID == "" || input.Rating < 1 || input.Rating > 5 || comment == "" {
+		return domain.OrganizerFeedbackRecord{}, ErrInvalidCredentials
+	}
+	var expo domain.Expo
+	foundExpo := false
+	for _, item := range s.expos {
+		if item.ID == expoID {
+			expo = item
+			foundExpo = true
+			break
+		}
+	}
+	if !foundExpo || expo.OrganizerID == "" {
+		return domain.OrganizerFeedbackRecord{}, ErrNotFound
+	}
+	assigned := false
+	for _, item := range s.exhibitors {
+		if item.ExpoID == expoID && item.ExhibitorID == exhibitorID {
+			assigned = true
+			break
+		}
+	}
+	if !assigned {
+		return domain.OrganizerFeedbackRecord{}, ErrNotFound
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	item := domain.OrganizerFeedbackRecord{
+		ID: fmt.Sprintf("ofb_%06d", len(s.organizerFeedback)+1), ExpoID: expo.ID, ExpoName: expo.Name, OrganizerID: expo.OrganizerID,
+		ExhibitorID: exhibitorID, ExhibitorName: nonEmptyString(actor.CompanyName, actor.Name), Rating: input.Rating, Category: category,
+		Comment: comment, Improvements: improvements, Dislikes: dislikes, SubmittedAt: now,
+	}
+	s.organizerFeedback = append([]domain.OrganizerFeedbackRecord{item}, s.organizerFeedback...)
 	return item, nil
 }
 

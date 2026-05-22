@@ -28,6 +28,14 @@ const DEFAULT_MEETING_CATEGORIES = ["Online demo", "Sales consultation", "Produc
 const AD_BANNER_WIDTH = 728
 const AD_BANNER_HEIGHT = 90
 const AD_BANNER_MAX_SIZE_BYTES = 2 * 1024 * 1024
+const ORGANIZER_FEEDBACK_CATEGORIES = [
+  { value: "overall", label: "Overall experience" },
+  { value: "venue", label: "Venue" },
+  { value: "logistics", label: "Logistics" },
+  { value: "communication", label: "Communication" },
+  { value: "support", label: "Organizer support" },
+  { value: "payments", label: "Payments" }
+] as const
 const PRE_ORDER_STATUSES: Array<{ value: PreOrder["status"]; label: string }> = [
   { value: "pending", label: "Pending" },
   { value: "confirmed", label: "Confirmed" },
@@ -127,6 +135,13 @@ export default function MyExpoPage() {
   const [orderStatusFilter, setOrderStatusFilter] = useState<PreOrder["status"] | "all">("all")
   const [orderSearch, setOrderSearch] = useState("")
   const [feedbackRatingFilter, setFeedbackRatingFilter] = useState("all")
+  const [organizerFeedbackForm, setOrganizerFeedbackForm] = useState({
+    rating: "5",
+    category: "overall",
+    comment: "",
+    improvements: "",
+    dislikes: ""
+  })
   const [boostForm, setBoostForm] = useState({ name: "", imageUrl: "" })
   const [boostDialogOpen, setBoostDialogOpen] = useState(false)
   const [editingBoost, setEditingBoost] = useState<AdCampaign | null>(null)
@@ -275,6 +290,29 @@ export default function MyExpoPage() {
     queryKey: ["expo-feedback", params.id],
     queryFn: () => api.getExpoFeedback(token || "", params.id),
     enabled: Boolean(token && params.id)
+  })
+
+  const organizerFeedbackMutation = useMutation({
+    mutationFn: () => {
+      const comment = organizerFeedbackForm.comment.trim()
+      const improvements = organizerFeedbackForm.improvements.trim()
+      const dislikes = organizerFeedbackForm.dislikes.trim()
+      const rating = Number(organizerFeedbackForm.rating)
+      if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error("Choose a rating from 1 to 5.")
+      if (!comment) throw new Error("Share your overall feedback for the organizer.")
+      return api.submitOrganizerFeedback(token || "", params.id, {
+        rating,
+        category: organizerFeedbackForm.category as "venue" | "logistics" | "communication" | "support" | "payments" | "overall",
+        comment,
+        improvements,
+        dislikes
+      })
+    },
+    onSuccess: () => {
+      toast.success("Feedback sent to organizer.")
+      setOrganizerFeedbackForm({ rating: "5", category: "overall", comment: "", improvements: "", dislikes: "" })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not send feedback")
   })
 
   const conversationsQuery = useQuery({
@@ -3047,6 +3085,74 @@ export default function MyExpoPage() {
 
       {activeTab === "feedback" && (
         <div className="space-y-4">
+          <Card className="overflow-hidden">
+            <div className="border-b border-border/70 bg-elevated/70 px-5 py-4">
+              <p className="text-sm font-semibold text-foreground">Feedback for organizer</p>
+              <p className="mt-1 text-xs text-slate-500">Share what worked, what did not, and what should improve for this expo.</p>
+            </div>
+            <div className="space-y-4 p-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-600">Rating</label>
+                  <select
+                    value={organizerFeedbackForm.rating}
+                    onChange={(event) => setOrganizerFeedbackForm((value) => ({ ...value, rating: event.target.value }))}
+                    className="h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  >
+                    {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} star{rating === 1 ? "" : "s"}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-600">Category</label>
+                  <select
+                    value={organizerFeedbackForm.category}
+                    onChange={(event) => setOrganizerFeedbackForm((value) => ({ ...value, category: event.target.value }))}
+                    className="h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  >
+                    {ORGANIZER_FEEDBACK_CATEGORIES.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-600">Overall feedback</label>
+                <textarea
+                  value={organizerFeedbackForm.comment}
+                  onChange={(event) => setOrganizerFeedbackForm((value) => ({ ...value, comment: event.target.value }))}
+                  placeholder="Tell the organizer how the expo experience was for your company."
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm text-foreground outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-600">Improvements</label>
+                  <textarea
+                    value={organizerFeedbackForm.improvements}
+                    onChange={(event) => setOrganizerFeedbackForm((value) => ({ ...value, improvements: event.target.value }))}
+                    placeholder="What should the organizer improve next time?"
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm text-foreground outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-600">Dislikes</label>
+                  <textarea
+                    value={organizerFeedbackForm.dislikes}
+                    onChange={(event) => setOrganizerFeedbackForm((value) => ({ ...value, dislikes: event.target.value }))}
+                    placeholder="What made the expo harder for your team?"
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm text-foreground outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end border-t border-border/70 pt-4">
+                <Button onClick={() => organizerFeedbackMutation.mutate()} disabled={organizerFeedbackMutation.isPending}>
+                  {organizerFeedbackMutation.isPending ? "Sending..." : "Send Feedback"}
+                </Button>
+              </div>
+            </div>
+          </Card>
+
           <Card className="p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>

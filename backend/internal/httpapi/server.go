@@ -227,6 +227,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/exhibitor/expos/{id}/analytics/ai-summary", s.exhibitorGenerateExpoAnalyticsAISummary)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/visitors", s.exhibitorExpoVisitors)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/feedback", s.exhibitorExpoFeedback)
+	mux.HandleFunc("POST /api/v1/exhibitor/expos/{id}/organizer-feedback", s.exhibitorSubmitOrganizerFeedback)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/conversations", s.exhibitorExpoConversations)
 	mux.HandleFunc("POST /api/v1/exhibitor/expos/{id}/conversations/{threadId}/messages", s.exhibitorSendChatMessage)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/conversations/ws", s.chatWebSocket)
@@ -2617,7 +2618,19 @@ func (s *Server) organizerFeedback(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "feedback_failed", "Could not load organizer feedback.")
 		return
 	}
-	writeJSON(w, http.StatusOK, organizerFeedbackFromLeads(leads))
+	exhibitorFeedback, err := s.store.ListOrganizerFeedback(r.Context(), claims.UserID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "feedback_failed", "Could not load organizer feedback.")
+		return
+	}
+	records := organizerFeedbackFromLeads(leads)
+	for _, item := range exhibitorFeedback {
+		records = append(records, organizerFeedbackRecordMap(item))
+	}
+	sort.SliceStable(records, func(i, j int) bool {
+		return fmt.Sprint(records[i]["createdAt"]) > fmt.Sprint(records[j]["createdAt"])
+	})
+	writeJSON(w, http.StatusOK, records)
 }
 
 func (s *Server) organizerProfile(w http.ResponseWriter, r *http.Request) {
@@ -4098,6 +4111,31 @@ func (s *Server) exhibitorExpoFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, paginatedItems(r, items))
+}
+
+func (s *Server) exhibitorSubmitOrganizerFeedback(w http.ResponseWriter, r *http.Request) {
+	claims, ok := s.requireRole(w, r, domain.RoleExhibitor)
+	if !ok {
+		return
+	}
+	actor, err := s.store.UserByID(r.Context(), claims.UserID)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Sign in again.")
+		return
+	}
+	exhibitorID := s.effectiveExhibitorID(r.Context(), claims.UserID)
+	var input domain.OrganizerFeedbackInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	item, err := s.store.CreateOrganizerFeedback(r.Context(), r.PathValue("id"), exhibitorID, input, actor)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "organizer_feedback_failed", "Could not submit feedback. Check rating and comments.")
+		return
+	}
+	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, ExpoID: item.ExpoID, Action: "organizer_feedback_submitted", EntityType: "organizer_feedback", EntityID: item.ID, Metadata: map[string]any{"organizerId": item.OrganizerID, "rating": item.Rating, "category": item.Category}})
+	writeJSON(w, http.StatusCreated, item)
 }
 
 func (s *Server) exhibitorExpoCampaigns(w http.ResponseWriter, r *http.Request) {
@@ -6649,6 +6687,23 @@ func organizerFeedbackFromLeads(leads []domain.LeadRecord) []map[string]any {
 		})
 	}
 	return records
+}
+
+func organizerFeedbackRecordMap(item domain.OrganizerFeedbackRecord) map[string]any {
+	return map[string]any{
+		"id":             item.ID,
+		"expoId":         item.ExpoID,
+		"expoName":       item.ExpoName,
+		"respondentName": item.ExhibitorName,
+		"respondentRole": "exhibitor",
+		"category":       item.Category,
+		"rating":         item.Rating,
+		"comment":        item.Comment,
+		"suggestions":    item.Improvements,
+		"improvements":   item.Improvements,
+		"dislikes":       item.Dislikes,
+		"createdAt":      item.SubmittedAt,
+	}
 }
 
 func exhibitorVisitorsFromLeads(leads []domain.LeadRecord) []map[string]any {

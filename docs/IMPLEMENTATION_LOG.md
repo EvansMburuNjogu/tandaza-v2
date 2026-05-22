@@ -697,3 +697,9 @@
 
 - Reworked organizer payment receipts into a premium print/PDF layout with a branded header, clear payer/payee blocks, itemized activation/add-on/fee breakdown, and finance footer details.
 - Reworked organizer settlement invoices into a matching professional PDF layout with net payout emphasis, payout method details, itemized settlement breakdown, and print-safe styles.
+
+### Exhibitor To Organizer Feedback
+
+- Added persisted exhibitor-to-organizer expo feedback with ratings, categories, improvements, dislikes, and audit logging.
+- Added an exhibitor workspace feedback form so exhibitors can send practical feedback to the organizer for that expo.
+- Updated the organizer Feedback page to show exhibitor feedback alongside visitor-derived feedback.

@@ -52,6 +52,8 @@ import {
   MyExpoRegistration,
   NotificationRecord,
   OrganizerFeedback,
+  OrganizerFeedbackPayload,
+  OrganizerFeedbackSubmission,
   OrganizerExhibitorInvitePayload,
   OrganizerOverviewResponse,
   OrganizerPaymentRecord,
@@ -676,6 +678,9 @@ export const httpApi: ApiDriver = {
   },
   getExpoFeedback(token: string, expoId: string): Promise<ExhibitorFeedback[]> {
     return requestItems(`/api/v1/exhibitor/expos/${expoId}/feedback`, { headers: { Authorization: `Bearer ${token}` } })
+  },
+  submitOrganizerFeedback(token: string, expoId: string, data: OrganizerFeedbackPayload): Promise<OrganizerFeedbackSubmission> {
+    return request(`/api/v1/exhibitor/expos/${expoId}/organizer-feedback`, { method: "POST", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
   },
   getExpoCampaignDrafts(token: string, expoId: string): Promise<ExhibitorCampaignDraft[]> {
     return requestItems(`/api/v1/exhibitor/expos/${expoId}/campaigns`, { headers: { Authorization: `Bearer ${token}` } })

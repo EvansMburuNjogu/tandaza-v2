@@ -453,10 +453,12 @@ export interface OrganizerFeedback {
   expoName: string
   respondentName: string
   respondentRole: "visitor" | "exhibitor"
-  category: "venue" | "logistics" | "marketing" | "communication" | "overall"
+  category: "venue" | "logistics" | "marketing" | "communication" | "support" | "payments" | "overall"
   rating: number
   comment: string
   suggestions: string
+  improvements?: string
+  dislikes?: string
   createdAt: string
 }
 
@@ -985,6 +987,28 @@ export interface ExhibitorFeedback {
   submittedAt: string
 }
 
+export interface OrganizerFeedbackPayload {
+  rating: number
+  category: "venue" | "logistics" | "communication" | "support" | "payments" | "overall"
+  comment: string
+  improvements?: string
+  dislikes?: string
+}
+
+export interface OrganizerFeedbackSubmission {
+  id: string
+  expoId: string
+  expoName: string
+  exhibitorId: string
+  exhibitorName: string
+  rating: number
+  category: string
+  comment: string
+  improvements: string
+  dislikes: string
+  submittedAt: string
+}
+
 export interface ExhibitorCampaignDraft {
   id: string
   expoId: string
@@ -1320,6 +1344,7 @@ export interface ApiDriver {
   generateExpoAIAnalyticsSummary(token: string, expoId: string): Promise<AIAnalyticsSummary>
   getExpoVisitors(token: string, expoId: string): Promise<ExpoVisitor[]>
   getExpoFeedback(token: string, expoId: string): Promise<ExhibitorFeedback[]>
+  submitOrganizerFeedback(token: string, expoId: string, data: OrganizerFeedbackPayload): Promise<OrganizerFeedbackSubmission>
   getExpoCampaignDrafts(token: string, expoId: string): Promise<ExhibitorCampaignDraft[]>
   createExpoCampaignDraft(token: string, expoId: string, data: ExhibitorCampaignDraftPayload): Promise<ExhibitorCampaignDraft>
   getExpoDocuments(token: string, expoId: string): Promise<ExpoDocument[]>

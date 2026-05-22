@@ -53,7 +53,7 @@ export default function OrganizerFeedbackPage() {
     return acc
   }, {} as Record<string, { total: number; count: number }>)
 
-  const categories = ["venue", "logistics", "marketing", "communication", "overall"] as const
+  const categories = ["overall", "venue", "logistics", "communication", "support", "payments"] as const
   const pageNumbers = getPageNumbers(page, totalPages)
 
   return (
@@ -123,7 +123,12 @@ export default function OrganizerFeedbackPage() {
               )}
               {item.suggestions && (
                 <p className="mt-2 text-sm text-slate-500">
-                  <span className="font-medium">Suggestion:</span> {item.suggestions}
+                  <span className="font-medium">{item.respondentRole === "exhibitor" ? "Improvements:" : "Suggestion:"}</span> {item.suggestions}
+                </p>
+              )}
+              {item.dislikes && (
+                <p className="mt-2 text-sm text-slate-500">
+                  <span className="font-medium">Dislikes:</span> {item.dislikes}
                 </p>
               )}
             </div>

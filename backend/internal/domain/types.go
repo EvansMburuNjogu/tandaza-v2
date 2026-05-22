@@ -628,6 +628,29 @@ type ExhibitorFeedbackInput struct {
 	Comment     string `json:"comment"`
 }
 
+type OrganizerFeedbackRecord struct {
+	ID            string `json:"id"`
+	ExpoID        string `json:"expoId"`
+	ExpoName      string `json:"expoName"`
+	OrganizerID   string `json:"organizerId,omitempty"`
+	ExhibitorID   string `json:"exhibitorId"`
+	ExhibitorName string `json:"exhibitorName"`
+	Rating        int    `json:"rating"`
+	Category      string `json:"category"`
+	Comment       string `json:"comment"`
+	Improvements  string `json:"improvements"`
+	Dislikes      string `json:"dislikes"`
+	SubmittedAt   string `json:"submittedAt"`
+}
+
+type OrganizerFeedbackInput struct {
+	Rating       int    `json:"rating"`
+	Category     string `json:"category"`
+	Comment      string `json:"comment"`
+	Improvements string `json:"improvements"`
+	Dislikes     string `json:"dislikes"`
+}
+
 type ExhibitorCampaignDraftRecord struct {
 	ID          string `json:"id"`
 	ExpoID      string `json:"expoId"`
