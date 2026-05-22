@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -23,6 +23,7 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [submittedEmail, setSubmittedEmail] = useState("")
+  const successPanelRef = useRef<HTMLDivElement>(null)
 
   const countries = useQuery({ queryKey: ["platform-countries"], queryFn: () => api.getCountries() })
   const countryOptions = availableCountries(countries.data?.items)
@@ -34,6 +35,7 @@ export function RegisterForm() {
       const trimmedEmail = email.trim().toLowerCase()
       if (!trimmedName) throw new Error("Enter your full name.")
       if (!trimmedEmail) throw new Error("Enter your email address.")
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) throw new Error("Enter a valid email address.")
       if (password.length < 8) throw new Error("Password must be at least 8 characters.")
       if (password !== confirmPassword) throw new Error("Passwords do not match.")
 
@@ -74,6 +76,10 @@ export function RegisterForm() {
     }
   }, [countryCode, countryOptions])
 
+  useEffect(() => {
+    if (submittedEmail) successPanelRef.current?.focus()
+  }, [submittedEmail])
+
   return (
     <AuthShell
       panelTitle="Be present at the expo, even when you are not in the room."
@@ -106,7 +112,13 @@ export function RegisterForm() {
 
         {submittedEmail ? (
           <div className="space-y-5">
-            <div className="rounded-2xl border border-primary/15 bg-primary/5 px-5 py-5">
+            <div
+              ref={successPanelRef}
+              tabIndex={-1}
+              role="status"
+              aria-live="polite"
+              className="rounded-2xl border border-primary/15 bg-primary/5 px-5 py-5 outline-none focus:ring-4 focus:ring-primary/10"
+            >
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-white shadow-sm">
                 <MailIcon />
               </div>
@@ -117,7 +129,7 @@ export function RegisterForm() {
             </div>
             <Link
               href={loginHref}
-              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[14px] font-semibold text-white shadow-sm transition hover:shadow-md"
+              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[14px] font-semibold text-white shadow-sm transition hover:shadow-md focus:outline-none focus:ring-4 focus:ring-primary/20"
             >
               Go to sign in
             </Link>
@@ -126,7 +138,7 @@ export function RegisterForm() {
         <form className="space-y-4" onSubmit={(event) => {
           event.preventDefault()
           registerMutation.mutate()
-        }} noValidate>
+        }} noValidate aria-busy={registerMutation.isPending}>
           <GoogleAuthButton label="Sign up with Google" nextPath={nextPath || undefined} />
 
           <div className="flex items-center">
@@ -136,26 +148,29 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="name" className="block text-[13px] font-semibold text-foreground">Full name</label>
+            <label htmlFor="name" className="block text-[13px] font-semibold text-foreground">Full name <span className="text-primary" aria-hidden>*</span></label>
             <IconInput icon={<UserIcon />}>
-              <input id="name" autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Jane Wanjiku" className={inputCls} />
+              <input id="name" autoComplete="name" required aria-required="true" value={name} onChange={(event) => setName(event.target.value)} placeholder="Jane Wanjiku" className={inputCls} />
             </IconInput>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="email" className="block text-[13px] font-semibold text-foreground">Email address</label>
+            <label htmlFor="email" className="block text-[13px] font-semibold text-foreground">Email address <span className="text-primary" aria-hidden>*</span></label>
             <IconInput icon={<MailIcon />}>
-              <input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@company.com" className={inputCls} />
+              <input id="email" type="email" autoComplete="email" required aria-required="true" inputMode="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" className={inputCls} />
             </IconInput>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="countryCode" className="block text-[13px] font-semibold text-foreground">Country</label>
+            <label htmlFor="countryCode" className="block text-[13px] font-semibold text-foreground">Country <span className="text-primary" aria-hidden>*</span></label>
             <IconInput icon={<GlobeIcon />}>
               <select
                 id="countryCode"
                 value={countryCode}
                 onChange={(event) => setCountryCode(event.target.value)}
+                required
+                aria-required="true"
+                aria-label="Country"
                 className="w-full appearance-none rounded-xl border border-border bg-elevated py-3 pl-10 pr-10 text-[13.5px] text-foreground shadow-sm transition-all duration-150 focus:border-primary/60 focus:outline-none focus:ring-4 focus:ring-primary/10"
               >
                 {countryOptions.map((country) => (
@@ -171,12 +186,15 @@ export function RegisterForm() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-[13px] font-semibold text-foreground">Password</label>
+              <label htmlFor="password" className="block text-[13px] font-semibold text-foreground">Password <span className="text-primary" aria-hidden>*</span></label>
               <IconInput icon={<LockIcon />}>
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   minLength={8}
+                  required
+                  aria-required="true"
+                  aria-describedby="password-hint"
                   autoComplete="new-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -187,27 +205,33 @@ export function RegisterForm() {
               </IconInput>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="confirmPassword" className="block text-[13px] font-semibold text-foreground">Confirm</label>
+              <label htmlFor="confirmPassword" className="block text-[13px] font-semibold text-foreground">Confirm password <span className="text-primary" aria-hidden>*</span></label>
               <IconInput icon={<LockIcon />}>
                 <input
                   id="confirmPassword"
                   type={showConfirm ? "text" : "password"}
                   minLength={8}
+                  required
+                  aria-required="true"
+                  aria-describedby="password-hint"
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
-                  placeholder="Re-enter"
+                  placeholder="Re-enter password"
                   className={`${inputCls} pr-10`}
                 />
                 <VisibilityToggle shown={showConfirm} onClick={() => setShowConfirm((value) => !value)} />
               </IconInput>
             </div>
           </div>
+          <p id="password-hint" className="-mt-1 text-xs leading-5 text-slate-500">
+            Use at least 8 characters. You will verify your email before signing in.
+          </p>
 
           <button
             type="submit"
             disabled={registerMutation.isPending}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[14px] font-semibold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-[14px] font-semibold text-white shadow-sm transition hover:shadow-md focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {registerMutation.isPending ? (
               <>
@@ -248,7 +272,7 @@ function IconInput({ icon, children }: { icon: ReactNode; children: ReactNode })
 
 function VisibilityToggle({ shown, onClick }: { shown: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-slate-600 focus:outline-none" aria-label={shown ? "Hide" : "Show"}>
+    <button type="button" onClick={onClick} className="absolute inset-y-0 right-3 flex items-center rounded-md text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20" aria-label={shown ? "Hide password" : "Show password"}>
       {shown ? <EyeOffIcon /> : <EyeIcon />}
     </button>
   )
