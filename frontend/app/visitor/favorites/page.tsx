@@ -82,18 +82,16 @@ export default function VisitorFavoritesPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <Card className="overflow-hidden p-5 sm:p-6">
+        <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.12),transparent_34%),linear-gradient(135deg,#ffffff,#faf8ff_62%,#f8fafc)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Saved access</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/75">Saved</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Favorites</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-                Keep important expos and exhibitor profiles close so you can return to products, materials, meetings, and conversations later.
-              </p>
+              <p className="mt-2 text-sm text-muted">Expos and exhibitors you want to revisit.</p>
             </div>
-            <div className="rounded-2xl border border-border/70 bg-elevated px-4 py-3">
-              <p className="text-xs font-semibold uppercase text-muted">Saved items</p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">{data.length.toLocaleString()}</p>
+            <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
+              <p className="text-xs font-medium text-muted">Items</p>
+              <p className="mt-1 text-xl font-semibold text-primary">{data.length.toLocaleString()}</p>
             </div>
           </div>
         </Card>

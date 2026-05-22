@@ -98,20 +98,29 @@ export default function VisitorSettingsPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground lg:text-[1.75rem]">Visitor Settings</h1>
-          <p className="mt-1.5 text-sm leading-6 text-muted">Keep your contact details ready for meeting reminders and exhibitor follow-up.</p>
-        </div>
+        <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.12),transparent_34%),linear-gradient(135deg,#ffffff,#faf8ff_62%,#f8fafc)] p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/75">Account</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
+              <p className="mt-2 text-sm text-muted">Contact details and notification preferences.</p>
+            </div>
+            <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
+              <p className="text-xs font-medium text-muted">Signed in as</p>
+              <p className="mt-1 max-w-48 truncate text-sm font-semibold text-foreground">{settings.email}</p>
+            </div>
+          </div>
+        </Card>
 
-        <div className="flex gap-1 overflow-x-auto border-b border-border/80 pb-px">
+        <div className="flex gap-2 overflow-x-auto rounded-2xl border border-border/70 bg-card/80 p-1.5">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
                 activeTab === tab.id
-                  ? "border-b-2 border-primary bg-primary/5 text-primary"
-                   : "text-muted hover:text-foreground"
+                  ? "bg-primary text-white shadow-sm"
+                   : "text-muted hover:bg-elevated hover:text-foreground"
               }`}
             >
               {tab.label}
@@ -120,11 +129,10 @@ export default function VisitorSettingsPage() {
         </div>
 
         {activeTab === "profile" && (
-          <Card className="p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-accent/5 rounded-full -mr-16 -mt-16" />
-            <div className="relative">
-              <h3 className="text-lg font-semibold mb-1">Profile Information</h3>
-              <p className="mb-5 text-sm leading-6 text-muted">This information is used when you request meetings, share interest, or submit pre-order intent.</p>
+          <Card className="p-5 shadow-sm sm:p-6">
+            <div>
+              <h2 className="text-lg font-semibold">Profile</h2>
+              <p className="mb-5 mt-1 text-sm leading-6 text-muted">Used for exhibitor follow-up and meeting reminders.</p>
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -186,8 +194,8 @@ export default function VisitorSettingsPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-4 border-t border-border">
-                  <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save Profile"}</Button>
+                <div className="flex justify-end border-t border-border pt-4">
+                  <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save profile"}</Button>
                 </div>
               </div>
             </div>
@@ -195,63 +203,62 @@ export default function VisitorSettingsPage() {
         )}
 
         {activeTab === "notifications" && (
-          <Card className="p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full -mr-16 -mt-16" />
-            <div className="relative">
-              <h3 className="text-lg font-semibold mb-1">Notification Preferences</h3>
-              <p className="mb-5 text-sm leading-6 text-muted">Choose how Tandaza should reach you for meetings, expo updates, and exhibitor responses.</p>
-              <div className="space-y-4">
-                <label className="flex items-center justify-between gap-4 p-3 bg-elevated rounded-lg cursor-pointer">
+          <Card className="p-5 shadow-sm sm:p-6">
+            <div>
+              <h2 className="text-lg font-semibold">Notifications</h2>
+              <p className="mb-5 mt-1 text-sm leading-6 text-muted">Choose what should reach you.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
                   <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted">Receive updates via email</p>
+                    <p className="font-medium">Email</p>
+                    <p className="text-sm text-muted">Meeting and expo updates</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notifications.email}
                     onChange={(e) => setNotifications(n => ({ ...n, email: e.target.checked }))}
-                    className="w-5 h-5 rounded"
+                    className="h-5 w-5 rounded accent-primary"
                   />
                 </label>
-                <label className="flex items-center justify-between gap-4 p-3 bg-elevated rounded-lg cursor-pointer">
+                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
                   <div>
-                    <p className="font-medium">Push Notifications</p>
-                    <p className="text-sm text-muted">Receive push notifications on your device</p>
+                    <p className="font-medium">Push</p>
+                    <p className="text-sm text-muted">In-app device alerts</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notifications.push}
                     onChange={(e) => setNotifications(n => ({ ...n, push: e.target.checked }))}
-                    className="w-5 h-5 rounded"
+                    className="h-5 w-5 rounded accent-primary"
                   />
                 </label>
-                <label className="flex items-center justify-between gap-4 p-3 bg-elevated rounded-lg cursor-pointer">
+                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
                   <div>
-                    <p className="font-medium">Expo Updates</p>
-                    <p className="text-sm text-muted">Get notified about expo changes and exhibitor activity</p>
+                    <p className="font-medium">Expo updates</p>
+                    <p className="text-sm text-muted">Changes and exhibitor replies</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notifications.expoUpdates}
                     onChange={(e) => setNotifications(n => ({ ...n, expoUpdates: e.target.checked }))}
-                    className="w-5 h-5 rounded"
+                    className="h-5 w-5 rounded accent-primary"
                   />
                 </label>
-                <label className="flex items-center justify-between gap-4 p-3 bg-elevated rounded-lg cursor-pointer">
+                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
                   <div>
-                    <p className="font-medium">Expo Reminders</p>
-                    <p className="text-sm text-muted">Receive reminders before saved expo activities</p>
+                    <p className="font-medium">Reminders</p>
+                    <p className="text-sm text-muted">Before meetings and activities</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notifications.reminders}
                     onChange={(e) => setNotifications(n => ({ ...n, reminders: e.target.checked }))}
-                    className="w-5 h-5 rounded"
+                    className="h-5 w-5 rounded accent-primary"
                   />
                 </label>
               </div>
-              <div className="flex justify-end pt-4 border-t border-border mt-6">
-                <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save Preferences"}</Button>
+              <div className="mt-6 flex justify-end border-t border-border pt-4">
+                <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save preferences"}</Button>
               </div>
             </div>
           </Card>
