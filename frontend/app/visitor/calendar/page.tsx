@@ -105,39 +105,42 @@ export default function VisitorCalendarPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Calendar</h1>
-          <p className="text-muted">Your scheduled expos, meetings, and reminders.</p>
+        <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.24),transparent_36%),linear-gradient(135deg,#ffffff,#f7f3ff_55%,#eefdfa)] p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/75">Schedule</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Calendar</h1>
+              <p className="mt-2 text-sm text-muted">Expos, meetings, and reminders in one place.</p>
+            </div>
+            <div className="rounded-2xl bg-primary px-4 py-3 text-white shadow-sm">
+              <p className="text-lg font-semibold">{expos.length.toLocaleString()}</p>
+              <p className="text-xs font-medium text-white/75">items</p>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Calendar Grid */}
-          <Card className="lg:col-span-2 p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-accent/5 rounded-full -mr-16 -mt-16" />
-            <div className="relative">
-              {/* Month Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <button onClick={prevMonth} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-slate-500 hover:text-foreground transition-colors">
+          <Card className="relative overflow-hidden border-primary/10 p-4 shadow-sm sm:p-6 lg:col-span-2">
+              <div className="mb-5 flex items-center justify-between rounded-2xl bg-elevated px-3 py-3">
+                <button aria-label="Previous month" onClick={prevMonth} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-muted transition-colors hover:text-foreground">
                   &larr;
                 </button>
                 <h2 className="text-lg font-semibold">
                   {MONTHS[currentMonth]} {currentYear}
                 </h2>
-                <button onClick={nextMonth} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-slate-500 hover:text-foreground transition-colors">
+                <button aria-label="Next month" onClick={nextMonth} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-muted transition-colors hover:text-foreground">
                   &rarr;
                 </button>
               </div>
 
-              {/* Day Headers */}
               <div className="grid grid-cols-7 mb-2">
                 {DAYS.map((d) => (
-                  <div key={d} className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 py-2">
+                  <div key={d} className="py-2 text-center text-[10px] font-bold uppercase tracking-wider text-muted">
                     {d}
                   </div>
                 ))}
               </div>
 
-              {/* Calendar Grid */}
               <div className="grid grid-cols-7 gap-1">
                 {grid.map((day, i) => {
                   if (!day) return <div key={`empty-${i}`} className="aspect-square" />
@@ -151,10 +154,11 @@ export default function VisitorCalendarPage() {
                     <button
                       key={dateStr}
                       onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-                      className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all text-sm
+                      className={`relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm transition-all
                         ${isSelected ? "bg-primary text-white shadow-lg shadow-primary/20" : ""}
-                        ${isToday && !isSelected ? "bg-primary/10 text-primary font-bold" : ""}
-                        ${!isSelected && !isToday ? "hover:bg-elevated" : ""}
+                        ${isToday && !isSelected ? "bg-primary/10 font-bold text-primary ring-1 ring-primary/15" : ""}
+                        ${hasExpos && !isSelected && !isToday ? "bg-accent/10 text-foreground ring-1 ring-accent/15" : ""}
+                        ${!isSelected && !isToday && !hasExpos ? "hover:bg-elevated" : ""}
                       `}
                     >
                       <span>{day}</span>
@@ -172,30 +176,26 @@ export default function VisitorCalendarPage() {
                   )
                 })}
               </div>
-            </div>
           </Card>
 
-          {/* Expos Panel */}
-          <Card className="p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full -mr-12 -mt-12" />
-            <div className="relative">
-              <h3 className="text-lg font-semibold mb-1">
+          <Card className="relative overflow-hidden border-primary/10 p-5 shadow-sm sm:p-6">
+              <h2 className="mb-1 text-lg font-semibold">
                 {selectedDate
                   ? new Date(selectedDate + "T00:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
-                  : "All Expos"}
-              </h3>
+                  : "Upcoming"}
+              </h2>
               {selectedDate && (
                 <button
                   onClick={() => setSelectedDate(null)}
-                  className="text-xs text-slate-400 hover:text-foreground mb-4 block"
+                  className="mb-4 block text-xs font-semibold text-primary hover:underline"
                 >
-                  Show all expos
+                  Show all
                 </button>
               )}
 
               <div className="space-y-3 mt-4">
                 {(selectedExpos.length > 0 ? selectedExpos : expos.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())).map((expo) => (
-                  <div key={expo.id} className={`p-3 rounded-xl border ${typeColor(expo.type)}`}>
+                  <div key={expo.id} className={`rounded-2xl border p-3 ${typeColor(expo.type)}`}>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${typeDot(expo.type)}`} />
                       <span className="text-xs font-semibold capitalize">{expo.type}</span>
@@ -209,17 +209,16 @@ export default function VisitorCalendarPage() {
               </div>
 
               {(selectedExpos.length === 0 && selectedDate) && (
-                <div className="text-center py-8 text-slate-400">
+                <div className="py-8 text-center text-muted">
                   <p className="text-sm">No expos on this date</p>
                 </div>
               )}
 
               {expos.length === 0 && (
-                <div className="text-center py-8 text-slate-400">
+                <div className="py-8 text-center text-muted">
                   <p className="text-sm">No upcoming expos</p>
                 </div>
               )}
-            </div>
           </Card>
         </div>
       </div>

@@ -18,17 +18,17 @@ const PAGE_SIZE = 9
 function ExpoCard({ expo }: { expo: VisitorExpo }) {
   const exhibitorCount = expo.booths?.length || 0
   return (
-    <Card className="group overflow-hidden border-border/70 bg-card/95 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-sm">
+    <Card className="group overflow-hidden border-border/70 bg-card/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
       <div className="relative h-44 bg-elevated">
         {expo.bannerImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={expo.bannerImage} alt={expo.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/10 to-elevated">
-            <span className="text-3xl font-semibold text-primary/40">{expo.name.charAt(0)}</span>
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.38),transparent_34%),linear-gradient(135deg,#2d174f,#7c3aed_48%,#14b8a6)]">
+            <span className="text-4xl font-semibold text-white/70">{expo.name.charAt(0)}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/14 to-transparent" />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <span className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold bg-primary/90 text-white ring-1 ring-white/20">
             {expo.category || "Expo"}
@@ -46,16 +46,16 @@ function ExpoCard({ expo }: { expo: VisitorExpo }) {
       
       <div className="p-4">
         <h3 className="line-clamp-2 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">{expo.name}</h3>
-        <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">{expo.description}</p>
+        <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{expo.description}</p>
         
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/60">
           <div>
-            <p className="text-xs text-slate-400">Date</p>
+            <p className="text-xs text-muted">Date</p>
             <p className="text-sm font-medium text-foreground">{formatDate(expo.startDate)}</p>
           </div>
           
           <div className="text-right">
-            <p className="text-xs text-slate-400">Venue</p>
+            <p className="text-xs text-muted">Venue</p>
             <p className="max-w-[9rem] truncate text-sm font-semibold text-primary">{expo.venue}</p>
           </div>
         </div>
@@ -110,36 +110,35 @@ export default function VisitorExposPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-          <div className="rounded-3xl border border-border/70 bg-card/95 p-5 shadow-sm sm:p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.26),transparent_36%),linear-gradient(135deg,#ffffff,#f7f3ff_55%,#eefdfa)] p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/75">Expo discovery</p>
-                <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground lg:text-[1.85rem]">Explore Expos</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Find expos you can attend physically or remotely, then open exhibitor workspaces to view products, request meetings, chat, and share interest.</p>
+                <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground lg:text-[1.9rem]">Explore expos</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Find an expo, open exhibitors, and take action quickly.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-right sm:flex">
-                <div className="rounded-2xl bg-elevated px-4 py-3">
+              <div className="grid grid-cols-2 gap-2 sm:min-w-72">
+                <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm ring-1 ring-white/70">
                   <p className="text-lg font-semibold text-foreground">{data.length.toLocaleString()}</p>
-                  <p className="text-xs text-muted">available</p>
+                  <p className="text-xs font-medium text-muted">available</p>
                 </div>
-                <div className="rounded-2xl bg-elevated px-4 py-3">
-                  <p className="text-lg font-semibold text-foreground">{expos.length.toLocaleString()}</p>
-                  <p className="text-xs text-muted">matched</p>
+                <div className="rounded-2xl bg-primary px-4 py-3 text-white shadow-sm">
+                  <p className="text-lg font-semibold text-white">{expos.length.toLocaleString()}</p>
+                  <p className="text-xs font-medium text-white/75">matched</p>
                 </div>
               </div>
             </div>
+            <div className="mt-5">
+              <input
+                type="text"
+                aria-label="Search expos"
+                placeholder="Search expos, venue, organizer, or category"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="min-h-12 w-full rounded-2xl border border-white/70 bg-white/85 px-4 py-3 text-sm text-foreground shadow-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+              />
+            </div>
           </div>
-
-        <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card/80 p-3 sm:flex-row">
-          <input
-            type="text"
-            aria-label="Search expos"
-            placeholder="Search by expo, venue, organizer, or category"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="min-h-11 flex-1 rounded-xl border border-border bg-elevated px-4 py-2.5 text-sm text-foreground placeholder:text-slate-400 focus:border-primary/60 focus:outline-none focus:ring-4 focus:ring-primary/10"
-          />
-        </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2" aria-label="Expo categories">
           {categories.map((cat) => (
@@ -150,7 +149,7 @@ export default function VisitorExposPage() {
               className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 selectedCategory === cat
                   ? "bg-primary text-white shadow-sm"
-                  : "bg-elevated text-slate-500 hover:bg-elevated/80"
+                  : "bg-card text-muted ring-1 ring-border/70 hover:bg-primary/10 hover:text-primary"
               }`}
             >
               {cat}
@@ -159,9 +158,9 @@ export default function VisitorExposPage() {
         </div>
 
         {expos.length === 0 ? (
-          <Card className="p-12 text-center">
+          <Card className="border-dashed p-10 text-center">
             <p className="font-semibold text-foreground">No expos found</p>
-            <p className="mt-2 text-sm text-slate-500">Try another search term or clear the category filter.</p>
+            <p className="mt-2 text-sm text-muted">Try another search term or clear the category filter.</p>
           </Card>
         ) : (
           <>
