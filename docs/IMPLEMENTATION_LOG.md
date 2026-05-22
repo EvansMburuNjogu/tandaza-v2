@@ -752,3 +752,10 @@
 - Added daily expo performance scoring from visitor leads and paid activation payments.
 - Added best-expo ranking data using revenue, commission, leads, unique visitors, assigned exhibitors, and active exhibitor workspaces.
 - Updated organizer reports to show a best expo card, per-day performance chart, and expo ranking table.
+
+### Platform Button System
+
+- Standardized the shared platform button primitive with primary, secondary, outline, ghost, soft, danger, and icon treatments.
+- Added a reusable `buttonClasses` helper so button-styled links use the same sizing, focus, hover, disabled, and spacing rules as real buttons.
+- Moved shared admin resource pages, form footers, back links, table row action triggers, and pagination controls onto the shared button system.
+- Documented the platform button inventory and usage rules in the frontend UI reference.

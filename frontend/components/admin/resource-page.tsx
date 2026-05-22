@@ -7,6 +7,7 @@ import { DataTable, DataTableColumn, DataTableRowAction } from "@/components/adm
 import { StatCard } from "@/components/admin/stat-card"
 import { PageHeader } from "@/components/admin/page-header"
 import { DownloadIcon, PlusIcon, SearchIcon } from "@/components/ui/icons"
+import { buttonClasses } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export function ResourcePage<T extends { id: string }>({
@@ -93,16 +94,15 @@ export function ResourcePage<T extends { id: string }>({
           <div className="flex items-center gap-2.5">
             <button
               onClick={exportCsv}
-              className="inline-flex items-center gap-2 rounded-2xl border border-border/70 bg-card/80 px-3.5 py-2.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur transition hover:border-primary/25 hover:bg-card focus:outline-none focus:ring-4 focus:ring-primary/10"
+              className={buttonClasses({ variant: "secondary" })}
             >
-              <DownloadIcon className="h-4 w-4 text-slate-400" />
+              <DownloadIcon className="h-4 w-4" />
               Export
             </button>
             {actionLabel && actionHref && (
               <Link
                 href={actionHref}
-                className="inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:-translate-y-px hover:shadow-float focus:outline-none focus:ring-4 focus:ring-primary/20 active:translate-y-0"
-                style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)" }}
+                className={buttonClasses({ variant: "primary" })}
               >
                 {isAddAction ? <PlusIcon className="h-4 w-4" /> : <DownloadIcon className="h-4 w-4" />}
                 {actionLabel}
@@ -111,8 +111,7 @@ export function ResourcePage<T extends { id: string }>({
             {actionLabel && !actionHref && actionOnClick && (
               <button
                 onClick={actionOnClick}
-                className="inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:-translate-y-px hover:shadow-float focus:outline-none focus:ring-4 focus:ring-primary/20 active:translate-y-0"
-                style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)" }}
+                className={buttonClasses({ variant: "primary" })}
               >
                 {isAddAction ? <PlusIcon className="h-4 w-4" /> : <DownloadIcon className="h-4 w-4" />}
                 {actionLabel}

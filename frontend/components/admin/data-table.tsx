@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Card } from "@/components/ui/card"
+import { buttonClasses } from "@/components/ui/button"
 import { ArrowsUpDownIcon, ChevronDownIcon, ChevronUpIcon, EllipsisIcon } from "@/components/ui/icons"
 import { cn } from "@/lib/utils"
 
@@ -171,7 +172,7 @@ function RowActionsDropdown<T>({
         onClick={() => (open ? onClose() : onOpen())}
         disabled={!hasVisibleActions}
         className={cn(
-          "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition",
+          buttonClasses({ variant: "secondary", size: "icon", className: "h-8 w-8 rounded-lg shadow-none" }),
           !hasVisibleActions && "cursor-not-allowed opacity-35",
           open
             ? "border-primary/30 bg-primary/5 text-primary"
@@ -453,7 +454,7 @@ export function DataTable<T extends { id: string }>({
             type="button"
             onClick={() => setPage((v) => Math.max(1, v - 1))}
             disabled={currentPage <= 1}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-border/70 bg-card text-slate-500 shadow-sm transition hover:border-primary/25 hover:bg-elevated hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            className={buttonClasses({ variant: "secondary", size: "icon", className: "h-8 w-8 shadow-sm" })}
             aria-label="Previous page"
           >
             <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none">
@@ -467,7 +468,7 @@ export function DataTable<T extends { id: string }>({
             type="button"
             onClick={() => setPage((v) => Math.min(totalPages, v + 1))}
             disabled={currentPage >= totalPages}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-border/70 bg-card text-slate-500 shadow-sm transition hover:border-primary/25 hover:bg-elevated hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            className={buttonClasses({ variant: "secondary", size: "icon", className: "h-8 w-8 shadow-sm" })}
             aria-label="Next page"
           >
             <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none">

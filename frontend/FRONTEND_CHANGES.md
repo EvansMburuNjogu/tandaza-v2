@@ -187,12 +187,25 @@ Standard template for all 9 admin list pages. Renders: `PageHeader → stat card
 - Record count: `tabular-nums` pill with `text-xs` label
 
 ### Action buttons
+All platform buttons should use `components/ui/button.tsx`:
+- `<Button>` for real `<button>` actions.
+- `buttonClasses(...)` for `Link` elements that must look like buttons.
+
 `actionLabel` auto-detects intent:
 - Starts with `add/create/invite/new` → `<PlusIcon>` + primary button
 - Otherwise → `<DownloadIcon>` + primary button
 - Export CSV is always a separate secondary button
 - Use `actionHref` for real create/view/edit navigation
 - Use `actionOnClick` only for real button actions, never dead placeholders
+
+Button inventory and treatment:
+- Primary: create, invite, submit, save, activate, pay, generate, send.
+- Secondary: back, cancel, export, download, view, previous, next.
+- Outline/ghost: low-emphasis filters, dismiss, compact utility controls.
+- Soft: contextual non-primary highlights where a full primary CTA would compete.
+- Danger: delete, remove, archive, deactivate, cancel payment.
+- Icon-only: table row actions, pagination arrows, menu toggles, notification controls; always keep an accessible label.
+- Loading/disabled: keep the same button size and label area so layouts do not jump.
 
 ### Stat card grid
 ```
