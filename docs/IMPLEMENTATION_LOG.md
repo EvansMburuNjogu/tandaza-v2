@@ -734,3 +734,9 @@
 
 - Updated organizer exhibitor records to return one row per exhibitor assigned to the organizer's expos, with assigned expo names grouped into the table.
 - Adjusted the organizer Exhibitors page copy and assigned-expos column so it reflects expo participation, not all platform exhibitors.
+
+### Organizer Expo Detail Upgrade
+
+- Reworked the organizer expo detail view into a richer operations workspace with activation, visitor, revenue, commission, feedback, and timeline signals.
+- Added expo-specific filtering for exhibitors, visitors, payments, and feedback so every tab shows data tied to the viewed expo.
+- Added lightweight progress visuals and analytics cards using current backend data rather than placeholder metrics.
