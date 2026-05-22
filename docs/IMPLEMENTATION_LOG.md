@@ -776,3 +776,10 @@
 - Added daily expo aggregation using payments, visitor activity, interactions, and feedback submitted during the expo date range.
 - Added best-performing exhibitor scoring based on activation status and paid payment activity, with visual ranking panels in overview and analytics.
 - Reworked overview and analytics sections to feel more like a premium operations workspace with stronger cards, progress signals, and data hierarchy.
+
+### Admin Reports Platform Aggregation Upgrade
+
+- Reworked administrator Reports & Analytics into a platform-wide performance view with executive pulse, country scope, expo supply, captured leads, notifications, operations mix, and platform health sections.
+- Added CSV export for admin report metrics, revenue series, and activity series.
+- Added a data-backed AI performance summary fallback using aggregated admin report data without exposing provider or configuration wording.
+- Improved admin report charts with richer framing and varied chart colors for clearer platform-level comparison.
