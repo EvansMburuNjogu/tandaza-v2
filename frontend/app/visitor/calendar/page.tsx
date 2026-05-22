@@ -105,16 +105,16 @@ export default function VisitorCalendarPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.24),transparent_36%),linear-gradient(135deg,#ffffff,#f7f3ff_55%,#eefdfa)] p-5 shadow-sm sm:p-6">
+        <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.16),transparent_36%),linear-gradient(135deg,#ffffff,#faf8ff_60%,#f8fafc)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/75">Schedule</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Calendar</h1>
               <p className="mt-2 text-sm text-muted">Expos, meetings, and reminders in one place.</p>
             </div>
-            <div className="rounded-2xl bg-primary px-4 py-3 text-white shadow-sm">
-              <p className="text-lg font-semibold">{expos.length.toLocaleString()}</p>
-              <p className="text-xs font-medium text-white/75">items</p>
+            <div className="rounded-2xl bg-primary/10 px-4 py-3 shadow-sm ring-1 ring-primary/15">
+              <p className="text-lg font-semibold text-primary">{expos.length.toLocaleString()}</p>
+              <p className="text-xs font-medium text-primary/70">items</p>
             </div>
           </div>
         </div>

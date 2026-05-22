@@ -24,11 +24,11 @@ function ExpoCard({ expo }: { expo: VisitorExpo }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={expo.bannerImage} alt={expo.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.38),transparent_34%),linear-gradient(135deg,#2d174f,#7c3aed_48%,#14b8a6)]">
-            <span className="text-4xl font-semibold text-white/70">{expo.name.charAt(0)}</span>
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.2),transparent_34%),linear-gradient(135deg,#f8f5ff,#efe7ff_56%,#f7fbfb)]">
+            <span className="text-4xl font-semibold text-primary/45">{expo.name.charAt(0)}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/14 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/64 via-black/8 to-transparent" />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <span className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold bg-primary/90 text-white ring-1 ring-white/20">
             {expo.category || "Expo"}
@@ -110,7 +110,7 @@ export default function VisitorExposPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-          <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.26),transparent_36%),linear-gradient(135deg,#ffffff,#f7f3ff_55%,#eefdfa)] p-5 shadow-sm sm:p-6">
+          <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.16),transparent_36%),linear-gradient(135deg,#ffffff,#faf8ff_60%,#f8fafc)] p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/75">Expo discovery</p>
@@ -122,9 +122,9 @@ export default function VisitorExposPage() {
                   <p className="text-lg font-semibold text-foreground">{data.length.toLocaleString()}</p>
                   <p className="text-xs font-medium text-muted">available</p>
                 </div>
-                <div className="rounded-2xl bg-primary px-4 py-3 text-white shadow-sm">
-                  <p className="text-lg font-semibold text-white">{expos.length.toLocaleString()}</p>
-                  <p className="text-xs font-medium text-white/75">matched</p>
+                <div className="rounded-2xl bg-primary/10 px-4 py-3 shadow-sm ring-1 ring-primary/15">
+                  <p className="text-lg font-semibold text-primary">{expos.length.toLocaleString()}</p>
+                  <p className="text-xs font-medium text-primary/70">matched</p>
                 </div>
               </div>
             </div>
