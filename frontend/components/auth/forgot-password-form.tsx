@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { forgotPassword } from "@/lib/auth/client-api"
 import { Spinner } from "@/components/ui/spinner"
@@ -12,12 +12,23 @@ export function ForgotPasswordForm() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const successPanelRef = useRef<HTMLDivElement>(null)
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const trimmedEmail = email.trim().toLowerCase()
+    if (!trimmedEmail) {
+      toast.error("Reset failed", { description: "Enter your email address." })
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error("Reset failed", { description: "Enter a valid email address." })
+      return
+    }
     setLoading(true)
     try {
-      const response = await forgotPassword({ email })
+      const response = await forgotPassword({ email: trimmedEmail })
+      setEmail(trimmedEmail)
       setSent(true)
       toast.success("Reset email sent", { description: response.message })
     } catch (error) {
@@ -27,6 +38,10 @@ export function ForgotPasswordForm() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (sent) successPanelRef.current?.focus()
+  }, [sent])
 
   return (
     <AuthShell compact cardClassName="p-0 overflow-hidden">
@@ -59,7 +74,13 @@ export function ForgotPasswordForm() {
 
         {sent ? (
           /* Success state */
-          <div className="flex flex-col items-center py-4 text-center">
+          <div
+            ref={successPanelRef}
+            tabIndex={-1}
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center rounded-2xl py-4 text-center outline-none focus:ring-4 focus:ring-primary/10"
+          >
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
               <MailSentIcon />
             </span>
@@ -70,7 +91,7 @@ export function ForgotPasswordForm() {
             <div className="mt-6 h-px w-full bg-border/50" />
             <Link
               href="/login"
-              className="mt-5 flex items-center gap-1.5 text-[13px] font-semibold text-primary transition hover:underline"
+              className="mt-5 flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-primary transition hover:underline focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <BackArrowIcon />
               Back to sign in
@@ -78,10 +99,10 @@ export function ForgotPasswordForm() {
           </div>
         ) : (
           /* Form */
-          <form className="space-y-5" onSubmit={onSubmit}>
+          <form className="space-y-5" onSubmit={onSubmit} noValidate aria-busy={loading}>
             <div className="space-y-1.5">
               <label htmlFor="email" className="block text-[13px] font-semibold text-foreground">
-                Email address
+                Email address <span className="text-primary" aria-hidden>*</span>
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -91,10 +112,12 @@ export function ForgotPasswordForm() {
                   id="email"
                   type="email"
                   required
+                  aria-required="true"
+                  inputMode="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
+                  placeholder="name@example.com"
                   className="w-full rounded-xl border border-border bg-elevated py-3 pl-10 pr-4 text-[13.5px] text-foreground shadow-sm placeholder:text-slate-400/80 transition-all duration-150 focus:border-primary/60 focus:outline-none focus:ring-4 focus:ring-primary/10"
                 />
               </div>
@@ -104,7 +127,7 @@ export function ForgotPasswordForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
                 style={{
                   background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
                   boxShadow: "0 4px 18px hsl(var(--primary)/0.32)"
@@ -128,7 +151,7 @@ export function ForgotPasswordForm() {
             <div className="mt-2 flex items-center justify-center">
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-primary"
+                className="flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-500 transition hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <BackArrowIcon />
                 Back to sign in

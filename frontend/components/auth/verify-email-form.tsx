@@ -81,7 +81,7 @@ export function VerifyEmailForm() {
         <div className="my-7 h-px w-full bg-border/50" />
 
         {/* Status body */}
-        <div className="flex flex-col items-center py-4 text-center">
+        <div className="flex flex-col items-center py-4 text-center" role="status" aria-live="polite">
           {status === "loading" && (
             <>
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/15">
@@ -115,7 +115,7 @@ export function VerifyEmailForm() {
               <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
                 <Link
                   href="/register"
-                  className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-4 focus:ring-primary/20"
                   style={{
                     background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
                     boxShadow: "0 4px 14px hsl(var(--primary)/0.28)"
@@ -126,7 +126,7 @@ export function VerifyEmailForm() {
                 </Link>
                 <Link
                   href="/login"
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-elevated px-5 py-2.5 text-[13px] font-semibold text-foreground transition hover:bg-secondary/60 focus:outline-none"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-elevated px-5 py-2.5 text-[13px] font-semibold text-foreground transition hover:bg-secondary/60 focus:outline-none focus:ring-4 focus:ring-primary/10"
                 >
                   Sign in
                 </Link>

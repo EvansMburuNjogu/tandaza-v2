@@ -5,7 +5,7 @@ import { Spinner } from "@/components/ui/spinner"
 
 export const metadata: Metadata = {
   title: "Verify your Tandaza email",
-  description: "Verify your Tandaza account email to activate visitor or sponsor access to expo workspaces."
+  description: "Verify your Tandaza account email to activate your visitor access to expo discovery, exhibitor engagement, meetings, and saved activity."
 }
 
 export default function VerifyEmailPage() {

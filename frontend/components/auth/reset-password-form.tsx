@@ -25,6 +25,10 @@ export function ResetPasswordForm() {
       toast.error("Invalid reset link", { description: "Please use the reset link from your email." })
       return
     }
+    if (password.length < 8) {
+      toast.error("Could not reset password", { description: "Password must be at least 8 characters." })
+      return
+    }
     if (password !== confirmPassword) {
       toast.error("Passwords do not match", { description: "Confirm your new password and try again." })
       return
@@ -72,11 +76,11 @@ export function ResetPasswordForm() {
 
         <div className="my-7 h-px w-full bg-border/50" />
 
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form className="space-y-4" onSubmit={onSubmit} noValidate aria-busy={loading}>
           {/* New password */}
           <div className="space-y-1.5">
             <label htmlFor="password" className="block text-[13px] font-semibold text-foreground">
-              New password
+              New password <span className="text-primary" aria-hidden>*</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -86,6 +90,8 @@ export function ResetPasswordForm() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 required
+                aria-required="true"
+                aria-describedby="password-hint"
                 minLength={8}
                 autoComplete="new-password"
                 value={password}
@@ -96,7 +102,7 @@ export function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-3.5 flex items-center text-slate-400 transition hover:text-slate-600 focus:outline-none"
+                className="absolute inset-y-0 right-3.5 flex items-center rounded-md text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -107,7 +113,7 @@ export function ResetPasswordForm() {
           {/* Confirm password */}
           <div className="space-y-1.5">
             <label htmlFor="confirmPassword" className="block text-[13px] font-semibold text-foreground">
-              Confirm password
+              Confirm password <span className="text-primary" aria-hidden>*</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
@@ -117,6 +123,8 @@ export function ResetPasswordForm() {
                 id="confirmPassword"
                 type={showConfirm ? "text" : "password"}
                 required
+                aria-required="true"
+                aria-describedby="password-hint"
                 minLength={8}
                 autoComplete="new-password"
                 value={confirmPassword}
@@ -127,13 +135,16 @@ export function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                className="absolute inset-y-0 right-3.5 flex items-center text-slate-400 transition hover:text-slate-600 focus:outline-none"
+                className="absolute inset-y-0 right-3.5 flex items-center rounded-md text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 aria-label={showConfirm ? "Hide password" : "Show password"}
               >
                 {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
+          <p id="password-hint" className="-mt-1 text-xs leading-5 text-slate-500">
+            Use at least 8 characters. You can sign in after the password is updated.
+          </p>
 
           {/* Strength hint */}
           {password.length > 0 && (
@@ -145,7 +156,7 @@ export function ResetPasswordForm() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
               style={{
                 background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
                 boxShadow: "0 4px 18px hsl(var(--primary)/0.32)"
@@ -169,7 +180,7 @@ export function ResetPasswordForm() {
           <div className="flex items-center justify-center pt-1">
             <Link
               href="/login"
-              className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-primary"
+              className="flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-500 transition hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <BackArrowIcon />
               Back to sign in
@@ -209,7 +220,7 @@ function PasswordStrength({ password }: { password: string }) {
           />
         ))}
       </div>
-      <p className="text-[11px] text-slate-400">
+      <p className="text-[11px] text-slate-400" aria-live="polite">
         Strength: <span className="font-semibold text-foreground">{level.label}</span>
       </p>
     </div>
