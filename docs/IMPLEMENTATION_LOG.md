@@ -719,3 +719,8 @@
 - Changed organizer team-member creation into a real organizer login-user flow with temporary password, first-login password reset, welcome email, and founder note.
 - Scoped organizer team users to their main organizer company workspace so they can access the same expos, payments, visitors, feedback, reports, and profile data.
 - Made team creation and deletion main-organizer-only, disabled team editing, removed permissions UI, and added delete member actions in the organizer team list.
+
+### Organizer Feedback Cleanup
+
+- Removed visitor-lead-derived placeholder feedback from the organizer feedback API so the page only shows feedback explicitly submitted by exhibitors.
+- Rebuilt organizer feedback as a paginated data table with exhibitor, expo, rating, category, comments, improvements, dislikes, and submitted date columns.

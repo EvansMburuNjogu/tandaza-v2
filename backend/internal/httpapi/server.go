@@ -2626,17 +2626,12 @@ func (s *Server) organizerFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	organizerID := s.effectiveOrganizerID(r.Context(), claims.UserID)
-	leads, err := s.store.ListLeads(r.Context(), store.LeadFilter{OrganizerID: organizerID})
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "feedback_failed", "Could not load organizer feedback.")
-		return
-	}
 	exhibitorFeedback, err := s.store.ListOrganizerFeedback(r.Context(), organizerID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "feedback_failed", "Could not load organizer feedback.")
 		return
 	}
-	records := organizerFeedbackFromLeads(leads)
+	records := []map[string]any{}
 	for _, item := range exhibitorFeedback {
 		records = append(records, organizerFeedbackRecordMap(item))
 	}
@@ -6698,24 +6693,6 @@ func organizerVisitorRecordsFromLeads(leads []domain.LeadRecord) []map[string]an
 		records = append(records, map[string]any{
 			"id": item.id, "name": item.name, "email": item.email, "status": "active", "lastActivity": item.lastActivity,
 			"exposAttended": len(item.expos), "interactions": item.interactions, "createdAt": item.lastActivity,
-		})
-	}
-	return records
-}
-
-func organizerFeedbackFromLeads(leads []domain.LeadRecord) []map[string]any {
-	records := []map[string]any{}
-	for _, lead := range leads {
-		comment := strings.TrimSpace(lead.Notes)
-		if comment == "" {
-			comment = "Shared interest with an exhibitor."
-		}
-		records = append(records, map[string]any{
-			"id": "fb_" + lead.ID, "expoId": lead.ExpoID, "expoName": lead.ExpoName,
-			"respondentName": nonEmpty(lead.VisitorName, "Visitor"), "respondentRole": "visitor",
-			"category": "overall", "rating": 4, "comment": comment,
-			"suggestions": "Follow up with this visitor after the expo while interest is still warm.",
-			"createdAt":   lead.CapturedAt,
 		})
 	}
 	return records
