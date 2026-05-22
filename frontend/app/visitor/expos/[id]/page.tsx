@@ -271,7 +271,9 @@ export default function VisitorExpoDetailPage() {
                   <h2 className="text-lg font-semibold">Exhibitor Workspaces</h2>
                   <p className="mt-1 text-sm text-muted">Open an exhibitor workspace to view products and take action.</p>
                 </div>
-                <Link href="/visitor/timeline" className="text-sm font-medium text-primary hover:underline">Timeline</Link>
+                <span className="rounded-full bg-elevated px-3 py-1 text-xs font-semibold text-muted">
+                  {exhibitors.length.toLocaleString()} exhibitors
+                </span>
               </div>
               {exhibitors.length === 0 ? (
                 <div className="mt-5 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">

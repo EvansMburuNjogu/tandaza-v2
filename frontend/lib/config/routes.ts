@@ -69,7 +69,6 @@ export const visitorNavItems: AdminNavItem[] = [
   { label: "Home", href: "/visitor", section: "Core", icon: "home" },
   { label: "Expos", href: "/visitor/expos", section: "Discover", icon: "explore" },
   { label: "Favorites", href: "/visitor/favorites", section: "Discover", icon: "favorite" },
-  { label: "Timeline", href: "/visitor/timeline", section: "Activity", icon: "timeline" },
   { label: "Calendar", href: "/visitor/calendar", section: "My Expos", icon: "calendar" },
   { label: "Settings", href: "/visitor/settings", section: "Configuration", icon: "settings" }
 ]
@@ -227,7 +226,6 @@ const dynamicPageTitles: Array<{ test: RegExp; meta: { title: string; descriptio
   { test: /^\/visitor$/, meta: { title: "Home", description: "Your visitor dashboard for upcoming expos, recent activity, and quick actions." } },
   { test: /^\/visitor\/explore$/, meta: { title: "Explore", description: "Discover upcoming expos and exhibitors." } },
   { test: /^\/visitor\/expos\/[^/]+$/, meta: { title: "Expo Details", description: "View expo details, exhibitors, products, and remote access options." } },
-  { test: /^\/visitor\/timeline$/, meta: { title: "Timeline", description: "Your activity log - visited exhibitors, actions, and interactions." } },
   { test: /^\/visitor\/favorites$/, meta: { title: "Favorites", description: "Your saved expos and exhibitors." } },
   { test: /^\/visitor\/messages$/, meta: { title: "Messages", description: "Chat with exhibitors and manage contacts." } },
   { test: /^\/visitor\/calendar$/, meta: { title: "Calendar", description: "Your expo schedule, meetings, and reminders." } },

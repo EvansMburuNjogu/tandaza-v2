@@ -28,6 +28,22 @@ function StatCard({ label, value, color = "primary" }: { label: string; value: s
   )
 }
 
+function ActionLink({ href, label, description, primary = false }: { href: string; label: string; description: string; primary?: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`group flex min-h-24 flex-col justify-between rounded-2xl border p-4 transition focus:outline-none focus:ring-4 focus:ring-primary/10 ${
+        primary
+          ? "border-primary/25 bg-gradient-to-br from-primary to-accent text-white shadow-sm hover:shadow-md"
+          : "border-border/70 bg-elevated text-foreground hover:border-primary/25 hover:bg-elevated/80"
+      }`}
+    >
+      <span className="text-sm font-semibold">{label}</span>
+      <span className={`mt-3 text-xs leading-5 ${primary ? "text-white/75" : "text-muted"}`}>{description}</span>
+    </Link>
+  )
+}
+
 function ActivityIcon({ type }: { type: string }) {
   const styles: Record<string, string> = {
     visited: "bg-primary/10 text-primary",
@@ -92,13 +108,25 @@ export default function VisitorDashboardPage() {
   if (error) return <ErrorState title="Failed to load dashboard" />
 
   const stats = data!
+  const upcomingExpos = stats.upcomingExpos || []
+  const recentActivity = stats.recentActivity || []
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground lg:text-[1.75rem]">Welcome back!</h1>
-          <p className="mt-1.5 text-sm leading-6 text-muted">Your expo access, saved exhibitors, and recent activity.</p>
+        <div className="rounded-3xl border border-border/70 bg-card/95 p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/75">Visitor workspace</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground lg:text-[1.9rem]">Find expos. Meet exhibitors. Keep the value moving.</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+                Discover expos, open exhibitor profiles, save what matters, and manage your meetings from one clean visitor account.
+              </p>
+            </div>
+            <Link href="/visitor/expos">
+              <Button>Explore expos</Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -116,9 +144,15 @@ export default function VisitorDashboardPage() {
                  <Link href="/visitor/calendar" className="text-sm text-primary hover:underline">View all</Link>
               </div>
               <div className="space-y-3">
-                {stats.upcomingExpos.map((expo) => (
+                {upcomingExpos.slice(0, 4).map((expo) => (
                   <UpcomingExpoCard key={expo.id} expo={expo} />
                 ))}
+                {upcomingExpos.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/70 bg-elevated/50 px-4 py-8 text-center">
+                    <p className="text-sm font-medium text-foreground">No upcoming expos yet</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">Explore available expos and save the ones you want to follow.</p>
+                  </div>
+                ) : null}
               </div>
             </div>
           </Card>
@@ -128,10 +162,10 @@ export default function VisitorDashboardPage() {
             <div className="relative">
                <div className="flex items-center justify-between mb-4">
                  <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
-                 <Link href="/visitor/timeline" className="text-sm text-primary hover:underline">View all</Link>
+                 <span className="rounded-full bg-elevated px-3 py-1 text-xs font-semibold text-muted">{recentActivity.length.toLocaleString()} updates</span>
                </div>
               <div className="space-y-3">
-                 {stats.recentActivity.slice(0, 3).map((activity) => (
+                 {recentActivity.slice(0, 5).map((activity) => (
                    <div key={activity.id} className="flex items-center gap-3 p-3 bg-elevated rounded-xl border border-border/60">
                      <ActivityIcon type={activity.type} />
                      <div className="flex-1 min-w-0">
@@ -143,6 +177,12 @@ export default function VisitorDashboardPage() {
                      </span>
                    </div>
                  ))}
+                 {recentActivity.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/70 bg-elevated/50 px-4 py-8 text-center">
+                    <p className="text-sm font-medium text-foreground">No activity yet</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">When you visit exhibitors, save profiles, or request meetings, the latest updates appear here.</p>
+                  </div>
+                 ) : null}
               </div>
             </div>
           </Card>
@@ -152,19 +192,11 @@ export default function VisitorDashboardPage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-success/5 to-primary/5 rounded-full -mr-16 -mt-16" />
           <div className="relative">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/visitor/expos">
-                <Button>Explore Expos</Button>
-              </Link>
-              <Link href="/visitor/calendar">
-                <Button variant="secondary">My Schedule</Button>
-              </Link>
-              <Link href="/visitor/favorites">
-                <Button variant="secondary">Favorites</Button>
-              </Link>
-              <Link href="/visitor/timeline">
-                <Button variant="secondary">Activity</Button>
-              </Link>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <ActionLink href="/visitor/expos" label="Explore expos" description="Browse expos and open exhibitor profiles." primary />
+              <ActionLink href="/visitor/calendar" label="My calendar" description="See your meetings and reminders." />
+              <ActionLink href="/visitor/favorites" label="Saved items" description="Return to expos and exhibitors you saved." />
+              <ActionLink href="/visitor/settings" label="Profile" description="Update your contact details and preferences." />
             </div>
           </div>
         </Card>
