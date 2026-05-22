@@ -692,3 +692,8 @@
 - Added persisted organizer payout payment method fields for bank transfer, mobile money, and manual settlement instructions.
 - Added a Payout Payment Method tab to organizer settings so organizers can save payout details used by finance.
 - Updated organizer settlement invoice details to display the saved payout method and account information instead of empty bank placeholders.
+
+### Organizer Finance PDF Polish
+
+- Reworked organizer payment receipts into a premium print/PDF layout with a branded header, clear payer/payee blocks, itemized activation/add-on/fee breakdown, and finance footer details.
+- Reworked organizer settlement invoices into a matching professional PDF layout with net payout emphasis, payout method details, itemized settlement breakdown, and print-safe styles.

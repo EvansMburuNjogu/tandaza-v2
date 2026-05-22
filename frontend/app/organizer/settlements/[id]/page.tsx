@@ -38,117 +38,129 @@ export default function SettlementInvoicePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="settlement-screen-only flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <BackLink href="/organizer/settlements" label="Back to Settlements" />
-        <div className="flex gap-2 no-print">
+        <div className="flex gap-2">
           <Button variant="secondary" onClick={handlePrint}>
             Download / Print
           </Button>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden print:shadow-none print:border">
-          <div className="bg-primary p-8 text-white">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">SETTLEMENT INVOICE</h1>
-                <p className="mt-1 text-primary-foreground/80">Tandaza Platform</p>
+      <div className="settlement-print-area mx-auto max-w-4xl">
+        <div className="settlement-card overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl print:shadow-none">
+          <div className="relative overflow-hidden bg-[#140822] px-8 py-8 text-white">
+            <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.34),transparent_45%)]" />
+            <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  <img src="/tandaza-logo.svg" alt="Tandaza" className="h-9 w-9 object-contain" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/60">Tandaza</p>
+                  <h1 className="mt-1 text-3xl font-semibold tracking-tight">Settlement Invoice</h1>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-primary-foreground/80">Invoice Date</p>
-                <p className="font-semibold">{formatDate(settlement.createdAt)}</p>
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4 text-left backdrop-blur sm:text-right">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Net Payout</p>
+                <p className="mt-2 text-3xl font-bold tracking-tight">{formatCurrency(settlement.netAmount, settlement.currency)}</p>
+                <p className="mt-1 text-xs text-white/60">{settlement.reference}</p>
               </div>
             </div>
           </div>
 
           <div className="p-8">
-            <div className="grid gap-8">
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-1">Settlement Reference</p>
-                  <p className="text-lg font-mono font-semibold">{settlement.reference}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-1">Status</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Settlement Reference</p>
+                <p className="mt-2 break-all font-mono text-sm font-semibold text-slate-900">{settlement.reference}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Invoice Date</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">{formatDate(settlement.createdAt)}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Status</p>
+                <div className="mt-2">
                   <StatusBadge value={settlement.status} />
                 </div>
               </div>
+            </div>
 
-              <div className="border-t border-border pt-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">Settlement Details</p>
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="p-4 rounded-xl bg-elevated/50">
-                    <p className="text-sm text-slate-500">Expo</p>
-                    <p className="mt-1 font-semibold">{settlement.expo}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-elevated/50">
-                    <p className="text-sm text-slate-500">Period</p>
-                    <p className="mt-1 font-semibold">{settlement.period}</p>
-                  </div>
-                </div>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Settlement For</p>
+                <p className="mt-3 text-lg font-semibold text-slate-950">{settlement.expo}</p>
+                <p className="mt-1 text-sm text-slate-500">Period: {settlement.period}</p>
               </div>
+              <div className="rounded-2xl border border-slate-200 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Payee</p>
+                <p className="mt-3 text-lg font-semibold text-slate-950">Organizer</p>
+                <p className="mt-1 text-sm text-slate-500">Commission settlement from paid exhibitor activations.</p>
+              </div>
+            </div>
 
-              <div className="border-t border-border pt-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">Payment Breakdown</p>
-                <div className="rounded-xl border border-border overflow-hidden">
+            <div className="mt-8 grid gap-8">
+              <div>
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Payment Breakdown</p>
+                <div className="overflow-hidden rounded-2xl border border-slate-200">
                   <table className="w-full">
-                    <thead className="bg-elevated/80">
+                    <thead className="bg-slate-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Description</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Amount</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Description</th>
+                        <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-slate-200 text-sm">
                       <tr>
-                        <td className="px-4 py-3 text-slate-600">Gross Revenue</td>
-                        <td className="px-4 py-3 text-right font-mono">{formatCurrency(settlement.amount, settlement.currency)}</td>
+                        <td className="px-5 py-3 text-slate-700">Gross Revenue</td>
+                        <td className="px-5 py-3 text-right font-mono font-semibold text-slate-950">{formatCurrency(settlement.amount, settlement.currency)}</td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-3 text-slate-600">Platform Commission ({settlement.commissionRate}%)</td>
-                        <td className="px-4 py-3 text-right font-mono text-primary">-{formatCurrency(settlement.commission, settlement.currency)}</td>
+                        <td className="px-5 py-3 text-slate-700">Platform Commission ({settlement.commissionRate}%)</td>
+                        <td className="px-5 py-3 text-right font-mono font-semibold text-primary">-{formatCurrency(settlement.commission, settlement.currency)}</td>
                       </tr>
-                      <tr className="bg-success/5">
-                        <td className="px-4 py-3 font-semibold">Net Payout</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-success">{formatCurrency(settlement.netAmount, settlement.currency)}</td>
+                      <tr className="bg-purple-50/80">
+                        <td className="px-5 py-4 text-base font-semibold text-slate-950">Net Payout</td>
+                        <td className="px-5 py-4 text-right font-mono text-xl font-bold text-primary">{formatCurrency(settlement.netAmount, settlement.currency)}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <div className="border-t border-border pt-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">Payout Details</p>
+              <div>
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Payout Details</p>
                 {hasPayoutDetails ? (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl bg-elevated/50 p-4">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                       <p className="text-sm text-slate-500">Payment Method</p>
                       <p className="mt-1 font-medium capitalize">{(settlement.payoutMethod || "manual").replaceAll("_", " ")}</p>
                     </div>
                     {settlement.accountName ? (
-                      <div className="rounded-xl bg-elevated/50 p-4">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                         <p className="text-sm text-slate-500">Account Name</p>
                         <p className="mt-1 font-medium">{settlement.accountName}</p>
                       </div>
                     ) : null}
                     {settlement.payoutMethod === "bank" ? (
                       <>
-                        <div className="rounded-xl bg-elevated/50 p-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                           <p className="text-sm text-slate-500">Bank Name</p>
                           <p className="mt-1 font-medium">{settlement.bankName || "Not provided"}</p>
                         </div>
-                        <div className="rounded-xl bg-elevated/50 p-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                           <p className="text-sm text-slate-500">Account Number</p>
                           <p className="mt-1 font-mono font-medium">{settlement.accountNumber || "Not provided"}</p>
                         </div>
                         {settlement.bankBranch ? (
-                          <div className="rounded-xl bg-elevated/50 p-4">
+                          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                             <p className="text-sm text-slate-500">Branch</p>
                             <p className="mt-1 font-medium">{settlement.bankBranch}</p>
                           </div>
                         ) : null}
                         {settlement.swiftCode ? (
-                          <div className="rounded-xl bg-elevated/50 p-4">
+                          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                             <p className="text-sm text-slate-500">SWIFT Code</p>
                             <p className="mt-1 font-mono font-medium">{settlement.swiftCode}</p>
                           </div>
@@ -157,18 +169,18 @@ export default function SettlementInvoicePage() {
                     ) : null}
                     {settlement.payoutMethod === "mobile_money" ? (
                       <>
-                        <div className="rounded-xl bg-elevated/50 p-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                           <p className="text-sm text-slate-500">Provider</p>
                           <p className="mt-1 font-medium">{settlement.mobileProvider || "Not provided"}</p>
                         </div>
-                        <div className="rounded-xl bg-elevated/50 p-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                           <p className="text-sm text-slate-500">Mobile Number</p>
                           <p className="mt-1 font-mono font-medium">{settlement.mobileNumber || "Not provided"}</p>
                         </div>
                       </>
                     ) : null}
                     {settlement.payoutNotes ? (
-                      <div className="rounded-xl bg-elevated/50 p-4 sm:col-span-2">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:col-span-2">
                         <p className="text-sm text-slate-500">Payout Notes</p>
                         <p className="mt-1 whitespace-pre-line font-medium">{settlement.payoutNotes}</p>
                       </div>
@@ -183,7 +195,7 @@ export default function SettlementInvoicePage() {
                 )}
               </div>
 
-              <div className="bg-elevated/50 p-4 rounded-xl">
+              <div className="rounded-2xl border border-purple-100 bg-purple-50/60 p-5">
                 <p className="text-sm text-slate-500">
                   {isDisbursed
                     ? "This settlement has been processed and the net amount has been disbursed to your registered payout account."
@@ -193,20 +205,54 @@ export default function SettlementInvoicePage() {
             </div>
           </div>
 
-          <div className="border-t border-border bg-slate-50 px-8 py-4 flex items-center justify-between">
+          <div className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-8 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-600">Tandaza</span>
+              <img src="/tandaza-logo.svg" alt="" className="h-5 w-5 object-contain" />
+              <span className="font-semibold text-slate-700">Tandaza</span>
             </div>
-            <p className="text-sm text-slate-400">support@tandaza.co.ke • +254 700 000 000</p>
+            <p>hello@tandaza.africa · +254 799 010 210</p>
           </div>
         </div>
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
         @media print {
-          .no-print { display: none; }
-          body { background: white; }
-          .bg-white { box-shadow: none; border: 1px solid #e2e8f0; }
+          @page {
+            size: A4;
+            margin: 12mm;
+          }
+
+          body {
+            background: #ffffff !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          .settlement-print-area,
+          .settlement-print-area * {
+            visibility: visible;
+          }
+
+          .settlement-print-area {
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 100%;
+            max-width: none !important;
+            margin: 0 !important;
+          }
+
+          .settlement-screen-only,
+          .settlement-screen-only * {
+            display: none !important;
+          }
+
+          .settlement-card {
+            border-radius: 18px !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+          }
         }
       `}</style>
     </div>
