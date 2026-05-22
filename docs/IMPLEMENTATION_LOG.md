@@ -759,3 +759,7 @@
 - Added a reusable `buttonClasses` helper so button-styled links use the same sizing, focus, hover, disabled, and spacing rules as real buttons.
 - Moved shared admin resource pages, form footers, back links, table row action triggers, and pagination controls onto the shared button system.
 - Documented the platform button inventory and usage rules in the frontend UI reference.
+
+### Organizer Feedback Detail Action
+
+- Added a table row action on the organizer Feedback page so organizers can open full exhibitor feedback comments, improvements, dislikes, rating, expo, and submission date in a focused dialog.
