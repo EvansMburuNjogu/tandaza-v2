@@ -116,6 +116,11 @@ export default function VisitorExpoDetailPage() {
     enabled: sessionReady && Boolean(expoId),
     refetchInterval: 15000
   })
+  const settingsQuery = useQuery({
+    queryKey: ["visitor-settings"],
+    queryFn: () => api.getVisitorSettings(token || ""),
+    enabled: sessionReady
+  })
   useEffect(() => {
     if (!exhibitorFromQr || selectedExhibitorId || !exhibitors.length) return
     if (exhibitors.some((exhibitor) => exhibitor.id === exhibitorFromQr)) {
@@ -126,8 +131,14 @@ export default function VisitorExpoDetailPage() {
     if (!exhibitors.length) return undefined
     return exhibitors.find((exhibitor) => exhibitor.id === selectedExhibitorId) || exhibitors[0]
   }, [exhibitors, selectedExhibitorId])
+  const selectedProducts = selectedExhibitor?.products || []
   const selectedProduct = selectedExhibitor?.products.find((product) => product.id === selectedProductId)
   const selectedConversation = conversationsQuery.data?.find((thread) => thread.exhibitorId === selectedExhibitor?.exhibitorId)
+
+  useEffect(() => {
+    if (phone || !settingsQuery.data?.phone) return
+    setPhone(settingsQuery.data.phone)
+  }, [phone, settingsQuery.data?.phone])
 
   useEffect(() => {
     if (!selectedConversation?.id) return
@@ -212,13 +223,17 @@ export default function VisitorExpoDetailPage() {
       toast.error("Choose a meeting date and time")
       return
     }
+    if ((action === "meeting" || action === "pre_order") && !phone.trim()) {
+      toast.error("Add your phone number so the exhibitor can follow up")
+      return
+    }
 
     actionMutation.mutate({
       boothId: exhibitor.id,
       action,
       name: user?.name,
       email: user?.email,
-      phone,
+      phone: phone.trim(),
       notes: notes.trim() || `${actionLabels[action]} for ${exhibitor.exhibitorName}`,
       productId: selectedProduct?.id,
       productName: selectedProduct?.name,
@@ -245,25 +260,51 @@ export default function VisitorExpoDetailPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <Link href="/visitor/expos" className="text-sm font-medium text-primary hover:underline">Back to expos</Link>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-foreground lg:text-[1.85rem]">{data.name}</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-muted">
-              <span className="rounded-full bg-elevated px-3 py-1">{data.category}</span>
-              <span className="rounded-full bg-elevated px-3 py-1">{formatDate(data.startDate)} - {formatDate(data.endDate)}</span>
-              <span className="rounded-full bg-elevated px-3 py-1">{data.venue}</span>
+        <Card className="overflow-hidden">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="p-5 sm:p-6">
+              <Link href="/visitor/expos" className="text-sm font-medium text-primary hover:underline">Back to expos</Link>
+              <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-muted">
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{data.category}</span>
+                <span className="rounded-full bg-elevated px-3 py-1">{formatDate(data.startDate)} - {formatDate(data.endDate)}</span>
+                <span className="rounded-full bg-elevated px-3 py-1">{data.venue}</span>
+              </div>
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground lg:text-[2rem]">{data.name}</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-border/70 bg-elevated/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-muted">Exhibitors</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">{exhibitors.length.toLocaleString()}</p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-elevated/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-muted">Products</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {exhibitors.reduce((total, exhibitor) => total + exhibitor.products.length, 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-elevated/50 p-4">
+                  <p className="text-xs font-semibold uppercase text-muted">Access</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">Remote</p>
+                </div>
+              </div>
+            </div>
+            <div className="min-h-56 bg-elevated lg:min-h-full">
+              {data.bannerImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={data.bannerImage} alt={data.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full min-h-56 items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.22),transparent_32%),linear-gradient(135deg,#fafafa,#f2efff)] px-8 text-center">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Tandaza Remote Access</p>
+                    <p className="mt-3 text-lg font-semibold text-foreground">Explore exhibitors from anywhere</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          <Card className="p-4 lg:min-w-[18rem]">
-            <p className="text-xs font-semibold uppercase text-muted">Remote access</p>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{exhibitors.length}</p>
-            <p className="text-sm text-muted">active exhibitor workspaces</p>
-          </Card>
-        </div>
+        </Card>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="space-y-6">
             <Card className="p-5">
               <div className="flex items-center justify-between gap-3">
@@ -299,13 +340,13 @@ export default function VisitorExpoDetailPage() {
             <Card className="p-5">
               <h2 className="text-lg font-semibold">Products</h2>
               <p className="mt-1 text-sm text-muted">{selectedExhibitor ? selectedExhibitor.exhibitorName : "Choose an exhibitor"} catalog</p>
-              {!selectedExhibitor || selectedExhibitor.products.length === 0 ? (
+              {!selectedExhibitor || selectedProducts.length === 0 ? (
                 <div className="mt-5 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
                   Product catalog is not available yet.
                 </div>
               ) : (
                 <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {selectedExhibitor.products.map((product) => (
+                  {selectedProducts.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
@@ -318,99 +359,119 @@ export default function VisitorExpoDetailPage() {
             </Card>
           </div>
 
-          <Card className="h-fit p-5">
-            <h2 className="text-lg font-semibold">Visitor Action</h2>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {(["interest", "meeting", "pre_order"] as VisibleVisitorAction[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setAction(item)}
-                  className={`rounded-lg px-2 py-2 text-xs font-semibold transition ${
-                    action === item ? "bg-primary text-white" : "bg-elevated text-muted hover:bg-elevated/80"
-                  }`}
-                >
-                  {actionLabels[item]}
-                </button>
-              ))}
-            </div>
+          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <Card className="p-5">
+              <h2 className="text-lg font-semibold">Take action</h2>
+              <p className="mt-1 text-sm text-muted">Share interest, request a meeting, or send pre-order intent.</p>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {(["interest", "meeting", "pre_order"] as VisibleVisitorAction[]).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={action === item}
+                    onClick={() => setAction(item)}
+                    className={`rounded-xl px-2 py-2.5 text-xs font-semibold transition ${
+                      action === item ? "bg-primary text-white shadow-sm" : "bg-elevated text-muted hover:bg-primary/10 hover:text-primary"
+                    }`}
+                  >
+                    {actionLabels[item]}
+                  </button>
+                ))}
+              </div>
 
-            <div className="mt-5 space-y-3">
-              <input
-                aria-label="Phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone number"
-                className="h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 text-sm outline-none focus:border-primary"
-              />
-              {action === "meeting" && (
+              <div className="mt-5 space-y-3">
+                <label className="block text-xs font-semibold uppercase text-muted" htmlFor="visitor-phone">Phone number</label>
                 <input
-                  aria-label="Meeting date and time"
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
+                  id="visitor-phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+254 799 010 210"
                   className="h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 text-sm outline-none focus:border-primary"
                 />
-              )}
-              <textarea
-                aria-label="Notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Notes for the exhibitor"
-                rows={4}
-                className="w-full rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm outline-none focus:border-primary"
-              />
-              <div className="rounded-xl bg-elevated p-3 text-sm text-muted">
-                <p className="font-medium text-foreground">{selectedExhibitor?.exhibitorName || "No exhibitor selected"}</p>
-                {selectedProduct && <p className="mt-1">{selectedProduct.name}</p>}
-              </div>
-              <Button onClick={submitAction} disabled={actionMutation.isPending || !selectedExhibitor} className="w-full">
-                {actionMutation.isPending ? "Sending..." : actionLabels[action]}
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="h-fit p-5">
-            <h2 className="text-lg font-semibold">Chat with exhibitor</h2>
-            <p className="mt-1 text-sm text-muted">Send a realtime message to {selectedExhibitor?.exhibitorName || "the selected exhibitor"}.</p>
-            <div className="mt-4 max-h-72 space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-elevated/40 p-3">
-              {selectedConversation?.messages?.length ? selectedConversation.messages.map((message) => (
-                <div key={message.id} className={`max-w-[86%] rounded-2xl p-3 text-sm ${message.senderRole === "visitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground"}`}>
-                  <p className="leading-6">{message.message}</p>
-                  <p className={`mt-1 text-[11px] ${message.senderRole === "visitor" ? "text-white/60" : "text-muted"}`}>{formatDate(message.createdAt)}</p>
-                </div>
-              )) : (
-                <div className="py-8 text-center text-sm text-muted">No chat yet. Say hi to start the conversation.</div>
-              )}
-            </div>
-            <form
-              className="mt-3"
-              onSubmit={(event) => {
-                event.preventDefault()
-                chatMutation.mutate()
-              }}
-            >
-              <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+                {action === "meeting" && (
+                  <>
+                    <label className="block text-xs font-semibold uppercase text-muted" htmlFor="meeting-time">Meeting date and time</label>
+                    <input
+                      id="meeting-time"
+                      type="datetime-local"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      className="h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 text-sm outline-none focus:border-primary"
+                    />
+                  </>
+                )}
+                <label className="block text-xs font-semibold uppercase text-muted" htmlFor="visitor-notes">Notes</label>
                 <textarea
-                  aria-label="Chat message"
-                  value={chatMessage}
-                  onChange={(event) => setChatMessage(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault()
-                      chatMutation.mutate()
-                    }
-                  }}
-                  rows={1}
-                  placeholder="Write a message..."
-                  className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-slate-400"
+                  id="visitor-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="What would you like the exhibitor to know?"
+                  rows={4}
+                  className="w-full rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm outline-none focus:border-primary"
                 />
-                <Button type="submit" size="sm" className="h-10 shrink-0 rounded-xl px-4" disabled={chatMutation.isPending || !selectedExhibitor || chatMessage.trim().length < 1}>
-                  {chatMutation.isPending ? "Sending" : "Send"}
+                <div className="rounded-2xl border border-border/70 bg-elevated p-3 text-sm">
+                  <p className="text-xs font-semibold uppercase text-muted">Selected exhibitor</p>
+                  <p className="mt-1 font-medium text-foreground">{selectedExhibitor?.exhibitorName || "No exhibitor selected"}</p>
+                  {selectedProduct ? (
+                    <div className="mt-3 rounded-xl bg-card p-3">
+                      <p className="text-xs font-semibold uppercase text-muted">Selected product</p>
+                      <p className="mt-1 font-medium text-foreground">{selectedProduct.name}</p>
+                      <p className="mt-1 font-mono text-sm font-semibold text-primary">
+                        {formatCurrency(selectedProduct.discountedPrice && selectedProduct.discountedPrice < selectedProduct.price ? selectedProduct.discountedPrice : selectedProduct.price, selectedProduct.currency)}
+                      </p>
+                    </div>
+                  ) : action === "pre_order" ? (
+                    <p className="mt-3 text-xs leading-5 text-muted">Choose a product from the catalog before sending pre-order intent.</p>
+                  ) : null}
+                </div>
+                <Button onClick={submitAction} disabled={actionMutation.isPending || !selectedExhibitor} className="w-full">
+                  {actionMutation.isPending ? "Sending..." : actionLabels[action]}
                 </Button>
               </div>
-            </form>
-          </Card>
+            </Card>
+
+            <Card className="p-5">
+              <h2 className="text-lg font-semibold">Chat with exhibitor</h2>
+              <p className="mt-1 text-sm text-muted">Send a realtime message to {selectedExhibitor?.exhibitorName || "the selected exhibitor"}.</p>
+              <div className="mt-4 max-h-72 space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-elevated/40 p-3">
+                {selectedConversation?.messages?.length ? selectedConversation.messages.map((message) => (
+                  <div key={message.id} className={`max-w-[86%] rounded-2xl p-3 text-sm ${message.senderRole === "visitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground"}`}>
+                    <p className="leading-6">{message.message}</p>
+                    <p className={`mt-1 text-[11px] ${message.senderRole === "visitor" ? "text-white/60" : "text-muted"}`}>{formatDate(message.createdAt)}</p>
+                  </div>
+                )) : (
+                  <div className="py-8 text-center text-sm text-muted">No chat yet. Say hi to start the conversation.</div>
+                )}
+              </div>
+              <form
+                className="mt-3"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  chatMutation.mutate()
+                }}
+              >
+                <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+                  <textarea
+                    aria-label="Chat message"
+                    value={chatMessage}
+                    onChange={(event) => setChatMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault()
+                        chatMutation.mutate()
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Write a message..."
+                    className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-slate-400"
+                  />
+                  <Button type="submit" size="sm" className="h-10 shrink-0 rounded-xl px-4" disabled={chatMutation.isPending || !selectedExhibitor || chatMessage.trim().length < 1}>
+                    {chatMutation.isPending ? "Sending" : "Send"}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          </aside>
         </div>
       </div>
     </SessionGuard>
