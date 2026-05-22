@@ -1,0 +1,2 @@
+-- Demo payment seed removed.
+-- Payment, commission, and exhibitor assignment records are created through app workflows.

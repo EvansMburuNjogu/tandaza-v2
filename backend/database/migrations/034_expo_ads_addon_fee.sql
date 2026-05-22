@@ -1,0 +1,2 @@
+ALTER TABLE expos
+  ADD COLUMN IF NOT EXISTS ads_addon_fee_minor BIGINT NOT NULL DEFAULT 0;
