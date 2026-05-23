@@ -151,8 +151,7 @@ export default function VisitorExpoDetailPage() {
                 <span className="rounded-full bg-white/75 px-3 py-1">{formatDate(data.startDate)} - {formatDate(data.endDate)}</span>
                 <span className="rounded-full bg-white/75 px-3 py-1">{data.venue}</span>
               </div>
-              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground lg:text-[2rem]">{data.name}</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
               <div className="mt-5 grid gap-2 sm:max-w-[12rem]">
                 <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
                   <p className="text-xs font-medium text-muted">Exhibitors</p>
