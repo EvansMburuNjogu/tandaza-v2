@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
+import { VisitorPhoneInput, fullPhoneNumber } from "@/components/visitor/phone-input"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { findVisitorBooth, productDisplayPrice } from "@/lib/visitor-expo"
@@ -24,6 +25,7 @@ export default function VisitorPreOrderPage() {
   const user = useSessionStore((s) => s.user)
   const [productId, setProductId] = useState(searchParams.get("product") || "")
   const [quantity, setQuantity] = useState(1)
+  const [callingCode, setCallingCode] = useState("+254")
   const [phone, setPhone] = useState("")
   const [notes, setNotes] = useState("")
   const sessionReady = Boolean(token && user?.role === "visitor")
@@ -41,13 +43,14 @@ export default function VisitorPreOrderPage() {
     mutationFn: () => {
       if (!booth) throw new Error("Exhibitor not found")
       if (!product) throw new Error("Choose a product")
-      if (!phone.trim()) throw new Error("Add your phone number")
+      const visitorPhone = fullPhoneNumber(callingCode, phone)
+      if (!visitorPhone) throw new Error("Add your phone number")
       return api.createVisitorExpoAction(token || "", expoId, {
         boothId: booth.id,
         action: "pre_order",
         name: user?.name,
         email: user?.email,
-        phone: phone.trim(),
+        phone: visitorPhone,
         productId: product.id,
         productName: product.name,
         quantity,
@@ -94,10 +97,7 @@ export default function VisitorPreOrderPage() {
                 <label className="text-sm font-semibold text-foreground" htmlFor="quantity">Quantity</label>
                 <input id="quantity" type="number" min={1} value={quantity} onChange={(event) => setQuantity(Math.max(1, Number(event.target.value) || 1))} className="mt-2 h-12 w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none focus:border-primary" />
               </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground" htmlFor="phone">Phone number</label>
-                <input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+254 799 010 210" className="mt-2 h-12 w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
-              </div>
+              <VisitorPhoneInput id="phone" callingCode={callingCode} phone={phone} onCallingCodeChange={setCallingCode} onPhoneChange={setPhone} />
             </div>
             <div className="rounded-2xl bg-elevated p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Estimated total</p>

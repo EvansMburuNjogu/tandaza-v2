@@ -12,6 +12,7 @@ import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { BellIcon, CalendarIcon, ChatIcon, DownloadIcon, FeedbackIcon, HeartIcon } from "@/components/ui/icons"
+import { VisitorPhoneInput, fullPhoneNumber } from "@/components/visitor/phone-input"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { allVisitorDocuments, findVisitorBooth, firstProductImage } from "@/lib/visitor-expo"
@@ -80,6 +81,7 @@ export default function VisitorExhibitorPage() {
   const user = useSessionStore((s) => s.user)
   const sessionReady = Boolean(token && user?.role === "visitor")
   const [dialog, setDialog] = useState<ActionDialog>(null)
+  const [callingCode, setCallingCode] = useState("+254")
   const [phone, setPhone] = useState("")
   const [scheduledAt, setScheduledAt] = useState("")
   const [notes, setNotes] = useState("")
@@ -98,6 +100,7 @@ export default function VisitorExhibitorPage() {
       if (dialog === "meeting" && !scheduledAt) throw new Error("Choose a meeting date and time")
       const meetingTime = scheduledAt ? new Date(scheduledAt) : null
       const baseNotes = notes.trim()
+      const visitorPhone = fullPhoneNumber(callingCode, phone)
       const actionNotes = dialog === "meeting"
         ? `${baseNotes || `Meeting request for ${booth.exhibitorName}`}${meetingTime ? `\nPreferred time: ${meetingTime.toLocaleString()}` : ""}`
         : baseNotes || `Interested in ${booth.exhibitorName}`
@@ -107,7 +110,7 @@ export default function VisitorExhibitorPage() {
         title: dialog === "meeting" ? `Meeting with ${user?.name || "visitor"}` : undefined,
         name: user?.name,
         email: user?.email,
-        phone: phone.trim(),
+        phone: visitorPhone,
         source: "inquiry",
         temperature: "warm",
         status: dialog === "meeting" ? "meeting_booked" : "new",
@@ -242,10 +245,7 @@ export default function VisitorExhibitorPage() {
                 <button type="button" onClick={() => setDialog(null)} className="shrink-0 rounded-full border border-border px-3 py-1 text-sm font-semibold text-muted hover:text-foreground">Close</button>
               </div>
               <div className="mt-5 grid gap-4">
-                <div>
-                  <label className="text-sm font-semibold text-foreground" htmlFor="visitor-action-phone">Phone number</label>
-                  <input id="visitor-action-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+254 799 010 210" className="mt-2 block h-12 w-full min-w-0 max-w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
-                </div>
+                <VisitorPhoneInput id="visitor-action-phone" callingCode={callingCode} phone={phone} onCallingCodeChange={setCallingCode} onPhoneChange={setPhone} />
                 {dialog === "meeting" ? (
                   <div>
                     <label className="text-sm font-semibold text-foreground" htmlFor="visitor-action-time">Preferred date and time</label>
@@ -267,16 +267,23 @@ export default function VisitorExhibitorPage() {
         <section id="downloads" className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Downloads</h2>
           {documents.length === 0 ? (
-            <Card className="border-dashed p-8 text-center text-sm text-muted">No company or expo files are available yet.</Card>
+            <Card className="border-dashed p-8 text-center text-sm text-muted">No company, exhibition, or product files are available yet.</Card>
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
-              {["Company", "Expo"].map((scope) => {
+              {[
+                { scope: "Company", title: "Company files", description: "Profile documents from the exhibitor." },
+                { scope: "Exhibition", title: "Exhibition files", description: "Materials shared for this exhibition." },
+                { scope: "Product", title: "Product files", description: "Product-specific brochures and presentation files." }
+              ].map(({ scope, title, description }) => {
                 const files = documents.filter((document) => document.scope === scope)
                 if (files.length === 0) return null
                 return (
                   <Card key={scope} className="p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <h3 className="font-semibold text-foreground">{scope} files</h3>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground">{title}</h3>
+                        <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+                      </div>
                       <span className="rounded-full bg-elevated px-2.5 py-1 text-xs font-semibold text-muted">{files.length}</span>
                     </div>
                     <div className="space-y-2">

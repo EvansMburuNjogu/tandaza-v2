@@ -24,6 +24,15 @@ export function allVisitorDocuments(booth: VisitorBooth | undefined) {
   if (!booth) return []
   return [
     ...(booth.companyDocuments || []).map((document) => ({ ...document, scope: "Company" })),
-    ...(booth.expoDocuments || []).map((document) => ({ ...document, scope: "Expo" })),
+    ...(booth.expoDocuments || []).map((document) => ({ ...document, scope: "Exhibition" })),
+    ...(booth.products || [])
+      .filter((product) => product.presentationUrl)
+      .map((product) => ({
+        id: product.id,
+        name: `${product.name} material`,
+        url: product.presentationUrl || "",
+        scope: "Product",
+        productName: product.name
+      })),
   ]
 }

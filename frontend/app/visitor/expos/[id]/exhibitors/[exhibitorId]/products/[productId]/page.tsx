@@ -11,6 +11,8 @@ import { Button, buttonClasses } from "@/components/ui/button"
 import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
+import { DownloadIcon } from "@/components/ui/icons"
+import { VisitorPhoneInput, fullPhoneNumber } from "@/components/visitor/phone-input"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { findVisitorBooth, findVisitorProduct, firstProductImage, productDisplayPrice } from "@/lib/visitor-expo"
@@ -52,6 +54,7 @@ export default function VisitorProductPage() {
   const sessionReady = Boolean(token && user?.role === "visitor")
   const [preOrderOpen, setPreOrderOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  const [callingCode, setCallingCode] = useState("+254")
   const [phone, setPhone] = useState("")
   const [notes, setNotes] = useState("")
 
@@ -73,13 +76,14 @@ export default function VisitorProductPage() {
   const preOrderMutation = useMutation({
     mutationFn: () => {
       if (!booth || !product) throw new Error("Product was not found")
-      if (!phone.trim()) throw new Error("Add your phone number")
+      const visitorPhone = fullPhoneNumber(callingCode, phone)
+      if (!visitorPhone) throw new Error("Add your phone number")
       return api.createVisitorExpoAction(token || "", expoId, {
         boothId: booth.id,
         action: "pre_order",
         name: user?.name,
         email: user?.email,
-        phone: phone.trim(),
+        phone: visitorPhone,
         productId: product.id,
         productName: product.name,
         productPrice: displayPrice,
@@ -169,11 +173,22 @@ export default function VisitorProductPage() {
             </Card>
 
             {(product.specifications || product.presentationUrl) ? (
-              <Card className="p-5">
-                <h2 className="font-semibold text-foreground">Details</h2>
-                {product.specifications ? <div className="prose prose-sm mt-3 max-w-none text-muted" dangerouslySetInnerHTML={{ __html: product.specifications }} /> : null}
+              <Card className="space-y-5 p-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Product details</p>
+                  <h2 className="mt-2 font-semibold text-foreground">Specifications and files</h2>
+                </div>
+                {product.specifications ? <div className="prose prose-sm max-w-none text-muted" dangerouslySetInnerHTML={{ __html: product.specifications }} /> : null}
                 {product.presentationUrl ? (
-                  <a href={product.presentationUrl} target="_blank" rel="noreferrer" className={buttonClasses({ variant: "outline", className: "mt-4 w-full" })}>Download material</a>
+                  <a href={product.presentationUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/55 p-3 transition hover:border-primary/25 hover:bg-elevated">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{product.name} material</p>
+                      <p className="mt-0.5 text-xs text-muted">Product specific file</p>
+                    </div>
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <DownloadIcon className="h-4 w-4" />
+                    </span>
+                  </a>
                 ) : null}
               </Card>
             ) : null}
@@ -209,10 +224,7 @@ export default function VisitorProductPage() {
                     <p className="mt-1 font-mono text-2xl font-semibold text-foreground">{formatCurrency(total, product.currency)}</p>
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm font-semibold text-foreground" htmlFor="preorder-phone">Phone number</label>
-                  <input id="preorder-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+254 799 010 210" className="mt-2 h-12 w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
-                </div>
+                <VisitorPhoneInput id="preorder-phone" callingCode={callingCode} phone={phone} onCallingCodeChange={setCallingCode} onPhoneChange={setPhone} />
                 <div>
                   <label className="text-sm font-semibold text-foreground" htmlFor="preorder-notes">Notes</label>
                   <textarea id="preorder-notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} placeholder="Delivery details, configuration, or questions" className="mt-2 w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
