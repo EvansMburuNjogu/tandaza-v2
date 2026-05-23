@@ -4319,6 +4319,7 @@ func (s *Server) exhibitorCreateExpoAd(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusForbidden, "ads_addon_required", "Create ads add-on payment is required before creating ads for this expo.")
 		return
 	}
+	input.Status = "active"
 	existing, err := s.store.ListSponsorAds(r.Context(), store.SponsorAdFilter{SponsorID: workspace.ID, ExpoID: input.ExpoID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "ad_failed", "Could not load existing workspace ad.")

@@ -2675,9 +2675,15 @@ func (s *PostgresStore) CreateSponsorAd(ctx context.Context, input domain.Sponso
 		campaignID = ""
 	}
 	id := fmt.Sprintf("sa_%d", time.Now().UnixNano())
-	_, err := s.pool.Exec(ctx, `INSERT INTO sponsor_ads (id, expo_id, campaign_id, sponsor_id, name, placement, dimensions, media_url, media_type, budget_minor, status)
-		VALUES ($1,NULLIF($2,''),NULLIF($3,''),$4,$5,$6,$7,$8,$9,$10,$11)`,
-		id, strings.TrimSpace(input.ExpoID), campaignID, actor.ID, strings.TrimSpace(input.Name), defaultString(input.Placement, "banner"), defaultString(input.Dimensions, "728x90"), strings.TrimSpace(input.MediaURL), defaultString(input.MediaType, "image"), input.Budget, defaultString(input.Status, "draft"))
+	status := defaultString(input.Status, "draft")
+	paymentStatus := "unpaid"
+	if actor.Role == domain.RoleExhibitor {
+		status = "active"
+		paymentStatus = "paid"
+	}
+	_, err := s.pool.Exec(ctx, `INSERT INTO sponsor_ads (id, expo_id, campaign_id, sponsor_id, name, placement, dimensions, media_url, media_type, budget_minor, status, payment_status)
+		VALUES ($1,NULLIF($2,''),NULLIF($3,''),$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+		id, strings.TrimSpace(input.ExpoID), campaignID, actor.ID, strings.TrimSpace(input.Name), defaultString(input.Placement, "banner"), defaultString(input.Dimensions, "728x90"), strings.TrimSpace(input.MediaURL), defaultString(input.MediaType, "image"), input.Budget, status, paymentStatus)
 	if err != nil {
 		return domain.SponsorAdRecord{}, err
 	}

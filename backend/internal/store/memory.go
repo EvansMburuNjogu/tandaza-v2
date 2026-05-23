@@ -2260,6 +2260,10 @@ func (s *MemoryStore) CreateSponsorAd(ctx context.Context, input domain.SponsorA
 		MediaURL: strings.TrimSpace(input.MediaURL), MediaType: defaultString(input.MediaType, "image"), Budget: input.Budget, Status: defaultString(input.Status, "draft"),
 		PaymentStatus: "unpaid", CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
+	if actor.Role == domain.RoleExhibitor {
+		item.Status = "active"
+		item.PaymentStatus = "paid"
+	}
 	s.sponsorAds = append([]domain.SponsorAdRecord{item}, s.sponsorAds...)
 	return item, nil
 }
