@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
@@ -44,6 +44,18 @@ function isDirectVideo(url: string) {
   return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url)
 }
 
+function removeDuplicateSpecTitle(html: string | undefined, duplicateTitles: Array<string | undefined>) {
+  if (!html) return ""
+  const titles = duplicateTitles
+    .map((title) => (title || "").replace(/\s+/g, " ").trim().toLowerCase())
+    .filter(Boolean)
+  if (!titles.length) return html
+  return html.replace(/^(\s*)<(h[1-6]|p|div)[^>]*>([\s\S]*?)<\/\2>/i, (match, whitespace, tag, content) => {
+    const text = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim().toLowerCase()
+    return titles.includes(text) ? whitespace : match
+  })
+}
+
 export default function VisitorProductPage() {
   const params = useParams()
   const expoId = params.id as string
@@ -72,6 +84,10 @@ export default function VisitorProductPage() {
   const displayPrice = product ? productDisplayPrice(product) : 0
   const hasDiscount = Boolean(product?.discountedPrice && product.discountedPrice < product.price)
   const total = displayPrice * quantity
+  const specifications = useMemo(
+    () => removeDuplicateSpecTitle(product?.specifications, [data?.name, product?.name, booth?.exhibitorName]),
+    [booth?.exhibitorName, data?.name, product?.name, product?.specifications]
+  )
 
   const preOrderMutation = useMutation({
     mutationFn: () => {
@@ -172,13 +188,13 @@ export default function VisitorProductPage() {
               </div>
             </Card>
 
-            {(product.specifications || product.presentationUrl) ? (
+            {(specifications || product.presentationUrl) ? (
               <Card className="space-y-5 p-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Product details</p>
                   <h2 className="mt-2 font-semibold text-foreground">Specifications and files</h2>
                 </div>
-                {product.specifications ? <div className="prose prose-sm max-w-none text-muted" dangerouslySetInnerHTML={{ __html: product.specifications }} /> : null}
+                {specifications ? <div className="prose prose-sm max-w-none text-muted" dangerouslySetInnerHTML={{ __html: specifications }} /> : null}
                 {product.presentationUrl ? (
                   <a href={product.presentationUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/55 p-3 transition hover:border-primary/25 hover:bg-elevated">
                     <div className="min-w-0">
