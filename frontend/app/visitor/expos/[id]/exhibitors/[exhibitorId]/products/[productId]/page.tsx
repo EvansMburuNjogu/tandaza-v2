@@ -13,6 +13,32 @@ import { useSessionStore } from "@/store/session-store"
 import { findVisitorBooth, findVisitorProduct, firstProductImage, productDisplayPrice } from "@/lib/visitor-expo"
 import { formatCurrency } from "@/lib/utils"
 
+function embeddableVideoUrl(url: string) {
+  if (!url) return ""
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname.includes("youtube.com")) {
+      const id = parsed.searchParams.get("v")
+      return id ? `https://www.youtube.com/embed/${id}` : url
+    }
+    if (parsed.hostname.includes("youtu.be")) {
+      const id = parsed.pathname.replace("/", "")
+      return id ? `https://www.youtube.com/embed/${id}` : url
+    }
+    if (parsed.hostname.includes("vimeo.com")) {
+      const id = parsed.pathname.split("/").filter(Boolean)[0]
+      return id ? `https://player.vimeo.com/video/${id}` : url
+    }
+  } catch {
+    return url
+  }
+  return url
+}
+
+function isDirectVideo(url: string) {
+  return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url)
+}
+
 export default function VisitorProductPage() {
   const params = useParams()
   const expoId = params.id as string
@@ -31,6 +57,8 @@ export default function VisitorProductPage() {
   const booth = findVisitorBooth(data, exhibitorId)
   const product = findVisitorProduct(data, exhibitorId, productId)
   const images = product ? (product.images?.length ? product.images : firstProductImage(product) ? [firstProductImage(product)] : []) : []
+  const demoUrl = product?.demoVideoUrl || ""
+  const embedUrl = embeddableVideoUrl(demoUrl)
 
   if (!sessionReady) return <SessionGuard allowedRoles={["visitor"]}><div /></SessionGuard>
   if (isLoading) {
@@ -70,9 +98,13 @@ export default function VisitorProductPage() {
                 ))}
               </div>
             ) : null}
-            {product.demoVideoUrl ? (
+            {demoUrl ? (
               <Card className="overflow-hidden">
-                <video src={product.demoVideoUrl} controls className="aspect-video w-full bg-black" />
+                {isDirectVideo(demoUrl) ? (
+                  <video src={demoUrl} controls className="aspect-video w-full bg-black" />
+                ) : (
+                  <iframe src={embedUrl} title={`${product.name} demo`} className="aspect-video w-full bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+                )}
               </Card>
             ) : null}
           </div>
@@ -90,7 +122,7 @@ export default function VisitorProductPage() {
                 ) : null}
               </div>
               <div className="mt-5 grid gap-2">
-                <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/pre-order?product=${product.id}`} className={buttonClasses({ className: "w-full" })}>Pre-order</Link>
+                <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/pre-order?product=${product.id}`} className={buttonClasses({ className: "w-full" })}>Make a pre-order</Link>
                 <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/chat`} className={buttonClasses({ variant: "secondary", className: "w-full" })}>Ask about product</Link>
               </div>
             </Card>

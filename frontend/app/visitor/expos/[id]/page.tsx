@@ -12,6 +12,22 @@ import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { formatDate } from "@/lib/utils"
 
+function expoTimeline(startDate: string, endDate: string) {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return []
+  const days = []
+  const cursor = new Date(start)
+  cursor.setHours(0, 0, 0, 0)
+  const last = new Date(end)
+  last.setHours(0, 0, 0, 0)
+  while (cursor <= last && days.length < 14) {
+    days.push(new Date(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return days
+}
+
 export default function VisitorExpoDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -30,6 +46,7 @@ export default function VisitorExpoDetailPage() {
 
   const booths = data?.booths || []
   const ads = data?.ads || []
+  const timeline = data ? expoTimeline(data.startDate, data.endDate) : []
 
   useEffect(() => {
     if (!sessionReady || !expoId || !token || !user || !booths.length) return
@@ -167,6 +184,35 @@ export default function VisitorExpoDetailPage() {
                     <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
                   </div>
                 </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Timeline</h2>
+            <p className="text-sm text-muted">Use this to plan when to explore exhibitors and return for follow-ups.</p>
+          </div>
+          {timeline.length === 0 ? (
+            <Card className="border-dashed p-8 text-center text-sm text-muted">The expo timeline will appear when dates are available.</Card>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {timeline.map((day, index) => (
+                <Card key={day.toISOString()} className="p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Day {index + 1}</p>
+                      <h3 className="mt-1 font-semibold text-foreground">{formatDate(day.toISOString())}</h3>
+                    </div>
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      {index === 0 ? "Opening" : index === timeline.length - 1 ? "Closing" : "Expo day"}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-muted">
+                    Exhibitor profiles, products, downloads, meetings, feedback, and chat remain available for remote access.
+                  </p>
+                </Card>
               ))}
             </div>
           )}
