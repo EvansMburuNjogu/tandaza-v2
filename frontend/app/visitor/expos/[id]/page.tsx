@@ -10,7 +10,7 @@ import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
-import { VisitorActivityItem } from "@/lib/api/contracts"
+import { SponsorAd, VisitorActivityItem, VisitorBooth } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 import { formatDate } from "@/lib/utils"
 
@@ -34,6 +34,21 @@ function activityText(activity: VisitorActivityItem, expoName: string) {
     .replace(/^viewed\s+expo$/i, "Viewed expo")
     .replace(/\s+/g, " ")
     .trim()
+}
+
+function normalizeMatch(value?: string) {
+  return (value || "").trim().toLowerCase()
+}
+
+function adBoothHref(expoId: string, booths: VisitorBooth[], ad: SponsorAd) {
+  const sponsorId = normalizeMatch(ad.sponsorId)
+  const sponsorName = normalizeMatch(ad.sponsorName)
+  const booth = booths.find((item) => {
+    return normalizeMatch(item.id) === sponsorId ||
+      normalizeMatch(item.exhibitorId) === sponsorId ||
+      normalizeMatch(item.exhibitorName) === sponsorName
+  })
+  return booth ? `/visitor/expos/${expoId}/exhibitors/${booth.id}` : `/visitor/expos/${expoId}`
 }
 
 export default function VisitorExpoDetailPage() {
@@ -125,6 +140,17 @@ export default function VisitorExpoDetailPage() {
                   <p className="mt-1 text-xl font-semibold text-primary">{booths.length.toLocaleString()}</p>
                 </div>
               </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <a href="#paid-ads" className="rounded-full border border-primary/15 bg-white/80 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary hover:text-white">
+                  Paid ads
+                </a>
+                <a href="#exhibitors" className="rounded-full border border-primary/15 bg-white/80 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary hover:text-white">
+                  Exhibitors
+                </a>
+                <a href="#timeline" className="rounded-full border border-primary/15 bg-white/80 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary hover:text-white">
+                  Timeline
+                </a>
+              </div>
             </div>
             <div className="min-h-56 bg-elevated">
               {data.bannerImage ? (
@@ -139,22 +165,26 @@ export default function VisitorExpoDetailPage() {
           </div>
         </section>
 
-        {ads.length ? (
-          <section className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Featured ads</h2>
-                <p className="text-sm text-muted">Paid exhibitor placements for this expo.</p>
-              </div>
+        <section id="paid-ads" className="scroll-mt-24 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Paid ads</h2>
+              <p className="text-sm text-muted">Promoted exhibitors and offers for this expo.</p>
             </div>
+          </div>
+          {ads.length === 0 ? (
+            <Card className="border-dashed p-8 text-center text-sm text-muted">Paid exhibitor ads will appear here when available.</Card>
+          ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {ads.map((ad) => {
-                const linkedBooth = booths.find((booth) => booth.exhibitorId === ad.sponsorId)
+                const href = adBoothHref(expoId, booths, ad)
+                const linkedBooth = booths.find((booth) => href.endsWith(`/exhibitors/${booth.id}`))
                 return (
                   <Link
                     key={ad.id}
-                    href={linkedBooth ? `/visitor/expos/${expoId}/exhibitors/${linkedBooth.id}` : `/visitor/expos/${expoId}`}
-                    className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card"
+                    href={href}
+                    onClick={() => void api.trackSponsorAd(ad.id, "click")}
+                    className="group overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card"
                   >
                     <div className="aspect-[16/7] bg-elevated">
                       {ad.mediaUrl ? (
@@ -163,18 +193,18 @@ export default function VisitorExpoDetailPage() {
                       ) : null}
                     </div>
                     <div className="p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Sponsored</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Paid ad</p>
                       <h3 className="mt-2 line-clamp-2 font-semibold text-foreground group-hover:text-primary">{ad.name}</h3>
-                      {linkedBooth ? <p className="mt-1 text-sm text-muted">{linkedBooth.exhibitorName}</p> : null}
+                      <p className="mt-1 text-sm text-muted">{linkedBooth?.exhibitorName || ad.sponsorName || "Expo exhibitor"}</p>
                     </div>
                   </Link>
                 )
               })}
             </div>
-          </section>
-        ) : null}
+          )}
+        </section>
 
-        <section className="space-y-3">
+        <section id="exhibitors" className="scroll-mt-24 space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Exhibitors</h2>
           {booths.length === 0 ? (
             <Card className="border-dashed p-8 text-center text-sm text-muted">Exhibitors will appear here when they activate.</Card>
@@ -208,7 +238,7 @@ export default function VisitorExpoDetailPage() {
           )}
         </section>
 
-        <section className="space-y-3">
+        <section id="timeline" className="scroll-mt-24 space-y-3">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Timeline</h2>
             <p className="text-sm text-muted">Your latest activity in this expo.</p>
@@ -238,6 +268,7 @@ export default function VisitorExpoDetailPage() {
             </Card>
           )}
         </section>
+
       </div>
     </SessionGuard>
   )
