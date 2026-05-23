@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
+import { VisitorCalendarItem, VisitorExpo } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 
 function ActivityIcon({ type }: { type: string }) {
@@ -32,18 +33,35 @@ function ActivityIcon({ type }: { type: string }) {
   )
 }
 
-function UpcomingExpoCard({ expo }: { expo: { id: string; expoName: string; expoDate: string; venue: string; status: string } }) {
+function ExpoCard({ expo, tone = "upcoming" }: { expo: VisitorExpo; tone?: "live" | "upcoming" }) {
+  const date = new Date(expo.startDate)
   return (
-    <Link href={`/visitor/expos/${expo.id}`} className="block min-w-0 max-w-full rounded-2xl border border-border/70 bg-elevated p-4 transition hover:border-primary/25 hover:bg-elevated/80 focus:outline-none focus:ring-4 focus:ring-primary/10">
-      <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-        <div className="min-w-0 max-w-full">
-          <p className="truncate font-semibold text-foreground">{expo.expoName}</p>
-          <p className="mt-1 text-sm text-muted">{new Date(expo.expoDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+    <Link href={`/visitor/expos/${expo.id}`} className="group block min-w-0 rounded-2xl border border-border/70 bg-elevated p-4 transition hover:border-primary/25 hover:bg-elevated/80 focus:outline-none focus:ring-4 focus:ring-primary/10">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-foreground group-hover:text-primary">{expo.name}</p>
+          <p className="mt-1 text-sm text-muted">{Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Date pending"}</p>
           {expo.venue ? <p className="mt-1 truncate text-xs text-muted">{expo.venue}</p> : null}
         </div>
-        <span className={`inline-flex w-fit max-w-full rounded-full px-2.5 py-0.5 text-xs font-semibold ${expo.status === "upcoming" ? "bg-success/10 text-success ring-1 ring-success/20" : "bg-muted/10 text-muted ring-1 ring-border"}`}>
-          {expo.status}
+        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "live" ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>
+          {tone === "live" ? "Live" : "Soon"}
         </span>
+      </div>
+    </Link>
+  )
+}
+
+function MeetingCard({ meeting }: { meeting: VisitorCalendarItem }) {
+  const date = new Date(`${meeting.date}T${meeting.time || "00:00"}`)
+  return (
+    <Link href="/visitor/calendar" className="block min-w-0 rounded-2xl border border-border/70 bg-elevated p-4 transition hover:border-primary/25 hover:bg-elevated/80 focus:outline-none focus:ring-4 focus:ring-primary/10">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-foreground">{meeting.title || meeting.expoName}</p>
+          <p className="mt-1 text-sm text-muted">{Number.isFinite(date.getTime()) ? date.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : meeting.date}</p>
+          {meeting.expoName ? <p className="mt-1 truncate text-xs text-muted">{meeting.expoName}</p> : null}
+        </div>
+        <span className="shrink-0 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">Meeting</span>
       </div>
     </Link>
   )
@@ -55,6 +73,16 @@ export default function VisitorDashboardPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-dashboard"],
     queryFn: () => api.getVisitorDashboard(token || ""),
+    enabled: Boolean(token)
+  })
+  const exposQuery = useQuery({
+    queryKey: ["visitor-expos-home"],
+    queryFn: () => api.getVisitorExpos(token || ""),
+    enabled: Boolean(token)
+  })
+  const calendarQuery = useQuery({
+    queryKey: ["visitor-calendar-home"],
+    queryFn: () => api.getVisitorCalendar(token || ""),
     enabled: Boolean(token)
   })
 
@@ -70,7 +98,24 @@ export default function VisitorDashboardPage() {
   if (error) return <ErrorState title="Failed to load dashboard" />
 
   const stats = data!
-  const upcomingExpos = stats.upcomingExpos || []
+  const now = new Date()
+  const allExpos = exposQuery.data || []
+  const liveExpos = allExpos
+    .filter((expo) => {
+      const start = new Date(expo.startDate)
+      const end = new Date(expo.endDate)
+      return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && start <= now && end >= now
+    })
+    .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
+  const upcomingExpos = allExpos
+    .filter((expo) => {
+      const start = new Date(expo.startDate)
+      return Number.isFinite(start.getTime()) && start > now
+    })
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+  const upcomingMeetings = (calendarQuery.data || [])
+    .filter((item) => item.type === "meeting" && new Date(`${item.date}T${item.time || "00:00"}`) >= now)
+    .sort((a, b) => new Date(`${a.date}T${a.time || "00:00"}`).getTime() - new Date(`${b.date}T${b.time || "00:00"}`).getTime())
   const recentActivity = stats.recentActivity || []
 
   return (
@@ -86,10 +131,11 @@ export default function VisitorDashboardPage() {
               <Button>Explore expos</Button>
             </Link>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className="mt-5 grid grid-cols-3 gap-2">
             {[
-              ["Upcoming", stats.upcomingExposCount],
-              ["Saved", stats.favoritesCount]
+              ["Live expos", liveExpos.length],
+              ["Upcoming", upcomingExpos.length],
+              ["Meetings", upcomingMeetings.length]
             ].map(([label, value]) => (
               <div key={label} className="min-w-0 rounded-2xl bg-elevated px-2.5 py-3 text-center sm:px-4 sm:text-left">
                 <p className="truncate text-[11px] font-medium text-muted sm:text-xs">{label}</p>
@@ -102,17 +148,52 @@ export default function VisitorDashboardPage() {
         <div className="grid min-w-0 gap-6 lg:grid-cols-2">
           <Card className="min-w-0 p-5 sm:p-6">
                <div className="mb-4 flex items-center justify-between gap-3">
+                 <h2 className="text-lg font-semibold text-foreground">Live expos</h2>
+                 <Link href="/visitor/expos" className="text-sm font-semibold text-primary hover:underline">View all</Link>
+              </div>
+              <div className="min-w-0 space-y-3">
+                {liveExpos.slice(0, 3).map((expo) => (
+                  <ExpoCard key={expo.id} expo={expo} tone="live" />
+                ))}
+                {liveExpos.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/70 px-4 py-8 text-center">
+                    <p className="text-sm font-medium text-foreground">No live expos right now</p>
+                    <Link href="/visitor/expos" className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline">Browse expos</Link>
+                  </div>
+                ) : null}
+              </div>
+          </Card>
+
+          <Card className="min-w-0 p-5 sm:p-6">
+               <div className="mb-4 flex items-center justify-between gap-3">
                  <h2 className="text-lg font-semibold text-foreground">Upcoming expos</h2>
                  <Link href="/visitor/calendar" className="text-sm font-semibold text-primary hover:underline">Calendar</Link>
               </div>
               <div className="min-w-0 space-y-3">
-                {upcomingExpos.slice(0, 4).map((expo) => (
-                  <UpcomingExpoCard key={expo.id} expo={expo} />
+                {upcomingExpos.slice(0, 3).map((expo) => (
+                  <ExpoCard key={expo.id} expo={expo} />
                 ))}
                 {upcomingExpos.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-border/70 px-4 py-8 text-center">
                     <p className="text-sm font-medium text-foreground">No upcoming expos</p>
                     <Link href="/visitor/expos" className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline">Browse expos</Link>
+                  </div>
+                ) : null}
+              </div>
+          </Card>
+
+          <Card className="min-w-0 p-5 sm:p-6">
+               <div className="mb-4 flex items-center justify-between gap-3">
+                 <h2 className="text-lg font-semibold text-foreground">Upcoming meetings</h2>
+                 <Link href="/visitor/calendar" className="text-sm font-semibold text-primary hover:underline">Calendar</Link>
+              </div>
+              <div className="min-w-0 space-y-3">
+                {upcomingMeetings.slice(0, 3).map((meeting) => (
+                  <MeetingCard key={meeting.id} meeting={meeting} />
+                ))}
+                {upcomingMeetings.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/70 px-4 py-8 text-center">
+                    <p className="text-sm font-medium text-foreground">No meetings scheduled</p>
                   </div>
                 ) : null}
               </div>

@@ -4859,9 +4859,28 @@ func (s *Server) visitorCalendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bookings, _ := s.store.VisitorBookings(r.Context(), claims.UserID)
+	meetings, _ := s.store.ListMeetings(r.Context(), store.MeetingFilter{VisitorID: claims.UserID})
 	events := []map[string]any{}
 	for _, booking := range bookings {
 		events = append(events, map[string]any{"id": booking.ID, "expoId": booking.ExpoID, "expoName": booking.ExpoName, "date": booking.ExpoDate, "time": "09:00", "venue": booking.Venue, "type": "expo"})
+	}
+	for _, meeting := range meetings {
+		if meeting.Status == "cancelled" {
+			continue
+		}
+		scheduledAt, err := time.Parse(time.RFC3339, meeting.ScheduledAt)
+		if err != nil {
+			continue
+		}
+		expoName := meeting.Title
+		if expo, err := s.store.ExpoByID(r.Context(), meeting.ExpoID); err == nil && strings.TrimSpace(expo.Name) != "" {
+			expoName = expo.Name
+		}
+		events = append(events, map[string]any{
+			"id": meeting.ID, "expoId": meeting.ExpoID, "expoName": expoName, "title": meeting.Title,
+			"date": scheduledAt.Format("2006-01-02"), "time": scheduledAt.Format("15:04"),
+			"venue": meeting.LocationOrLink, "type": "meeting",
+		})
 	}
 	writeJSON(w, http.StatusOK, events)
 }

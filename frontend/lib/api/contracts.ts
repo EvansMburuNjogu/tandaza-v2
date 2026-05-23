@@ -1589,6 +1589,7 @@ export interface VisitorCalendarItem {
   id: string
   expoId: string
   expoName: string
+  title?: string
   date: string
   time: string
   venue: string
