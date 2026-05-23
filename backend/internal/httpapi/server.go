@@ -4735,7 +4735,7 @@ func (s *Server) visitorExpoDetail(w http.ResponseWriter, r *http.Request) {
 		writeExpoMutationError(w, err)
 		return
 	}
-	_ = s.store.RecordVisitorActivity(r.Context(), user, expo.ID, "", "visited", "Viewed "+expo.Name)
+	_ = s.store.RecordVisitorActivity(r.Context(), user, expo.ID, "", "visited", "Viewed expo")
 	booths, _ := s.visitorBoothsForExpo(r.Context(), expo.ID)
 	ads, _ := s.store.ListSponsorAds(r.Context(), store.SponsorAdFilter{ExpoID: expo.ID, CountryCode: expo.CountryCode})
 	writeJSON(w, http.StatusOK, visitorExpoRecordWithBoothsAndAds(expo, booths, ads))

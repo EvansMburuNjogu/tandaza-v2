@@ -14,10 +14,27 @@ import { ErrorState } from "@/components/ui/error-state"
 import { BellIcon, CalendarIcon, ChatIcon, DownloadIcon, FeedbackIcon, HeartIcon } from "@/components/ui/icons"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
-import { allVisitorDocuments, findVisitorBooth, firstProductImage, productDisplayPrice } from "@/lib/visitor-expo"
+import { allVisitorDocuments, findVisitorBooth, firstProductImage } from "@/lib/visitor-expo"
 import { formatCurrency } from "@/lib/utils"
 
 type ActionDialog = "interest" | "meeting" | null
+
+function ProductPrice({ price, discountedPrice, currency }: { price: number; discountedPrice?: number; currency: string }) {
+  const hasDiscount = Boolean(discountedPrice && discountedPrice < price)
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      <span className="font-mono text-sm font-semibold text-primary">
+        {formatCurrency(hasDiscount ? discountedPrice || price : price, currency)}
+      </span>
+      {hasDiscount ? (
+        <>
+          <span className="font-mono text-xs text-muted line-through">{formatCurrency(price, currency)}</span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Discount</span>
+        </>
+      ) : null}
+    </div>
+  )
+}
 
 function QuickAction({
   label,
@@ -150,7 +167,7 @@ export default function VisitorExhibitorPage() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Exhibitor</p>
                   <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{booth.exhibitorName}</h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{booth.description || "Explore products, chat, request a meeting, download materials, and share feedback."}</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
                 </div>
               </div>
             </div>
@@ -193,7 +210,7 @@ export default function VisitorExhibitorPage() {
                   <div className="p-4">
                     <h3 className="line-clamp-2 font-semibold text-foreground group-hover:text-primary">{product.name}</h3>
                     <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{product.description}</p>
-                    <p className="mt-3 font-mono text-sm font-semibold text-primary">{formatCurrency(productDisplayPrice(product), product.currency)}</p>
+                    <ProductPrice price={product.price} discountedPrice={product.discountedPrice} currency={product.currency} />
                   </div>
                 </Link>
               ))}
@@ -244,13 +261,32 @@ export default function VisitorExhibitorPage() {
           {documents.length === 0 ? (
             <Card className="border-dashed p-8 text-center text-sm text-muted">No company or expo files are available yet.</Card>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {documents.map((document) => (
-                <a key={`${document.scope}-${document.id}`} href={document.url} target="_blank" rel="noreferrer" className="rounded-2xl border border-border/70 bg-card p-4 transition hover:border-primary/25">
-                  <p className="font-semibold text-foreground">{document.name}</p>
-                  <p className="mt-1 text-sm text-muted">{document.scope} file</p>
-                </a>
-              ))}
+            <div className="grid gap-4 lg:grid-cols-2">
+              {["Company", "Expo"].map((scope) => {
+                const files = documents.filter((document) => document.scope === scope)
+                if (files.length === 0) return null
+                return (
+                  <Card key={scope} className="p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h3 className="font-semibold text-foreground">{scope} files</h3>
+                      <span className="rounded-full bg-elevated px-2.5 py-1 text-xs font-semibold text-muted">{files.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {files.map((document) => (
+                        <a key={`${document.scope}-${document.id}`} href={document.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/45 p-3 transition hover:border-primary/25 hover:bg-elevated">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">{document.name}</p>
+                            <p className="mt-0.5 text-xs text-muted">View or download</p>
+                          </div>
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <DownloadIcon className="h-4 w-4" />
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </section>

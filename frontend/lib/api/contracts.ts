@@ -1561,6 +1561,8 @@ export interface VisitorExpoActionPayload {
   notes?: string
   productId?: string
   productName?: string
+  productPrice?: number
+  productCurrency?: string
   quantity?: number
   scheduledAt?: string
 }

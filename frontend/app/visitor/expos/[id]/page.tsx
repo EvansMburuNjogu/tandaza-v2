@@ -25,6 +25,17 @@ function activityLabel(type: VisitorActivityItem["type"]) {
   return labels[type] || type.replace(/_/g, " ")
 }
 
+function activityText(activity: VisitorActivityItem, expoName: string) {
+  const raw = (activity.description || activity.title || activityLabel(activity.type)).trim()
+  if (!raw) return activityLabel(activity.type)
+  const escapedExpo = expoName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return raw
+    .replace(new RegExp(`\\b${escapedExpo}\\b`, "gi"), "expo")
+    .replace(/^viewed\s+expo$/i, "Viewed expo")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 export default function VisitorExpoDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -184,7 +195,7 @@ export default function VisitorExpoDetailPage() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="truncate font-semibold text-foreground group-hover:text-primary">{booth.exhibitorName}</h3>
-                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description || "Open profile, products, chat, meetings, and downloads."}</p>
+                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-muted">
@@ -214,14 +225,11 @@ export default function VisitorExpoDetailPage() {
                     <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">{activity.title || activity.description}</p>
+                        <p className="text-sm font-semibold text-foreground">{activityText(activity, data.name)}</p>
                         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
                           {activityLabel(activity.type)}
                         </span>
                       </div>
-                      {activity.description && activity.description !== activity.title ? (
-                        <p className="mt-1 text-sm leading-6 text-muted">{activity.description}</p>
-                      ) : null}
                       <p className="mt-1 text-xs font-medium text-muted">{formatDate(activity.timestamp)}</p>
                     </div>
                   </div>
