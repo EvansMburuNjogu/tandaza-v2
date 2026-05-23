@@ -871,3 +871,8 @@
 - Added an upcoming meeting count to the visitor dashboard backend response.
 - Aligned the visitor homepage meeting count with the same non-expo upcoming schedule items shown by the visitor calendar.
 - Added a frontend fallback so the homepage count remains useful while the calendar query is still loading.
+
+### Visitor Chat Quick Link Count
+
+- Added unread visitor conversation polling on the visitor-facing exhibitor profile page.
+- The Chat quick action now shows a compact unread badge for the specific exhibitor when new messages are waiting.

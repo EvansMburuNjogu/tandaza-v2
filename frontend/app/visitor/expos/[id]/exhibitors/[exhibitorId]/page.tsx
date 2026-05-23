@@ -41,17 +41,24 @@ function QuickAction({
   label,
   icon: Icon,
   href,
-  onClick
+  onClick,
+  badge
 }: {
   label: string
   icon: ComponentType<SVGProps<SVGSVGElement>>
   href?: string
   onClick?: () => void
+  badge?: number
 }) {
   const content = (
     <>
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white">
+      <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white">
         <Icon className="h-5 w-5" />
+        {badge && badge > 0 ? (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold leading-none text-white shadow-sm ring-2 ring-card">
+            {badge > 9 ? "9+" : badge}
+          </span>
+        ) : null}
       </span>
       <span className="text-xs font-semibold text-foreground">{label}</span>
     </>
@@ -108,6 +115,15 @@ export default function VisitorExhibitorPage() {
   })
 
   const booth = findVisitorBooth(data, exhibitorId)
+  const conversationsQuery = useQuery({
+    queryKey: ["visitor-expo-conversations", expoId],
+    queryFn: () => api.getVisitorExpoConversations(token || "", expoId),
+    enabled: sessionReady && Boolean(expoId && booth),
+    refetchInterval: 8000
+  })
+  const chatUnreadCount = conversationsQuery.data
+    ?.find((thread) => thread.exhibitorId === booth?.exhibitorId)
+    ?.unreadCount || 0
   const documents = allVisitorDocuments(booth)
   const actionMutation = useMutation({
     mutationFn: () => {
@@ -232,7 +248,7 @@ export default function VisitorExhibitorPage() {
 
         <section>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-            <QuickAction label="Chat" icon={ChatIcon} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/chat`} />
+            <QuickAction label="Chat" icon={ChatIcon} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/chat`} badge={chatUnreadCount} />
             <QuickAction label="Interested" icon={HeartIcon} onClick={() => setDialog("interest")} />
             <QuickAction label="Meeting" icon={CalendarIcon} onClick={() => setDialog("meeting")} />
             <QuickAction label="Feedback" icon={FeedbackIcon} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/feedback`} />
