@@ -144,10 +144,6 @@ export default function VisitorCalendarPage() {
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Calendar</h1>
               <p className="mt-2 text-sm text-muted">Expos, meetings, and reminders in one place.</p>
             </div>
-            <div className="rounded-2xl bg-primary/10 px-4 py-3 shadow-sm ring-1 ring-primary/15">
-              <p className="text-lg font-semibold text-primary">{items.length.toLocaleString()}</p>
-              <p className="text-xs font-medium text-primary/70">items</p>
-            </div>
           </div>
         </div>
 
