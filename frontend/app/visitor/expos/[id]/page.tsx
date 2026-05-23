@@ -56,6 +56,21 @@ function adBoothHref(expoId: string, booths: VisitorBooth[], ad: SponsorAd) {
   return booth ? `/visitor/expos/${expoId}/exhibitors/${booth.id}` : `/visitor/expos/${expoId}`
 }
 
+function shuffleAds(ads: SponsorAd[]) {
+  const items = [...ads]
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    const current = items[index]
+    items[index] = items[randomIndex]
+    items[randomIndex] = current
+  }
+  return items
+}
+
+function adIdentityKey(ads: SponsorAd[]) {
+  return ads.map((ad) => ad.id).sort().join("|")
+}
+
 export default function VisitorExpoDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -68,6 +83,7 @@ export default function VisitorExpoDetailPage() {
   const [exhibitorSearch, setExhibitorSearch] = useState("")
   const [exhibitorPage, setExhibitorPage] = useState(1)
   const [timelinePage, setTimelinePage] = useState(1)
+  const [randomizedAds, setRandomizedAds] = useState<SponsorAd[]>([])
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-expo-details", expoId],
@@ -77,6 +93,7 @@ export default function VisitorExpoDetailPage() {
 
   const booths = data?.booths || []
   const ads = data?.ads || []
+  const displayedAds = adIdentityKey(randomizedAds) === adIdentityKey(ads) ? randomizedAds : ads
   const filteredBooths = useMemo(() => {
     const query = exhibitorSearch.trim().toLowerCase()
     if (!query) return booths
@@ -161,13 +178,18 @@ export default function VisitorExpoDetailPage() {
 
   useEffect(() => {
     if (!sessionReady || !ads.length) return
-    for (const ad of ads) {
+    setRandomizedAds(shuffleAds(ads))
+  }, [ads, sessionReady])
+
+  useEffect(() => {
+    if (!sessionReady || !displayedAds.length) return
+    for (const ad of displayedAds) {
       const key = `tandaza_ad_impression_${expoId}_${ad.id}`
       if (window.sessionStorage.getItem(key)) continue
       window.sessionStorage.setItem(key, "1")
       void api.trackSponsorAd(ad.id, "impression")
     }
-  }, [ads, expoId, sessionReady])
+  }, [displayedAds, expoId, sessionReady])
 
   if (!sessionReady) {
     return <SessionGuard allowedRoles={["visitor"]}><div /></SessionGuard>
@@ -220,10 +242,10 @@ export default function VisitorExpoDetailPage() {
           </div>
         </section>
 
-        {ads.length > 0 ? (
+        {displayedAds.length > 0 ? (
           <section className="overflow-hidden">
             <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-              {ads.map((ad) => {
+              {displayedAds.map((ad) => {
                 const href = adBoothHref(expoId, booths, ad)
                 return (
                   <Link
