@@ -174,28 +174,23 @@ export default function VisitorExpoDetailPage() {
         </section>
 
         {ads.length > 0 ? (
-          <section className="space-y-3">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="overflow-hidden">
+            <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
               {ads.map((ad) => {
                 const href = adBoothHref(expoId, booths, ad)
-                const linkedBooth = booths.find((booth) => href.endsWith(`/exhibitors/${booth.id}`))
                 return (
                   <Link
                     key={ad.id}
                     href={href}
                     onClick={() => void api.trackSponsorAd(ad.id, "click")}
-                    className="group overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card"
+                    aria-label={`Open exhibitor for ${ad.name}`}
+                    className="group block min-w-[82%] snap-center overflow-hidden rounded-3xl border border-primary/10 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card sm:min-w-[28rem] lg:min-w-[36rem]"
                   >
-                    <div className="aspect-[16/7] bg-elevated">
+                    <div className="aspect-[16/7] bg-elevated sm:aspect-[16/6]">
                       {ad.mediaUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={ad.mediaUrl} alt={ad.name} className="h-full w-full object-cover" />
                       ) : null}
-                    </div>
-                    <div className="p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Paid ad</p>
-                      <h3 className="mt-2 line-clamp-2 font-semibold text-foreground group-hover:text-primary">{ad.name}</h3>
-                      <p className="mt-1 text-sm text-muted">{linkedBooth?.exhibitorName || ad.sponsorName || "Expo exhibitor"}</p>
                     </div>
                   </Link>
                 )
