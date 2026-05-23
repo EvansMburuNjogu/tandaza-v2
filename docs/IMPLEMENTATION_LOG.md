@@ -834,3 +834,8 @@
 
 - Tightened the mobile expo workspace menu height so it stays inside the visible screen.
 - Added touch-friendly vertical scrolling for the mobile workspace menu when many expo tools are available.
+
+### Exhibitor Workspace Ads Polish
+
+- Removed the Spent column from the exhibitor workspace ads table.
+- Changed the ad edit dialog current banner section from a raw URL to a proper banner image preview.

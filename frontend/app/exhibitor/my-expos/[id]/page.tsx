@@ -2021,7 +2021,6 @@ export default function MyExpoPage() {
               { key: "impressions", header: "Impressions", sortable: true, render: (r) => <span className="font-mono">{r.impressions.toLocaleString()}</span> },
               { key: "clicks", header: "Clicks", sortable: true, render: (r) => <span className="font-mono">{r.clicks.toLocaleString()}</span> },
               { key: "ctr", header: "CTR", sortable: true, render: (r) => <span className="font-mono">{r.ctr}%</span> },
-              { key: "spent", header: "Spent", sortable: true, render: (r) => <span className="font-mono">{formatCurrency(r.spent ?? r.dailySpend ?? 0)}</span> },
               { key: "status", header: "Status", render: (r) => <StatusBadge value={r.status} /> }
             ]}
             rows={ads}
@@ -2097,7 +2096,11 @@ export default function MyExpoPage() {
                   {boostForm.imageUrl ? (
                     <div className="rounded-2xl border border-border/80 bg-elevated/60 p-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current banner</p>
-                      <p className="mt-2 break-all text-xs text-slate-500">{boostForm.imageUrl}</p>
+                      <div className="mt-3 overflow-hidden rounded-xl border border-border/70 bg-card">
+                        <div className="relative mx-auto aspect-[728/90] w-full max-w-[728px]">
+                          <img src={mediaUrl(boostForm.imageUrl)} alt="Current ad banner" className="h-full w-full object-cover" />
+                        </div>
+                      </div>
                     </div>
                   ) : null}
                 </div>
