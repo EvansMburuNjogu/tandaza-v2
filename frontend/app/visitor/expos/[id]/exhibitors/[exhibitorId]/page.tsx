@@ -96,15 +96,23 @@ export default function VisitorExhibitorPage() {
     mutationFn: () => {
       if (!booth || !dialog) throw new Error("Exhibitor not found")
       if (dialog === "meeting" && !scheduledAt) throw new Error("Choose a meeting date and time")
+      const meetingTime = scheduledAt ? new Date(scheduledAt) : null
+      const baseNotes = notes.trim()
+      const actionNotes = dialog === "meeting"
+        ? `${baseNotes || `Meeting request for ${booth.exhibitorName}`}${meetingTime ? `\nPreferred time: ${meetingTime.toLocaleString()}` : ""}`
+        : baseNotes || `Interested in ${booth.exhibitorName}`
       return api.createVisitorExpoAction(token || "", expoId, {
         boothId: booth.id,
         action: dialog === "meeting" ? "meeting" : "interest",
+        title: dialog === "meeting" ? `Meeting with ${user?.name || "visitor"}` : undefined,
         name: user?.name,
         email: user?.email,
         phone: phone.trim(),
-        source: "visitor_profile",
-        scheduledAt: dialog === "meeting" ? new Date(scheduledAt).toISOString() : undefined,
-        notes: notes.trim() || (dialog === "meeting" ? `Meeting request for ${booth.exhibitorName}` : `Interested in ${booth.exhibitorName}`)
+        source: "inquiry",
+        temperature: "warm",
+        status: dialog === "meeting" ? "meeting_booked" : "new",
+        scheduledAt: meetingTime ? meetingTime.toISOString() : undefined,
+        notes: actionNotes
       })
     },
     onSuccess: () => {
@@ -219,10 +227,10 @@ export default function VisitorExhibitorPage() {
         </section>
 
         {dialog ? (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 py-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="visitor-action-title" onClick={() => setDialog(null)}>
-            <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/55 px-3 py-6 backdrop-blur-sm sm:px-4 sm:py-8" role="dialog" aria-modal="true" aria-labelledby="visitor-action-title" onClick={() => setDialog(null)}>
+            <div className="max-h-[calc(100dvh-3rem)] w-full max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-3xl border border-border bg-card p-5 shadow-2xl sm:max-w-lg" onClick={(event) => event.stopPropagation()}>
               <div className="flex items-start justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{booth.exhibitorName}</p>
                   <h2 id="visitor-action-title" className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
                     {dialog === "meeting" ? "Request a meeting" : "Share interest"}
@@ -231,22 +239,22 @@ export default function VisitorExhibitorPage() {
                     {dialog === "meeting" ? "Choose a preferred time and add any context for the exhibitor." : "Let the exhibitor know what you are interested in so they can follow up."}
                   </p>
                 </div>
-                <button type="button" onClick={() => setDialog(null)} className="rounded-full border border-border px-3 py-1 text-sm font-semibold text-muted hover:text-foreground">Close</button>
+                <button type="button" onClick={() => setDialog(null)} className="shrink-0 rounded-full border border-border px-3 py-1 text-sm font-semibold text-muted hover:text-foreground">Close</button>
               </div>
               <div className="mt-5 grid gap-4">
                 <div>
                   <label className="text-sm font-semibold text-foreground" htmlFor="visitor-action-phone">Phone number</label>
-                  <input id="visitor-action-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+254 799 010 210" className="mt-2 h-12 w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
+                  <input id="visitor-action-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+254 799 010 210" className="mt-2 block h-12 w-full min-w-0 max-w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
                 </div>
                 {dialog === "meeting" ? (
                   <div>
                     <label className="text-sm font-semibold text-foreground" htmlFor="visitor-action-time">Preferred date and time</label>
-                    <input id="visitor-action-time" type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none focus:border-primary" />
+                    <input id="visitor-action-time" type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} className="mt-2 block h-12 w-full min-w-0 max-w-full rounded-xl border border-border bg-elevated px-3 text-sm text-foreground outline-none focus:border-primary" />
                   </div>
                 ) : null}
                 <div>
                   <label className="text-sm font-semibold text-foreground" htmlFor="visitor-action-notes">Notes</label>
-                  <textarea id="visitor-action-notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} placeholder={dialog === "meeting" ? "What would you like to discuss?" : "Products, services, or questions you want them to respond to"} className="mt-2 w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
+                  <textarea id="visitor-action-notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} placeholder={dialog === "meeting" ? "What would you like to discuss?" : "Products, services, or questions you want them to respond to"} className="mt-2 block w-full min-w-0 max-w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-foreground outline-none placeholder:text-slate-400 focus:border-primary" />
                 </div>
                 <Button onClick={() => actionMutation.mutate()} disabled={actionMutation.isPending}>
                   {actionMutation.isPending ? "Sending" : dialog === "meeting" ? "Send meeting request" : "Share interest"}

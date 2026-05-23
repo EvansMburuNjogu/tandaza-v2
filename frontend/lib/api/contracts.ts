@@ -1558,6 +1558,10 @@ export interface VisitorExpoActionPayload {
   email?: string
   phone?: string
   source?: string
+  temperature?: "hot" | "warm" | "cold"
+  status?: "new" | "contacted" | "meeting_booked" | "proposal_sent" | "won" | "lost"
+  title?: string
+  location?: string
   notes?: string
   productId?: string
   productName?: string

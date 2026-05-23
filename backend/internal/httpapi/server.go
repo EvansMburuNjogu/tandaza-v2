@@ -4675,14 +4675,14 @@ func (s *Server) visitorExpoAction(w http.ResponseWriter, r *http.Request) {
 		exhibitorUser, _ := s.store.UserByID(r.Context(), selected.ExhibitorID)
 		if strings.TrimSpace(input.Location) == "" {
 			if link := s.googleMeetLinkForMeeting(r.Context(), expo, domain.MeetingInput{
-				Title: "Meeting with " + nonEmpty(user.Name, "visitor"), MeetingType: "Online demo", ScheduledAt: input.ScheduledAt, Notes: input.Notes,
+				Title: nonEmpty(input.Title, "Meeting with "+nonEmpty(user.Name, "visitor")), MeetingType: "Online demo", ScheduledAt: input.ScheduledAt, Notes: input.Notes,
 			}, user.Email, exhibitorUser.Email); link != "" {
 				input.Location = link
 			}
 		}
 		meeting, meetingErr := s.store.CreateMeeting(r.Context(), expoID, selected.ExhibitorID, domain.MeetingInput{
 			LeadID: lead.ID, VisitorName: user.Name, VisitorEmail: user.Email, VisitorPhone: input.Phone,
-			Title: "Meeting with " + nonEmpty(user.Name, "visitor"), MeetingType: "Online demo", ScheduledAt: input.ScheduledAt, Location: input.Location, Notes: input.Notes,
+			Title: nonEmpty(input.Title, "Meeting with "+nonEmpty(user.Name, "visitor")), MeetingType: "Online demo", ScheduledAt: input.ScheduledAt, Location: input.Location, Notes: input.Notes,
 		}, user)
 		if meetingErr == nil {
 			s.queueMeetingNotifications(r.Context(), meeting, user)
