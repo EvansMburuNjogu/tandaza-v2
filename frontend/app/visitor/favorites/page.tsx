@@ -10,7 +10,6 @@ import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { VisitorFavorite } from "@/lib/api/contracts"
-import { formatDate } from "@/lib/utils"
 
 function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
   const href = favorite.type === "expo" ? `/visitor/expos/${favorite.itemId}` : undefined
@@ -33,13 +32,7 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
         </div>
         <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted">Saved {formatDate(favorite.addedAt)}</span>
-            </div>
-            <h3 className="mt-3 line-clamp-2 text-lg font-semibold text-foreground">{favorite.name}</h3>
-            <p className="mt-1 text-sm text-muted">
-              {favorite.type === "expo" ? "Open this expo and continue exploring exhibitors." : "Saved exhibitor profile."}
-            </p>
+            <h3 className="line-clamp-2 text-lg font-semibold text-foreground">{favorite.name}</h3>
           </div>
 
           {href ? (
