@@ -823,3 +823,9 @@
 - Changed the visitor expo detail timeline from a flat activity feed into expo-day sections built from the expo start and end dates.
 - Visitor activity is now grouped under Day 1, Day 2, and following expo days, with empty-day states when no activity has been recorded yet.
 - Removed timeline pagination from the expo detail page so visitors can scan their full per-day expo activity in one place.
+
+### Exhibitor Workspace Live Stream Menu
+
+- Moved live stream management out of the exhibitor Conversations tab into its own Live Stream workspace menu.
+- Conversations now focuses only on visitor chat and saved message threads.
+- Kept the existing YouTube Live URL settings, visitor visibility toggle, and embedded preview behavior unchanged.

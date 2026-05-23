@@ -21,7 +21,7 @@ import { ChatIcon, ChevronDownIcon, DownloadIcon, MenuIcon, PlusIcon, SearchIcon
 import { cn, formatCurrency, formatDate, mediaUrl } from "@/lib/utils"
 import { toast } from "sonner"
 
-type TabType = "overview" | "leads" | "visitors" | "products" | "orders" | "meetings" | "conversations" | "feedback" | "documents" | "ads" | "analytics" | "qrcode"
+type TabType = "overview" | "leads" | "visitors" | "products" | "orders" | "meetings" | "conversations" | "livestream" | "feedback" | "documents" | "ads" | "analytics" | "qrcode"
 
 const PAGE_SIZE = 10
 const DEFAULT_MEETING_CATEGORIES = ["Online demo", "Sales consultation", "Product walkthrough", "Partnership discussion", "Post-expo follow-up"]
@@ -173,7 +173,7 @@ export default function MyExpoPage() {
 
   useEffect(() => {
     const tab = searchParams.get("tab") as TabType | null
-    if (tab && ["overview", "leads", "visitors", "products", "orders", "meetings", "conversations", "feedback", "documents", "ads", "analytics", "qrcode"].includes(tab)) {
+    if (tab && ["overview", "leads", "visitors", "products", "orders", "meetings", "conversations", "livestream", "feedback", "documents", "ads", "analytics", "qrcode"].includes(tab)) {
       setActiveTab(tab)
     }
   }, [searchParams])
@@ -1080,6 +1080,7 @@ export default function MyExpoPage() {
     { id: "orders", label: "Pre-orders", description: "Purchase intent", count: preOrderTotal },
     { id: "meetings", label: "Meetings", description: "Upcoming sessions", count: upcomingMeetingTotal },
     { id: "conversations", label: "Conversations", description: "Visitor chat", count: conversations.length },
+    { id: "livestream", label: "Live Stream", description: "Remote broadcast" },
     { id: "feedback", label: "Feedback", description: "Visitor reviews", count: feedback.length },
     { id: "documents", label: "Documents", description: "Shared files", count: documents.length },
     ...(expo.adsAddonEnabled ? [{ id: "ads" as TabType, label: "Ads", description: "Paid visibility", count: ads.length }] : []),
@@ -2924,8 +2925,7 @@ export default function MyExpoPage() {
 
       {activeTab === "conversations" && (
         <div className="space-y-4">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
-            <Card className="overflow-hidden">
+          <Card className="overflow-hidden">
               <div className="border-b border-border/70 p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
@@ -3042,9 +3042,13 @@ export default function MyExpoPage() {
                   <p className="mt-1 text-xs text-slate-500">When visitors share interest, request meetings, or submit pre-orders, their conversation threads will appear here.</p>
                 </div>
               )}
-            </Card>
+          </Card>
+        </div>
+      )}
 
-            <Card className="p-4">
+      {activeTab === "livestream" && (
+        <div className="space-y-4">
+          <Card className="p-5 sm:p-6">
               <div>
                 <p className="text-sm font-semibold text-foreground">Live stream</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">Add a YouTube Live link for remote visitors. When enabled, it can be shown on the visitor-facing exhibitor profile.</p>
@@ -3100,8 +3104,7 @@ export default function MyExpoPage() {
               ) : (
                 <div className="mt-4 rounded-2xl border border-dashed border-border/80 p-4 text-sm text-slate-500">No active live stream is enabled for this workspace.</div>
               )}
-            </Card>
-          </div>
+          </Card>
         </div>
       )}
 
