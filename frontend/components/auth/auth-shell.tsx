@@ -135,7 +135,7 @@ function BrandPanel({ title, kicker }: { title: string; kicker: string }) {
           href="/login"
           className="flex w-fit items-center rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30"
         >
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={48} height={48} className="h-12 w-12 object-contain" priority />
+          <Image src="/tandaza-logo-white.png" alt="Tandaza" width={48} height={48} className="h-12 w-12 object-contain" priority />
         </Link>
 
         {/* Centred headline */}

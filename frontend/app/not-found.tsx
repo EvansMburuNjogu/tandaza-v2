@@ -10,7 +10,7 @@ export default function NotFound() {
 
       <div className="relative z-10 flex flex-col items-center">
         <Link href="/" className="mb-10 flex items-center">
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={52} height={52} className="h-12 w-12 object-contain" />
+          <Image src="/tandaza-logo-white.png" alt="Tandaza" width={52} height={52} className="h-12 w-12 object-contain" />
         </Link>
 
         {/* 404 number */}

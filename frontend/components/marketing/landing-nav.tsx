@@ -42,6 +42,7 @@ export function LandingNav() {
   }, [forOpen])
 
   const frosted = scrolled || !isDark
+  const logoSrc = frosted ? "/tandaza-logo.png" : "/tandaza-logo-white.png"
 
   return (
     <header className={cn(
@@ -53,7 +54,7 @@ export function LandingNav() {
       <div className="mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6 lg:px-8">
 
         <Link href="/" className="flex items-center">
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={44} height={44} className="h-11 w-11 object-contain" priority />
+          <Image src={logoSrc} alt="Tandaza" width={44} height={44} className="h-11 w-11 object-contain" priority />
         </Link>
 
         {/* Desktop nav */}

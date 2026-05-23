@@ -58,7 +58,7 @@ export function AdminSidebar({
 
         {/* ── Brand header ─────────────────────────── */}
         <div className="relative flex h-[64px] shrink-0 items-center gap-3 border-b border-white/[0.08] px-4">
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={42} height={42} className="h-10 w-10 shrink-0 object-contain" priority />
+          <Image src="/tandaza-logo-white.png" alt="Tandaza" width={42} height={42} className="h-10 w-10 shrink-0 object-contain" priority />
 
           <div
             className={cn(

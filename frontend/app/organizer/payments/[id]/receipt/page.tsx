@@ -54,7 +54,7 @@ export default function OrganizerPaymentReceiptPage() {
             <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.34),transparent_45%)]" />
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
-                <img src="/tandaza-logo.png" alt="Tandaza" className="h-14 w-14 object-contain" />
+                <img src="/tandaza-logo-white.png" alt="Tandaza" className="h-14 w-14 object-contain" />
                 <div>
                   <h2 className="text-3xl font-semibold tracking-tight">Payment Receipt</h2>
                 </div>
