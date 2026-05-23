@@ -274,17 +274,17 @@ export default function VisitorExpoDetailPage() {
                   const favoriteId = favoriteByItem.get(`exhibitor:${booth.id}`)
                   const isFavorite = Boolean(favoriteId)
                   return (
-                    <article key={booth.id} className="group relative rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
+                    <article key={booth.id} className="group relative overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
                       <button
                         type="button"
                         onClick={() => favoriteMutation.mutate({ booth, favoriteId })}
                         disabled={favoriteMutation.isPending}
                         aria-label={isFavorite ? `Remove ${booth.exhibitorName} from favorites` : `Add ${booth.exhibitorName} to favorites`}
-                        className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition ${isFavorite ? "border-primary/20 bg-primary text-white" : "border-border/70 bg-card/90 text-muted hover:border-primary/25 hover:text-primary"}`}
+                        className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm backdrop-blur transition ${isFavorite ? "border-primary/20 bg-primary text-white opacity-100" : "border-border/70 bg-card/90 text-muted opacity-100 hover:border-primary/25 hover:text-primary sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"}`}
                       >
                         <StarIcon className="h-4 w-4" />
                       </button>
-                      <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="block pr-9">
+                      <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="block">
                         <div className="flex items-start gap-3">
                           <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
                             {booth.exhibitorLogo ? (
@@ -292,7 +292,7 @@ export default function VisitorExpoDetailPage() {
                               <img src={booth.exhibitorLogo} alt={booth.exhibitorName} className="h-full w-full object-contain p-1.5" />
                             ) : booth.exhibitorName.charAt(0)}
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 pr-10">
                             <h3 className="truncate font-semibold text-foreground group-hover:text-primary">{booth.exhibitorName}</h3>
                             {booth.description ? <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description}</p> : null}
                           </div>
@@ -302,7 +302,8 @@ export default function VisitorExpoDetailPage() {
                             <span className="rounded-full bg-elevated px-3 py-1">{booth.products.length} products</span>
                             <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
                           </div>
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">
+                          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">
+                            View
                             <ArrowRightIcon className="h-4 w-4" />
                           </span>
                         </div>
