@@ -86,10 +86,9 @@ export default function VisitorDashboardPage() {
               <Button>Explore expos</Button>
             </Link>
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-2">
+          <div className="mt-5 grid grid-cols-2 gap-2">
             {[
               ["Upcoming", stats.upcomingExposCount],
-              ["Visits", stats.totalVisits],
               ["Saved", stats.favoritesCount]
             ].map(([label, value]) => (
               <div key={label} className="min-w-0 rounded-2xl bg-elevated px-2.5 py-3 text-center sm:px-4 sm:text-left">
