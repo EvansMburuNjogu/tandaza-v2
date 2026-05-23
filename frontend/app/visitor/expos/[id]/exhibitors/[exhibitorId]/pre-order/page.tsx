@@ -76,7 +76,7 @@ export default function VisitorPreOrderPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="mx-auto max-w-3xl space-y-4">
+      <div className="mx-auto w-full max-w-3xl space-y-4 overflow-hidden">
         <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="p-5 sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Pre-order</p>

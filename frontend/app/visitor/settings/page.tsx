@@ -97,7 +97,7 @@ export default function VisitorSettingsPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6 overflow-hidden">
         <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.12),transparent_34%),linear-gradient(135deg,#ffffff,#faf8ff_62%,#f8fafc)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -112,7 +112,7 @@ export default function VisitorSettingsPage() {
           </div>
         </Card>
 
-        <div className="flex gap-2 overflow-x-auto rounded-2xl border border-border/70 bg-card/80 p-1.5">
+        <div className="flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-border/70 bg-card/80 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -163,7 +163,7 @@ export default function VisitorSettingsPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <label htmlFor="visitorPhone" className="text-sm font-medium text-foreground">Phone number</label>
-                    <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2">
+                    <div className="grid min-w-0 grid-cols-[minmax(6.5rem,7.75rem)_minmax(0,1fr)] gap-2">
                       <select
                         value={callingCode}
                         onChange={(event) => setCallingCode(event.target.value)}

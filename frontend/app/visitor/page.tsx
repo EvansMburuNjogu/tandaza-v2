@@ -75,7 +75,7 @@ export default function VisitorDashboardPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6 overflow-hidden">
         <Card className="p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

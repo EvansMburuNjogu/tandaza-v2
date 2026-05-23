@@ -41,14 +41,14 @@ function QuickAction({
 
   if (href) {
     return (
-      <Link href={href} className="group flex min-w-[5.75rem] flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
+      <Link href={href} className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
         {content}
       </Link>
     )
   }
 
   return (
-    <button type="button" onClick={onClick} className="group flex min-w-[5.75rem] flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
+    <button type="button" onClick={onClick} className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
       {content}
     </button>
   )
@@ -135,7 +135,7 @@ export default function VisitorExhibitorPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6 overflow-hidden">
         <section className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="p-5 sm:p-6">
@@ -165,8 +165,8 @@ export default function VisitorExhibitorPage() {
           </div>
         </section>
 
-        <section className="overflow-x-auto pb-1">
-          <div className="flex min-w-max gap-3 sm:min-w-0 sm:flex-wrap">
+        <section>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
             <QuickAction label="Chat" icon={ChatIcon} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/chat`} />
             <QuickAction label="Interested" icon={HeartIcon} onClick={() => setDialog("interest")} />
             <QuickAction label="Meeting" icon={CalendarIcon} onClick={() => setDialog("meeting")} />

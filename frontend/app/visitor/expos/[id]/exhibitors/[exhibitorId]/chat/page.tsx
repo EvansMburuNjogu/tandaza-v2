@@ -70,7 +70,7 @@ export default function VisitorExhibitorChatPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="mx-auto flex max-w-4xl flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 overflow-hidden">
         <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="overflow-hidden">
           <div className="border-b border-border/70 p-4">
@@ -79,7 +79,7 @@ export default function VisitorExhibitorChatPage() {
           </div>
           <div className="max-h-[58vh] min-h-[22rem] space-y-3 overflow-y-auto bg-elevated/35 p-4">
             {messages.length ? messages.map((item) => (
-              <div key={item.id} className={`max-w-[86%] rounded-2xl p-3 text-sm ${item.senderRole === "visitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground"}`}>
+              <div key={item.id} className={`max-w-[86%] break-words rounded-2xl p-3 text-sm ${item.senderRole === "visitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground"}`}>
                 <p className="leading-6">{item.message}</p>
                 <p className={`mt-1 text-[11px] ${item.senderRole === "visitor" ? "text-white/70" : "text-muted"}`}>{formatDate(item.createdAt)}</p>
               </div>
@@ -94,7 +94,7 @@ export default function VisitorExhibitorChatPage() {
               mutation.mutate()
             }}
           >
-            <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10">
+            <div className="flex min-w-0 items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10">
               <textarea
                 aria-label="Message"
                 value={message}

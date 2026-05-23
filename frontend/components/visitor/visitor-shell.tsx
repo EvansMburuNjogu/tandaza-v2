@@ -40,7 +40,10 @@ export function VisitorShell({
   }
 
   return (
-    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground">
+    <div className="relative min-h-screen w-full max-w-[100dvw] overflow-x-hidden bg-background text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_18%_-10%,hsl(var(--primary)/0.10),transparent_58%),radial-gradient(ellipse_55%_40%_at_100%_12%,hsl(var(--accent)/0.08),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 border-b border-border/40 bg-gradient-to-b from-card/35 to-transparent" />
       <AdminSidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
@@ -54,7 +57,7 @@ export function VisitorShell({
             onToggleMenu={() => setMobileOpen((v) => !v)}
             onToggleSidebar={toggleCollapsed}
           />
-          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-28 pt-[88px] sm:px-6 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-8">
+          <main className="relative z-10 min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-28 pt-[88px] sm:px-6 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-8">
             <div className="mx-auto w-full min-w-0 max-w-[1600px]">
               {children}
             </div>

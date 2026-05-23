@@ -76,7 +76,7 @@ export default function VisitorProductPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6 overflow-hidden">
         <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
@@ -90,7 +90,7 @@ export default function VisitorProductPage() {
               </div>
             </Card>
             {images.length > 1 ? (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 {images.slice(1, 5).map((image) => (
                   <div key={image} className="aspect-square overflow-hidden rounded-2xl border border-border/70 bg-card">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

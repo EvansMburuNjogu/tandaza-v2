@@ -112,7 +112,7 @@ export default function VisitorExposPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6 overflow-hidden">
           <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.16),transparent_36%),linear-gradient(135deg,#ffffff,#faf8ff_60%,#f8fafc)] p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
@@ -143,7 +143,7 @@ export default function VisitorExposPage() {
             </div>
           </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2" aria-label="Expo categories">
+        <div className="-mx-4 flex max-w-[100dvw] gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0" aria-label="Expo categories">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -176,7 +176,7 @@ export default function VisitorExposPage() {
               <p className="text-sm text-muted">
                 Showing {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, expos.length)} of {expos.length.toLocaleString()} expos
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex max-w-full flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-end">
                 <Button variant="secondary" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Previous</Button>
                 <span className="rounded-xl bg-elevated px-3 py-2 text-sm font-semibold text-foreground">Page {page} of {totalPages}</span>
                 <Button variant="secondary" disabled={page === totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>Next</Button>

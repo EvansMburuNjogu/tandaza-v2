@@ -104,7 +104,7 @@ export default function VisitorCalendarPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6 overflow-hidden">
         <div className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.16),transparent_36%),linear-gradient(135deg,#ffffff,#faf8ff_60%,#f8fafc)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -125,7 +125,7 @@ export default function VisitorCalendarPage() {
                 <button aria-label="Previous month" onClick={prevMonth} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-muted transition-colors hover:text-foreground">
                   &larr;
                 </button>
-                <h2 className="text-lg font-semibold">
+                <h2 className="min-w-0 truncate px-2 text-center text-base font-semibold sm:text-lg">
                   {MONTHS[currentMonth]} {currentYear}
                 </h2>
                 <button aria-label="Next month" onClick={nextMonth} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-muted transition-colors hover:text-foreground">
@@ -193,7 +193,7 @@ export default function VisitorCalendarPage() {
                 </button>
               )}
 
-              <div className="space-y-3 mt-4">
+              <div className="mt-4 space-y-3">
                 {(selectedExpos.length > 0 ? selectedExpos : expos.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())).map((expo) => (
                   <div key={expo.id} className={`rounded-2xl border p-3 ${typeColor(expo.type)}`}>
                     <div className="flex items-center gap-2">

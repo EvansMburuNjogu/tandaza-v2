@@ -40,7 +40,7 @@ export default function VisitorLiveStreamPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="mx-auto max-w-4xl space-y-4">
+      <div className="mx-auto w-full max-w-4xl space-y-4 overflow-hidden">
         <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="overflow-hidden">
           <div className="aspect-video bg-[linear-gradient(135deg,#f6f2ff,#ffffff)]" />

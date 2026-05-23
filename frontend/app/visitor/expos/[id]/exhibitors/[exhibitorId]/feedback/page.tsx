@@ -60,7 +60,7 @@ export default function VisitorFeedbackPage() {
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
-      <div className="mx-auto max-w-2xl space-y-4">
+      <div className="mx-auto w-full max-w-2xl space-y-4 overflow-hidden">
         <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="p-5 sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Feedback</p>
