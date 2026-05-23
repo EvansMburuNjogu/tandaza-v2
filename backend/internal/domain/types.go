@@ -943,6 +943,20 @@ type VisitorDashboardStats struct {
 	UpcomingBookings []VisitorBookingRecord `json:"upcomingBookings"`
 }
 
+type VisitorFavoriteRecord struct {
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	ItemID  string `json:"itemId"`
+	Name    string `json:"name"`
+	Image   string `json:"image"`
+	AddedAt string `json:"addedAt"`
+}
+
+type VisitorFavoriteInput struct {
+	Type   string `json:"type"`
+	ItemID string `json:"itemId"`
+}
+
 type Notification struct {
 	ID             string         `json:"id"`
 	UserID         string         `json:"userId,omitempty"`

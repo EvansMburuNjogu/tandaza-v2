@@ -74,6 +74,9 @@ type Store interface {
 	CancelLeadFollowUpNotifications(ctx context.Context, leadID string) (int, error)
 	RecordVisitorActivity(ctx context.Context, actor domain.User, expoID string, expoExhibitorID string, activityType string, description string) error
 	VisitorTimeline(ctx context.Context, visitorID string) ([]domain.VisitorTimelineDay, error)
+	VisitorFavorites(ctx context.Context, visitorID string) ([]domain.VisitorFavoriteRecord, error)
+	AddVisitorFavorite(ctx context.Context, visitorID string, input domain.VisitorFavoriteInput) (domain.VisitorFavoriteRecord, error)
+	DeleteVisitorFavorite(ctx context.Context, visitorID string, id string) error
 	CreateVisitorBooking(ctx context.Context, expoID string, ticketType string, actor domain.User) (domain.VisitorBookingRecord, error)
 	VisitorBookings(ctx context.Context, visitorID string) ([]domain.VisitorBookingRecord, error)
 	CreateNotification(ctx context.Context, input domain.NotificationInput, actor domain.User) (domain.Notification, error)

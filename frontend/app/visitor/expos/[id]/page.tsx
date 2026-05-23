@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { SessionGuard } from "@/components/auth/session-guard"
@@ -9,11 +9,12 @@ import { Card } from "@/components/ui/card"
 import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
-import { ArrowRightIcon } from "@/components/ui/icons"
+import { ArrowRightIcon, StarIcon } from "@/components/ui/icons"
 import { api } from "@/lib/api"
 import { SponsorAd, VisitorActivityItem, VisitorBooth } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 import { formatDate } from "@/lib/utils"
+import { toast } from "sonner"
 
 const EXHIBITOR_PAGE_SIZE = 9
 const TIMELINE_PAGE_SIZE = 8
@@ -92,6 +93,33 @@ export default function VisitorExpoDetailPage() {
     queryFn: () => api.getVisitorTimeline(token || ""),
     enabled: sessionReady
   })
+  const favoritesQuery = useQuery({
+    queryKey: ["visitor-favorites", token],
+    queryFn: () => api.getVisitorFavorites(token || ""),
+    enabled: sessionReady
+  })
+  const favoriteByItem = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const favorite of favoritesQuery.data || []) {
+      map.set(`${favorite.type}:${favorite.itemId}`, favorite.id)
+    }
+    return map
+  }, [favoritesQuery.data])
+  const favoriteMutation = useMutation({
+    mutationFn: async ({ booth, favoriteId }: { booth: VisitorBooth; favoriteId?: string }) => {
+      if (favoriteId) {
+        await api.removeFavorite(token || "", favoriteId)
+        return
+      }
+      await api.addFavorite(token || "", "exhibitor", booth.id)
+    },
+    onSuccess: (_, variables) => {
+      toast.success(variables.favoriteId ? "Removed from favorites." : "Added to favorites.")
+      queryClient.invalidateQueries({ queryKey: ["visitor-favorites"] })
+      queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update favorite.")
+  })
   const timeline = useMemo(() => {
     return (timelineQuery.data || [])
       .flatMap((day) => day.activities || [])
@@ -130,6 +158,16 @@ export default function VisitorExpoDetailPage() {
   useEffect(() => {
     setTimelinePage(1)
   }, [expoId, timeline.length])
+
+  useEffect(() => {
+    if (!sessionReady || !ads.length) return
+    for (const ad of ads) {
+      const key = `tandaza_ad_impression_${expoId}_${ad.id}`
+      if (window.sessionStorage.getItem(key)) continue
+      window.sessionStorage.setItem(key, "1")
+      void api.trackSponsorAd(ad.id, "impression")
+    }
+  }, [ads, expoId, sessionReady])
 
   if (!sessionReady) {
     return <SessionGuard allowedRoles={["visitor"]}><div /></SessionGuard>
@@ -231,35 +269,46 @@ export default function VisitorExpoDetailPage() {
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {pagedBooths.map((booth) => (
-                  <Link
-                    key={booth.id}
-                    href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`}
-                    className="group rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
-                        {booth.exhibitorLogo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={booth.exhibitorLogo} alt={booth.exhibitorName} className="h-full w-full object-contain p-1.5" />
-                        ) : booth.exhibitorName.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="truncate font-semibold text-foreground group-hover:text-primary">{booth.exhibitorName}</h3>
-                        <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="flex flex-wrap gap-2 text-xs font-semibold text-muted">
-                        <span className="rounded-full bg-elevated px-3 py-1">{booth.products.length} products</span>
-                        <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
-                      </div>
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">
-                        <ArrowRightIcon className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                {pagedBooths.map((booth) => {
+                  const favoriteId = favoriteByItem.get(`exhibitor:${booth.id}`)
+                  const isFavorite = Boolean(favoriteId)
+                  return (
+                    <article key={booth.id} className="group relative rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
+                      <button
+                        type="button"
+                        onClick={() => favoriteMutation.mutate({ booth, favoriteId })}
+                        disabled={favoriteMutation.isPending}
+                        aria-label={isFavorite ? `Remove ${booth.exhibitorName} from favorites` : `Add ${booth.exhibitorName} to favorites`}
+                        className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition ${isFavorite ? "border-primary/20 bg-primary text-white" : "border-border/70 bg-card/90 text-muted hover:border-primary/25 hover:text-primary"}`}
+                      >
+                        <StarIcon className="h-4 w-4" />
+                      </button>
+                      <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="block pr-9">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
+                            {booth.exhibitorLogo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={booth.exhibitorLogo} alt={booth.exhibitorName} className="h-full w-full object-contain p-1.5" />
+                            ) : booth.exhibitorName.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-semibold text-foreground group-hover:text-primary">{booth.exhibitorName}</h3>
+                            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <div className="flex flex-wrap gap-2 text-xs font-semibold text-muted">
+                            <span className="rounded-full bg-elevated px-3 py-1">{booth.products.length} products</span>
+                            <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
+                          </div>
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">
+                            <ArrowRightIcon className="h-4 w-4" />
+                          </span>
+                        </div>
+                      </Link>
+                    </article>
+                  )
+                })}
               </div>
               {exhibitorTotalPages > 1 ? (
                 <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-3 sm:flex-row sm:items-center sm:justify-between">

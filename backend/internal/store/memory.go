@@ -46,6 +46,7 @@ type MemoryStore struct {
 	exhibitorCampaignDrafts  []domain.ExhibitorCampaignDraftRecord
 	meetings                 []domain.MeetingRecord
 	activities               []domain.VisitorActivityItem
+	favorites                []memoryFavorite
 	bookings                 []domain.VisitorBookingRecord
 	visitorProfiles          map[string]domain.VisitorSettingsInput
 	notifications            []domain.Notification
@@ -75,6 +76,11 @@ type MemoryStore struct {
 	openAISettings           domain.OpenAISettings
 	aiSummaries              []domain.AIAnalyticsSummary
 	whatsappSettings         domain.WhatsappSettings
+}
+
+type memoryFavorite struct {
+	VisitorID string
+	Record    domain.VisitorFavoriteRecord
 }
 
 func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
@@ -1815,6 +1821,82 @@ func (s *MemoryStore) VisitorTimeline(ctx context.Context, visitorID string) ([]
 		days = append(days, domain.VisitorTimelineDay{Date: day, Activities: activities})
 	}
 	return days, nil
+}
+
+func (s *MemoryStore) VisitorFavorites(ctx context.Context, visitorID string) ([]domain.VisitorFavoriteRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	items := []domain.VisitorFavoriteRecord{}
+	for _, favorite := range s.favorites {
+		if favorite.VisitorID == visitorID {
+			items = append(items, favorite.Record)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool { return items[i].AddedAt > items[j].AddedAt })
+	return items, nil
+}
+
+func (s *MemoryStore) AddVisitorFavorite(ctx context.Context, visitorID string, input domain.VisitorFavoriteInput) (domain.VisitorFavoriteRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	favoriteType := strings.ToLower(strings.TrimSpace(input.Type))
+	itemID := strings.TrimSpace(input.ItemID)
+	if visitorID == "" || itemID == "" || (favoriteType != "expo" && favoriteType != "exhibitor") {
+		return domain.VisitorFavoriteRecord{}, ErrInvalidCredentials
+	}
+	for _, favorite := range s.favorites {
+		if favorite.VisitorID == visitorID && favorite.Record.Type == favoriteType && favorite.Record.ItemID == itemID {
+			return favorite.Record, nil
+		}
+	}
+	name := ""
+	image := ""
+	if favoriteType == "expo" {
+		for _, expo := range s.expos {
+			if expo.ID == itemID {
+				name = expo.Name
+				image = expo.CoverImageURL
+				break
+			}
+		}
+	} else {
+		for _, assignment := range s.exhibitors {
+			if assignment.ID == itemID || assignment.ExhibitorID == itemID {
+				name = assignment.ExhibitorName
+				if profile, ok := s.exhibitorProfiles[assignment.ExhibitorID]; ok {
+					image = profile.LogoURL
+				}
+				break
+			}
+		}
+	}
+	if strings.TrimSpace(name) == "" {
+		return domain.VisitorFavoriteRecord{}, ErrNotFound
+	}
+	record := domain.VisitorFavoriteRecord{
+		ID: fmt.Sprintf("vf_%06d", len(s.favorites)+1), Type: favoriteType, ItemID: itemID, Name: name, Image: image, AddedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+	s.favorites = append([]memoryFavorite{{VisitorID: visitorID, Record: record}}, s.favorites...)
+	return record, nil
+}
+
+func (s *MemoryStore) DeleteVisitorFavorite(ctx context.Context, visitorID string, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	next := s.favorites[:0]
+	removed := false
+	for _, favorite := range s.favorites {
+		if favorite.VisitorID == visitorID && favorite.Record.ID == id {
+			removed = true
+			continue
+		}
+		next = append(next, favorite)
+	}
+	s.favorites = next
+	if !removed {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *MemoryStore) CreateVisitorBooking(ctx context.Context, expoID string, ticketType string, actor domain.User) (domain.VisitorBookingRecord, error) {

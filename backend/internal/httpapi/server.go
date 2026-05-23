@@ -253,6 +253,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/visitor/bookings/{id}/cancel", s.visitorCancelBooking)
 	mux.HandleFunc("GET /api/v1/visitor/timeline", s.visitorTimeline)
 	mux.HandleFunc("GET /api/v1/visitor/favorites", s.visitorFavorites)
+	mux.HandleFunc("POST /api/v1/visitor/favorites", s.visitorAddFavorite)
 	mux.HandleFunc("DELETE /api/v1/visitor/favorites/{id}", s.visitorDeleteFavorite)
 	mux.HandleFunc("GET /api/v1/visitor/calendar", s.visitorCalendar)
 	mux.HandleFunc("GET /api/v1/visitor/messages", s.visitorMessages)
@@ -4703,12 +4704,13 @@ func (s *Server) visitorDashboard(w http.ResponseWriter, r *http.Request) {
 	}
 	timeline, _ := s.store.VisitorTimeline(r.Context(), claims.UserID)
 	bookings, _ := s.store.VisitorBookings(r.Context(), claims.UserID)
+	favorites, _ := s.store.VisitorFavorites(r.Context(), claims.UserID)
 	activities := []domain.VisitorActivityItem{}
 	for _, day := range timeline {
 		activities = append(activities, day.Activities...)
 	}
 	writeJSON(w, http.StatusOK, domain.VisitorDashboardStats{
-		TotalBookings: len(bookings), UpcomingEvents: len(bookings), TotalVisits: len(activities), FavoritesCount: 0,
+		TotalBookings: len(bookings), UpcomingEvents: len(bookings), TotalVisits: len(activities), FavoritesCount: len(favorites),
 		RecentActivity: activities, UpcomingBookings: bookings,
 	})
 }
@@ -4809,17 +4811,46 @@ func (s *Server) visitorTimeline(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) visitorFavorites(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requireRole(w, r, domain.RoleVisitor); !ok {
+	claims, ok := s.requireRole(w, r, domain.RoleVisitor)
+	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, []map[string]any{})
+	items, err := s.store.VisitorFavorites(r.Context(), claims.UserID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "favorites_failed", "Could not load favorites.")
+		return
+	}
+	writeJSON(w, http.StatusOK, paginatedItems(r, items))
+}
+
+func (s *Server) visitorAddFavorite(w http.ResponseWriter, r *http.Request) {
+	claims, ok := s.requireRole(w, r, domain.RoleVisitor)
+	if !ok {
+		return
+	}
+	var input domain.VisitorFavoriteInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	item, err := s.store.AddVisitorFavorite(r.Context(), claims.UserID, input)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "favorite_failed", "Could not save favorite.")
+		return
+	}
+	writeJSON(w, http.StatusCreated, item)
 }
 
 func (s *Server) visitorDeleteFavorite(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requireRole(w, r, domain.RoleVisitor); !ok {
+	claims, ok := s.requireRole(w, r, domain.RoleVisitor)
+	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"success": true})
+	if err := s.store.DeleteVisitorFavorite(r.Context(), claims.UserID, r.PathValue("id")); err != nil {
+		writeError(w, http.StatusNotFound, "favorite_not_found", "Favorite was not found.")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) visitorCalendar(w http.ResponseWriter, r *http.Request) {

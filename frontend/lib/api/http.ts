@@ -802,9 +802,9 @@ export const httpApi: ApiDriver = {
     })
   },
   getVisitorFavorites(token): Promise<VisitorFavorite[]> {
-    return request("/api/v1/visitor/favorites", { headers: { Authorization: `Bearer ${token}` } })
+    return requestItems("/api/v1/visitor/favorites", { headers: { Authorization: `Bearer ${token}` } })
   },
-  addFavorite(token, type, itemId): Promise<void> {
+  addFavorite(token, type, itemId): Promise<VisitorFavorite> {
     return request("/api/v1/visitor/favorites", { method: "POST", body: JSON.stringify({ type, itemId }), headers: { Authorization: `Bearer ${token}` } })
   },
   removeFavorite(token, favoriteId): Promise<void> {

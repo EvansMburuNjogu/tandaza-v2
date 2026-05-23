@@ -1411,7 +1411,7 @@ export interface ApiDriver {
   getVisitorExpoDetails(token: string, id: string): Promise<VisitorExpo>
   createVisitorExpoAction(token: string, expoId: string, data: VisitorExpoActionPayload): Promise<Lead>
   getVisitorFavorites(token: string): Promise<VisitorFavorite[]>
-  addFavorite(token: string, type: "expo" | "exhibitor", itemId: string): Promise<void>
+  addFavorite(token: string, type: "expo" | "exhibitor", itemId: string): Promise<VisitorFavorite>
   removeFavorite(token: string, favoriteId: string): Promise<void>
   getVisitorTimeline(token: string): Promise<VisitorTimelineDay[]>
   getVisitorCalendar(token: string): Promise<VisitorCalendarItem[]>

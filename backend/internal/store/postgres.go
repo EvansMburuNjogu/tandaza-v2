@@ -2147,6 +2147,96 @@ func (s *PostgresStore) VisitorTimeline(ctx context.Context, visitorID string) (
 	return days, rows.Err()
 }
 
+func (s *PostgresStore) VisitorFavorites(ctx context.Context, visitorID string) ([]domain.VisitorFavoriteRecord, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, type, item_id, name, image_url, created_at FROM visitor_favorites WHERE visitor_id=$1 ORDER BY created_at DESC`, visitorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []domain.VisitorFavoriteRecord{}
+	for rows.Next() {
+		var item domain.VisitorFavoriteRecord
+		var created time.Time
+		if err := rows.Scan(&item.ID, &item.Type, &item.ItemID, &item.Name, &item.Image, &created); err != nil {
+			return nil, err
+		}
+		item.AddedAt = created.Format(time.RFC3339)
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func (s *PostgresStore) AddVisitorFavorite(ctx context.Context, visitorID string, input domain.VisitorFavoriteInput) (domain.VisitorFavoriteRecord, error) {
+	favoriteType := strings.ToLower(strings.TrimSpace(input.Type))
+	itemID := strings.TrimSpace(input.ItemID)
+	if visitorID == "" || itemID == "" || (favoriteType != "expo" && favoriteType != "exhibitor") {
+		return domain.VisitorFavoriteRecord{}, ErrInvalidCredentials
+	}
+	name, image, err := s.resolveVisitorFavoriteTarget(ctx, favoriteType, itemID)
+	if err != nil {
+		return domain.VisitorFavoriteRecord{}, err
+	}
+	id := fmt.Sprintf("vf_%d", time.Now().UnixNano())
+	var record domain.VisitorFavoriteRecord
+	var created time.Time
+	err = s.pool.QueryRow(ctx, `INSERT INTO visitor_favorites (id, visitor_id, type, item_id, name, image_url)
+		VALUES ($1,$2,$3,$4,$5,$6)
+		ON CONFLICT (visitor_id, type, item_id) DO UPDATE SET name=EXCLUDED.name, image_url=EXCLUDED.image_url
+		RETURNING id, type, item_id, name, image_url, created_at`, id, visitorID, favoriteType, itemID, name, image).
+		Scan(&record.ID, &record.Type, &record.ItemID, &record.Name, &record.Image, &created)
+	if err != nil {
+		return domain.VisitorFavoriteRecord{}, err
+	}
+	record.AddedAt = created.Format(time.RFC3339)
+	return record, nil
+}
+
+func (s *PostgresStore) DeleteVisitorFavorite(ctx context.Context, visitorID string, id string) error {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM visitor_favorites WHERE visitor_id=$1 AND id=$2`, visitorID, strings.TrimSpace(id))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *PostgresStore) resolveVisitorFavoriteTarget(ctx context.Context, favoriteType string, itemID string) (string, string, error) {
+	if favoriteType == "expo" {
+		var name, image string
+		if err := s.pool.QueryRow(ctx, `SELECT name, COALESCE(cover_image_url,'') FROM expos WHERE id=$1`, itemID).Scan(&name, &image); err != nil {
+			return "", "", err
+		}
+		return name, image, nil
+	}
+	var company, name, companyCipher, nameCipher, logo string
+	err := s.pool.QueryRow(ctx, `SELECT COALESCE(u.company_name,''), COALESCE(u.name,''), COALESCE(u.company_name_cipher,''), COALESCE(u.name_cipher,''), COALESCE(ep.logo_url, u.avatar_url, '')
+		FROM expo_exhibitors ee
+		JOIN users u ON u.id=ee.exhibitor_id
+		LEFT JOIN exhibitor_profiles ep ON ep.exhibitor_id=u.id
+		WHERE ee.id=$1 OR ee.exhibitor_id=$1
+		ORDER BY ee.created_at DESC
+		LIMIT 1`, itemID).Scan(&company, &name, &companyCipher, &nameCipher, &logo)
+	if err != nil {
+		return "", "", err
+	}
+	display := strings.TrimSpace(s.pii.Decrypt(companyCipher))
+	if display == "" {
+		display = strings.TrimSpace(company)
+	}
+	if display == "" {
+		display = strings.TrimSpace(s.pii.Decrypt(nameCipher))
+	}
+	if display == "" {
+		display = strings.TrimSpace(name)
+	}
+	if display == "" {
+		return "", "", ErrNotFound
+	}
+	return display, logo, nil
+}
+
 func (s *PostgresStore) CreateVisitorBooking(ctx context.Context, expoID string, ticketType string, actor domain.User) (domain.VisitorBookingRecord, error) {
 	expo, err := s.ExpoByID(ctx, expoID)
 	if err != nil {
