@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -10,23 +10,19 @@ import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
+import { VisitorActivityItem } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 import { formatDate } from "@/lib/utils"
 
-function expoTimeline(startDate: string, endDate: string) {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return []
-  const days = []
-  const cursor = new Date(start)
-  cursor.setHours(0, 0, 0, 0)
-  const last = new Date(end)
-  last.setHours(0, 0, 0, 0)
-  while (cursor <= last && days.length < 14) {
-    days.push(new Date(cursor))
-    cursor.setDate(cursor.getDate() + 1)
+function activityLabel(type: VisitorActivityItem["type"]) {
+  const labels: Record<string, string> = {
+    visited: "Visited",
+    saved: "Saved",
+    contact: "Shared interest",
+    feedback: "Feedback",
+    preorder: "Pre-order"
   }
-  return days
+  return labels[type] || type.replace(/_/g, " ")
 }
 
 export default function VisitorExpoDetailPage() {
@@ -47,7 +43,17 @@ export default function VisitorExpoDetailPage() {
 
   const booths = data?.booths || []
   const ads = data?.ads || []
-  const timeline = data ? expoTimeline(data.startDate, data.endDate) : []
+  const timelineQuery = useQuery({
+    queryKey: ["visitor-timeline", token],
+    queryFn: () => api.getVisitorTimeline(token || ""),
+    enabled: sessionReady
+  })
+  const timeline = useMemo(() => {
+    return (timelineQuery.data || [])
+      .flatMap((day) => day.activities || [])
+      .filter((activity) => activity.expoId === expoId)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  }, [expoId, timelineQuery.data])
 
   useEffect(() => {
     if (!sessionReady || !expoId || !token || !user || !booths.length) return
@@ -65,6 +71,7 @@ export default function VisitorExpoDetailPage() {
       notes: exhibitorFromQr ? "Opened exhibitor profile from QR code." : "Opened expo profile remotely."
     }).then(() => {
       queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
+      queryClient.invalidateQueries({ queryKey: ["visitor-timeline"] })
     }).catch(() => {
       window.sessionStorage.removeItem(visitKey)
     })
@@ -193,29 +200,34 @@ export default function VisitorExpoDetailPage() {
         <section className="space-y-3">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Timeline</h2>
-            <p className="text-sm text-muted">Use this to plan when to explore exhibitors and return for follow-ups.</p>
+            <p className="text-sm text-muted">Your latest activity in this expo.</p>
           </div>
-          {timeline.length === 0 ? (
-            <Card className="border-dashed p-8 text-center text-sm text-muted">The expo timeline will appear when dates are available.</Card>
+          {timelineQuery.isLoading ? (
+            <Card className="border-dashed p-8 text-center text-sm text-muted">Loading timeline...</Card>
+          ) : timeline.length === 0 ? (
+            <Card className="border-dashed p-8 text-center text-sm text-muted">Your activity will appear here after you open exhibitors, share interest, request meetings, or send feedback.</Card>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {timeline.map((day, index) => (
-                <Card key={day.toISOString()} className="p-4">
-                  <div className="flex items-center justify-between gap-3">
+            <Card className="overflow-hidden">
+              <div className="divide-y divide-border/70">
+                {timeline.slice(0, 8).map((activity) => (
+                  <div key={activity.id} className="flex gap-3 p-4">
+                    <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Day {index + 1}</p>
-                      <h3 className="mt-1 font-semibold text-foreground">{formatDate(day.toISOString())}</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">{activity.title || activity.description}</p>
+                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+                          {activityLabel(activity.type)}
+                        </span>
+                      </div>
+                      {activity.description && activity.description !== activity.title ? (
+                        <p className="mt-1 text-sm leading-6 text-muted">{activity.description}</p>
+                      ) : null}
+                      <p className="mt-1 text-xs font-medium text-muted">{formatDate(activity.timestamp)}</p>
                     </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      {index === 0 ? "Opening" : index === timeline.length - 1 ? "Closing" : "Expo day"}
-                    </span>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-muted">
-                    Exhibitor profiles, products, downloads, meetings, feedback, and chat remain available for remote access.
-                  </p>
-                </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            </Card>
           )}
         </section>
       </div>
