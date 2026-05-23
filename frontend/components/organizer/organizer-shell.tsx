@@ -40,22 +40,24 @@ export function OrganizerShell({
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground">
       <AdminSidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         navItems={activeNavItems}
       />
-      <div className={collapsed ? "lg:pl-[72px] transition-[padding] duration-300 ease-in-out" : "lg:pl-[260px] transition-[padding] duration-300 ease-in-out"}>
-        <div className="flex h-screen flex-col">
+      <div className={collapsed ? "relative z-10 min-w-0 max-w-full lg:pl-[72px] transition-[padding] duration-300 ease-in-out" : "relative z-10 min-w-0 max-w-full lg:pl-[260px] transition-[padding] duration-300 ease-in-out"}>
+        <div className="flex h-screen min-w-0 max-w-full flex-col">
           <AdminTopbar
             collapsed={collapsed}
             onToggleMenu={() => setMobileOpen((v) => !v)}
             onToggleSidebar={toggleCollapsed}
           />
-          <main className="flex-1 overflow-y-auto px-4 py-6 pb-28 sm:px-6 lg:px-8 lg:py-8">
-            {children}
+          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-28 pt-[88px] sm:px-6 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-8">
+            <div className="mx-auto w-full min-w-0 max-w-[1600px]">
+              {children}
+            </div>
           </main>
           <MobileBottomNav items={activeNavItems} onMore={() => setMobileOpen(true)} />
         </div>
