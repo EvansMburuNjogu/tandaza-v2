@@ -25,7 +25,11 @@ function activityLabel(type: VisitorActivityItem["type"]) {
     saved: "Saved",
     contact: "Shared interest",
     feedback: "Feedback",
-    preorder: "Pre-order"
+    preorder: "Pre-order",
+    profile_view: "Viewed profile",
+    product_view: "Viewed product",
+    document_download: "Opened file",
+    meeting_joined: "Joined meeting"
   }
   return labels[type] || type.replace(/_/g, " ")
 }
@@ -153,13 +157,10 @@ export default function VisitorExpoDetailPage() {
     const visitKey = `tandaza_visitor_exhibit_visit_${expoId}_${booth.id}_${user.id || user.email || "visitor"}`
     if (window.sessionStorage.getItem(visitKey)) return
     window.sessionStorage.setItem(visitKey, "1")
-    api.createVisitorExpoAction(token, expoId, {
+    api.recordVisitorActivity(token, expoId, {
       boothId: booth.id,
-      action: "visit",
-      name: user.name,
-      email: user.email,
-      source: exhibitorFromQr ? "booth_qr" : "remote_visit",
-      notes: exhibitorFromQr ? "Opened exhibitor profile from QR code." : "Opened expo profile remotely."
+      type: "profile_view",
+      description: exhibitorFromQr ? "Opened exhibitor profile from QR code." : "Opened expo profile remotely."
     }).then(() => {
       queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
       queryClient.invalidateQueries({ queryKey: ["visitor-timeline"] })

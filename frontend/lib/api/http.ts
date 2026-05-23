@@ -93,6 +93,7 @@ import {
   VisitorRecord,
   VisitorDashboardStats,
   VisitorFavorite,
+  VisitorActivityPayload,
   VisitorExpoActionPayload,
   VisitorTimelineDay,
   VisitorCalendarItem,
@@ -798,6 +799,13 @@ export const httpApi: ApiDriver = {
     return request(`/api/v1/visitor/expos/${expoId}/actions?exhibitor=${encodeURIComponent(boothId)}`, {
       method: "POST",
       body: JSON.stringify(payload),
+      headers: { Authorization: `Bearer ${token}` }
+    })
+  },
+  recordVisitorActivity(token: string, expoId: string, data: VisitorActivityPayload): Promise<{ status: string }> {
+    return request(`/api/v1/visitor/expos/${expoId}/activity`, {
+      method: "POST",
+      body: JSON.stringify(data),
       headers: { Authorization: `Bearer ${token}` }
     })
   },

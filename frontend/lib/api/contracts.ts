@@ -1410,6 +1410,7 @@ export interface ApiDriver {
   getVisitorExpos(token: string): Promise<VisitorExpo[]>
   getVisitorExpoDetails(token: string, id: string): Promise<VisitorExpo>
   createVisitorExpoAction(token: string, expoId: string, data: VisitorExpoActionPayload): Promise<Lead>
+  recordVisitorActivity(token: string, expoId: string, data: VisitorActivityPayload): Promise<{ status: string }>
   getVisitorFavorites(token: string): Promise<VisitorFavorite[]>
   addFavorite(token: string, type: "expo" | "exhibitor", itemId: string): Promise<VisitorFavorite>
   removeFavorite(token: string, favoriteId: string): Promise<void>
@@ -1499,7 +1500,7 @@ export interface VisitorDashboardStats {
 
 export interface VisitorActivityItem {
   id: string
-  type: "visited" | "saved" | "contact" | "feedback" | "preorder"
+  type: "visited" | "saved" | "contact" | "feedback" | "preorder" | "profile_view" | "product_view" | "document_download" | "meeting_joined"
   title: string
   description: string
   timestamp: string
@@ -1569,6 +1570,12 @@ export interface VisitorExpoActionPayload {
   productCurrency?: string
   quantity?: number
   scheduledAt?: string
+}
+
+export interface VisitorActivityPayload {
+  boothId?: string
+  type: VisitorActivityItem["type"] | "expo_view"
+  description?: string
 }
 
 export interface VisitorFavorite {

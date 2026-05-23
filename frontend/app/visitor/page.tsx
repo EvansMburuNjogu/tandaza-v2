@@ -17,14 +17,22 @@ function ActivityIcon({ type }: { type: string }) {
     saved: "bg-success/10 text-success",
     contact: "bg-purple-500/10 text-purple-500",
     feedback: "bg-amber-500/10 text-amber-600",
-    preorder: "bg-blue-500/10 text-blue-500"
+    preorder: "bg-blue-500/10 text-blue-500",
+    profile_view: "bg-indigo-500/10 text-indigo-600",
+    product_view: "bg-cyan-500/10 text-cyan-600",
+    document_download: "bg-slate-500/10 text-slate-600",
+    meeting_joined: "bg-emerald-500/10 text-emerald-600"
   }
   const icons: Record<string, string> = {
     visited: "V",
     saved: "S",
     contact: "C",
     feedback: "F",
-    preorder: "P"
+    preorder: "P",
+    profile_view: "E",
+    product_view: "P",
+    document_download: "D",
+    meeting_joined: "M"
   }
   return (
     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${styles[type] || styles.visited}`}>

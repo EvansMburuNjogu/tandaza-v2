@@ -247,6 +247,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/visitor/expos", s.visitorExpos)
 	mux.HandleFunc("GET /api/v1/visitor/expos/{id}", s.visitorExpoDetail)
 	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/actions", s.visitorExpoAction)
+	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/activity", s.visitorRecordActivity)
 	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/book", s.visitorBookExpo)
 	mux.HandleFunc("GET /api/v1/visitor/bookings", s.visitorBookings)
 	mux.HandleFunc("GET /api/v1/visitor/bookings/{id}", s.visitorBookingDetail)
@@ -4697,6 +4698,57 @@ func (s *Server) visitorExpoAction(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, lead)
 }
 
+func (s *Server) visitorRecordActivity(w http.ResponseWriter, r *http.Request) {
+	user, ok := s.requireUser(w, r, domain.RoleVisitor)
+	if !ok {
+		return
+	}
+	var input domain.VisitorActivityInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	expoID := strings.TrimSpace(r.PathValue("id"))
+	activityType := strings.ToLower(strings.TrimSpace(input.Type))
+	if activityType == "" {
+		writeError(w, http.StatusBadRequest, "activity_type_required", "Choose an activity type.")
+		return
+	}
+	if _, err := s.store.ExpoByID(r.Context(), expoID); err != nil {
+		writeError(w, http.StatusNotFound, "expo_not_found", "Expo was not found.")
+		return
+	}
+	boothID := strings.TrimSpace(input.BoothID)
+	if boothID != "" {
+		exhibitors, err := s.store.ListExpoExhibitors(r.Context(), store.ExpoExhibitorFilter{ExpoID: expoID})
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "activity_failed", "Could not validate exhibitor activity.")
+			return
+		}
+		matched := ""
+		for _, exhibitor := range exhibitors {
+			if exhibitor.ID == boothID || exhibitor.ExhibitorID == boothID {
+				matched = exhibitor.ID
+				break
+			}
+		}
+		if matched == "" {
+			writeError(w, http.StatusNotFound, "exhibitor_not_found", "Exhibitor was not found for this expo.")
+			return
+		}
+		boothID = matched
+	}
+	description := strings.TrimSpace(input.Description)
+	if description == "" {
+		description = strings.ReplaceAll(activityType, "_", " ")
+	}
+	if err := s.store.RecordVisitorActivity(r.Context(), user, expoID, boothID, activityType, description); err != nil {
+		writeError(w, http.StatusInternalServerError, "activity_failed", "Could not record visitor activity.")
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"status": "recorded"})
+}
+
 func (s *Server) visitorDashboard(w http.ResponseWriter, r *http.Request) {
 	claims, ok := s.requireRole(w, r, domain.RoleVisitor)
 	if !ok {
@@ -4837,6 +4889,14 @@ func (s *Server) visitorAddFavorite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "favorite_failed", "Could not save favorite.")
 		return
+	}
+	if strings.TrimSpace(item.ExpoID) != "" {
+		description := "Saved " + item.Name
+		boothID := ""
+		if item.Type == "exhibitor" {
+			boothID = item.ItemID
+		}
+		_ = s.store.RecordVisitorActivity(r.Context(), domain.User{ID: claims.UserID}, item.ExpoID, boothID, "saved", description)
 	}
 	writeJSON(w, http.StatusCreated, item)
 }

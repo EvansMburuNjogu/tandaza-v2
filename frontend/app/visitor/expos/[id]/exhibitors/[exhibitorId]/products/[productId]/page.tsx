@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
@@ -88,6 +88,20 @@ export default function VisitorProductPage() {
     () => removeDuplicateSpecTitle(product?.specifications, [data?.name, product?.name, booth?.exhibitorName]),
     [booth?.exhibitorName, data?.name, product?.name, product?.specifications]
   )
+
+  useEffect(() => {
+    if (!sessionReady || !token || !user || !booth || !product) return
+    const key = `tandaza_visitor_product_view_${expoId}_${booth.id}_${product.id}_${user.id || user.email || "visitor"}`
+    if (window.sessionStorage.getItem(key)) return
+    window.sessionStorage.setItem(key, "1")
+    api.recordVisitorActivity(token, expoId, {
+      boothId: booth.id,
+      type: "product_view",
+      description: `Viewed product: ${product.name}`
+    }).catch(() => {
+      window.sessionStorage.removeItem(key)
+    })
+  }, [booth, expoId, product, sessionReady, token, user])
 
   const preOrderMutation = useMutation({
     mutationFn: () => {
@@ -196,7 +210,20 @@ export default function VisitorProductPage() {
                 </div>
                 {specifications ? <div className="prose prose-sm max-w-none text-muted" dangerouslySetInnerHTML={{ __html: specifications }} /> : null}
                 {product.presentationUrl ? (
-                  <a href={product.presentationUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/55 p-3 transition hover:border-primary/25 hover:bg-elevated">
+                  <a
+                    href={product.presentationUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => {
+                      if (!token || !booth || !product) return
+                      void api.recordVisitorActivity(token, expoId, {
+                        boothId: booth.id,
+                        type: "document_download",
+                        description: `Opened product file: ${product.name}`
+                      })
+                    }}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/55 p-3 transition hover:border-primary/25 hover:bg-elevated"
+                  >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-foreground">{product.name} material</p>
                       <p className="mt-0.5 text-xs text-muted">Product specific file</p>

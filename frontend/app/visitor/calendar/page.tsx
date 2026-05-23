@@ -70,6 +70,7 @@ function formatMeetingDate(item: VisitorCalendarItem) {
 
 export default function VisitorCalendarPage() {
   const token = useSessionStore((s) => s.token)
+  const user = useSessionStore((s) => s.user)
   const today = new Date()
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
@@ -308,7 +309,19 @@ export default function VisitorCalendarPage() {
                   Done
                 </button>
                 {isJoinLink(selectedMeeting.venue) ? (
-                  <a href={selectedMeeting.venue} target="_blank" rel="noreferrer" className={buttonClasses()}>
+                  <a
+                    href={selectedMeeting.venue}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => {
+                      if (!token || user?.role !== "visitor") return
+                      void api.recordVisitorActivity(token, selectedMeeting.expoId, {
+                        type: "meeting_joined",
+                        description: `Joined meeting: ${selectedMeeting.title || selectedMeeting.expoName}`
+                      })
+                    }}
+                    className={buttonClasses()}
+                  >
                     Join meeting
                   </a>
                 ) : null}

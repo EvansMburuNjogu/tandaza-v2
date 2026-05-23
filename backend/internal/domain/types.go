@@ -960,6 +960,12 @@ type VisitorFavoriteInput struct {
 	ItemID string `json:"itemId"`
 }
 
+type VisitorActivityInput struct {
+	BoothID     string `json:"boothId"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
 type Notification struct {
 	ID             string         `json:"id"`
 	UserID         string         `json:"userId,omitempty"`

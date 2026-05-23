@@ -134,15 +134,13 @@ export default function VisitorExhibitorPage() {
     const visitKey = `tandaza_visitor_exhibit_visit_${expoId}_${booth.id}_${user.id || user.email || "visitor"}`
     if (window.sessionStorage.getItem(visitKey)) return
     window.sessionStorage.setItem(visitKey, "1")
-    api.createVisitorExpoAction(token, expoId, {
+    api.recordVisitorActivity(token, expoId, {
       boothId: booth.id,
-      action: "visit",
-      name: user.name,
-      email: user.email,
-      source: "remote_visit",
-      notes: "Opened exhibitor profile."
+      type: "profile_view",
+      description: `Opened ${booth.exhibitorName} profile.`
     }).then(() => {
       queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
+      queryClient.invalidateQueries({ queryKey: ["visitor-timeline"] })
     }).catch(() => {
       window.sessionStorage.removeItem(visitKey)
     })
@@ -288,7 +286,21 @@ export default function VisitorExhibitorPage() {
                     </div>
                     <div className="space-y-2">
                       {files.map((document) => (
-                        <a key={`${document.scope}-${document.id}`} href={document.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/45 p-3 transition hover:border-primary/25 hover:bg-elevated">
+                        <a
+                          key={`${document.scope}-${document.id}`}
+                          href={document.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => {
+                            if (!token || !booth) return
+                            void api.recordVisitorActivity(token, expoId, {
+                              boothId: booth.id,
+                              type: "document_download",
+                              description: `Opened ${document.scope.toLowerCase()} file: ${document.name}`
+                            })
+                          }}
+                          className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-elevated/45 p-3 transition hover:border-primary/25 hover:bg-elevated"
+                        >
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-foreground">{document.name}</p>
                             <p className="mt-0.5 text-xs text-muted">View or download</p>

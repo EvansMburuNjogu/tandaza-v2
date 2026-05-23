@@ -793,3 +793,9 @@
 - Re-enabled public visitor registration with email verification while keeping sponsor self-registration hidden from the public UI.
 - Tightened the Next.js auth proxy and Go backend registration path so only visitors can self-register; sponsors remain admin-created accounts.
 - Updated registration copy and metadata to be visitor-focused with no sponsor signup language.
+
+### Visitor Analytics Data Capture
+
+- Added a dedicated visitor activity capture endpoint for analytics events that should not create leads.
+- Started capturing exhibitor profile views, product views, document opens/downloads, meeting joins, and saved favourites into the visitor timeline event store.
+- Updated visitor activity UI labels so the new analytics events render cleanly in visitor activity surfaces.
