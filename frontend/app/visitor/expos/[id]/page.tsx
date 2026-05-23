@@ -11,8 +11,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
-import { formatCurrency, formatDate } from "@/lib/utils"
-import { firstProductImage, productDisplayPrice } from "@/lib/visitor-expo"
+import { formatDate } from "@/lib/utils"
 
 export default function VisitorExpoDetailPage() {
   const params = useParams()
@@ -32,7 +31,6 @@ export default function VisitorExpoDetailPage() {
 
   const booths = data?.booths || []
   const ads = data?.ads || []
-  const featuredProducts = booths.flatMap((booth) => booth.products.slice(0, 2).map((product) => ({ booth, product }))).slice(0, 6)
 
   useEffect(() => {
     if (!sessionReady || !expoId || !token || !user || !booths.length) return
@@ -86,16 +84,10 @@ export default function VisitorExpoDetailPage() {
               </div>
               <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground lg:text-[2rem]">{data.name}</h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
-              <div className="mt-5 grid grid-cols-2 gap-2 sm:max-w-md">
+              <div className="mt-5 grid gap-2 sm:max-w-[12rem]">
                 <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
                   <p className="text-xs font-medium text-muted">Exhibitors</p>
                   <p className="mt-1 text-xl font-semibold text-primary">{booths.length.toLocaleString()}</p>
-                </div>
-                <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
-                  <p className="text-xs font-medium text-muted">Products</p>
-                  <p className="mt-1 text-xl font-semibold text-primary">
-                    {booths.reduce((total, booth) => total + booth.products.length, 0).toLocaleString()}
-                  </p>
                 </div>
               </div>
             </div>
@@ -180,33 +172,6 @@ export default function VisitorExpoDetailPage() {
             </div>
           )}
         </section>
-
-        {featuredProducts.length ? (
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">Products</h2>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {featuredProducts.map(({ booth, product }) => (
-                <Link
-                  key={`${booth.id}-${product.id}`}
-                  href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/products/${product.id}`}
-                  className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card"
-                >
-                  <div className="aspect-[4/3] bg-elevated">
-                    {firstProductImage(product) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={firstProductImage(product)} alt={product.name} className="h-full w-full object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs font-medium text-muted">{booth.exhibitorName}</p>
-                    <h3 className="mt-1 line-clamp-2 font-semibold text-foreground group-hover:text-primary">{product.name}</h3>
-                    <p className="mt-2 font-mono text-sm font-semibold text-primary">{formatCurrency(productDisplayPrice(product), product.currency)}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
 
         <div className="flex flex-wrap gap-2">
           <Link href="/visitor/calendar" className={buttonClasses({ variant: "secondary" })}>View calendar</Link>
