@@ -38,9 +38,9 @@ function ExpoCard({ expo, tone = "upcoming" }: { expo: VisitorExpo; tone?: "live
   const showImage = tone === "live"
   return (
     <Link href={`/visitor/expos/${expo.id}`} className="group block min-w-0 rounded-2xl border border-border/70 bg-elevated p-3 transition hover:border-primary/25 hover:bg-elevated/80 focus:outline-none focus:ring-4 focus:ring-primary/10">
-      <div className="flex items-start gap-3">
+      <div className={showImage ? "grid min-w-0 grid-cols-[7.25rem_minmax(0,1fr)] gap-3 sm:grid-cols-[8.5rem_minmax(0,1fr)]" : "flex items-start gap-3"}>
         {showImage ? (
-          <div className="h-20 w-24 shrink-0 overflow-hidden rounded-2xl bg-card">
+          <div className="h-full min-h-28 overflow-hidden rounded-2xl bg-card sm:min-h-24">
             {expo.bannerImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={expo.bannerImage} alt={expo.name} className="h-full w-full object-cover" />
@@ -49,15 +49,15 @@ function ExpoCard({ expo, tone = "upcoming" }: { expo: VisitorExpo; tone?: "live
             )}
           </div>
         ) : null}
-        <div className="flex min-w-0 flex-1 items-start justify-between gap-3 py-1">
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-foreground group-hover:text-primary">{expo.name}</p>
-            <p className="mt-1 text-sm text-muted">{Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Date pending"}</p>
-            {expo.venue ? <p className="mt-1 truncate text-xs text-muted">{expo.venue}</p> : null}
-          </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "live" ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>
+        <div className="min-w-0 py-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "live" ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>
             {tone === "live" ? "Live" : "Soon"}
-          </span>
+            </span>
+            <span className="text-sm font-medium text-muted">{Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Date pending"}</span>
+          </div>
+          <p className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-foreground group-hover:text-primary sm:text-base sm:leading-6">{expo.name}</p>
+          {expo.venue ? <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">{expo.venue}</p> : null}
         </div>
       </div>
     </Link>
