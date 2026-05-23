@@ -4737,7 +4737,8 @@ func (s *Server) visitorExpoDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = s.store.RecordVisitorActivity(r.Context(), user, expo.ID, "", "visited", "Viewed "+expo.Name)
 	booths, _ := s.visitorBoothsForExpo(r.Context(), expo.ID)
-	writeJSON(w, http.StatusOK, visitorExpoRecordWithBooths(expo, booths))
+	ads, _ := s.store.ListSponsorAds(r.Context(), store.SponsorAdFilter{ExpoID: expo.ID, CountryCode: expo.CountryCode})
+	writeJSON(w, http.StatusOK, visitorExpoRecordWithBoothsAndAds(expo, booths, ads))
 }
 
 func (s *Server) visitorBookExpo(w http.ResponseWriter, r *http.Request) {
@@ -7832,10 +7833,20 @@ func (s *Server) visitorBoothsForExpo(ctx context.Context, expoID string) ([]dom
 		if !isActiveBooth(assignment) {
 			continue
 		}
+		profile, _ := s.store.ExhibitorProfile(ctx, assignment.ExhibitorID)
+		companyDocuments, _ := s.store.ListExhibitorDocuments(ctx, assignment.ExhibitorID)
+		expoDocuments, _ := s.store.ListExpoDocuments(ctx, assignment.ExpoID, assignment.ExhibitorID)
+		logo := strings.TrimSpace(profile.LogoURL)
+		if logo == "" {
+			logo = strings.TrimSpace(profile.Logo)
+		}
 		booths = append(booths, domain.VisitorBoothRecord{
 			ID: assignment.ID, ExpoID: assignment.ExpoID, ExhibitorID: assignment.ExhibitorID,
-			ExhibitorName: assignment.ExhibitorName, BoothNumber: assignment.BoothNumber,
+			ExhibitorName: nonEmpty(profile.CompanyName, assignment.ExhibitorName), ExhibitorLogo: logo,
+			Description: profile.Description, Email: profile.Email, Phone: profile.Phone, Address: profile.Address,
+			Categories: profile.Categories, BoothNumber: assignment.BoothNumber,
 			BoothLabel: nonEmpty(assignment.BoothLabel, assignment.BoothSize), Products: productsByExhibitor[assignment.ExhibitorID],
+			CompanyDocuments: companyDocuments, ExpoDocuments: expoDocuments,
 		})
 	}
 	return booths, nil
@@ -7848,6 +7859,20 @@ func isActiveBooth(item domain.ExpoExhibitor) bool {
 func visitorExpoRecordWithBooths(expo domain.Expo, booths []domain.VisitorBoothRecord) domain.VisitorExpoRecord {
 	record := visitorExpoRecord(expo)
 	record.Booths = booths
+	return record
+}
+
+func visitorExpoRecordWithBoothsAndAds(expo domain.Expo, booths []domain.VisitorBoothRecord, ads []domain.SponsorAdRecord) domain.VisitorExpoRecord {
+	record := visitorExpoRecordWithBooths(expo, booths)
+	activeAds := []domain.SponsorAdRecord{}
+	for _, ad := range ads {
+		status := strings.ToLower(strings.TrimSpace(ad.Status))
+		paymentStatus := strings.ToLower(strings.TrimSpace(ad.PaymentStatus))
+		if (status == "active" || status == "approved" || status == "published") && (paymentStatus == "" || paymentStatus == "paid") {
+			activeAds = append(activeAds, ad)
+		}
+	}
+	record.Ads = activeAds
 	return record
 }
 

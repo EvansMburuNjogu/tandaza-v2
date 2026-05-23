@@ -854,13 +854,21 @@ type ProductRecord struct {
 }
 
 type VisitorBoothRecord struct {
-	ID            string          `json:"id"`
-	ExpoID        string          `json:"expoId"`
-	ExhibitorID   string          `json:"exhibitorId"`
-	ExhibitorName string          `json:"exhibitorName"`
-	BoothNumber   string          `json:"boothNumber"`
-	BoothLabel    string          `json:"boothLabel"`
-	Products      []ProductRecord `json:"products"`
+	ID               string                  `json:"id"`
+	ExpoID           string                  `json:"expoId"`
+	ExhibitorID      string                  `json:"exhibitorId"`
+	ExhibitorName    string                  `json:"exhibitorName"`
+	ExhibitorLogo    string                  `json:"exhibitorLogo,omitempty"`
+	Description      string                  `json:"description,omitempty"`
+	Email            string                  `json:"email,omitempty"`
+	Phone            string                  `json:"phone,omitempty"`
+	Address          string                  `json:"address,omitempty"`
+	Categories       []string                `json:"categories,omitempty"`
+	BoothNumber      string                  `json:"boothNumber"`
+	BoothLabel       string                  `json:"boothLabel"`
+	Products         []ProductRecord         `json:"products"`
+	CompanyDocuments []CompanyDocumentRecord `json:"companyDocuments,omitempty"`
+	ExpoDocuments    []ExpoDocumentRecord    `json:"expoDocuments,omitempty"`
 }
 
 type ProductInput struct {
@@ -895,6 +903,7 @@ type VisitorExpoRecord struct {
 	TicketPrice   int64                `json:"ticketPrice"`
 	IsBookmarked  bool                 `json:"isBookmarked"`
 	Booths        []VisitorBoothRecord `json:"booths,omitempty"`
+	Ads           []SponsorAdRecord    `json:"ads,omitempty"`
 }
 
 type VisitorBookingRecord struct {

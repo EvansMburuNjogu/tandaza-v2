@@ -1444,6 +1444,9 @@ export interface SponsorCampaign {
 
 export interface SponsorAd {
   id: string
+  expoId?: string
+  sponsorId?: string
+  sponsorName?: string
   campaignId: string
   campaignName: string
   name: string
@@ -1527,6 +1530,7 @@ export interface VisitorExpo {
   organizerName: string
   isBookmarked: boolean
   booths?: VisitorBooth[]
+  ads?: SponsorAd[]
 }
 
 export interface VisitorBooth {
@@ -1534,9 +1538,17 @@ export interface VisitorBooth {
   expoId: string
   exhibitorId: string
   exhibitorName: string
+  exhibitorLogo?: string
+  description?: string
+  email?: string
+  phone?: string
+  address?: string
+  categories?: string[]
   boothNumber: string
   boothLabel: string
   products: Product[]
+  companyDocuments?: CompanyDocument[]
+  expoDocuments?: ExpoDocument[]
 }
 
 export interface VisitorExpoActionPayload {
