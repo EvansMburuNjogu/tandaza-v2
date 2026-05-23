@@ -1991,9 +1991,18 @@ func (s *PostgresStore) ListMeetings(ctx context.Context, filter MeetingFilter) 
 		args = append(args, filter.ExhibitorID)
 		conditions = append(conditions, fmt.Sprintf("ee.exhibitor_id=$%d", len(args)))
 	}
-	if filter.VisitorID != "" {
-		args = append(args, filter.VisitorID)
-		conditions = append(conditions, fmt.Sprintf("l.visitor_id=$%d", len(args)))
+	if filter.VisitorID != "" || strings.TrimSpace(filter.VisitorEmail) != "" {
+		attendeeConditions := []string{}
+		if filter.VisitorID != "" {
+			args = append(args, filter.VisitorID)
+			attendeeConditions = append(attendeeConditions, fmt.Sprintf("l.visitor_id=$%d", len(args)))
+		}
+		if strings.TrimSpace(filter.VisitorEmail) != "" {
+			args = append(args, strings.ToLower(strings.TrimSpace(filter.VisitorEmail)))
+			emailArg := len(args)
+			attendeeConditions = append(attendeeConditions, fmt.Sprintf("(LOWER(COALESCE(l.email,''))=$%d OR POSITION(',' || $%d || ',' IN ',' || LOWER(REPLACE(COALESCE(m.cc_emails,''), ' ', '')) || ',') > 0)", emailArg, emailArg))
+		}
+		conditions = append(conditions, "("+strings.Join(attendeeConditions, " OR ")+")")
 	}
 	if len(conditions) > 0 {
 		sql += " WHERE " + strings.Join(conditions, " AND ")

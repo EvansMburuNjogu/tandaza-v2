@@ -4854,12 +4854,12 @@ func (s *Server) visitorDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) visitorCalendar(w http.ResponseWriter, r *http.Request) {
-	claims, ok := s.requireRole(w, r, domain.RoleVisitor)
+	actor, ok := s.requireUser(w, r, domain.RoleVisitor)
 	if !ok {
 		return
 	}
-	bookings, _ := s.store.VisitorBookings(r.Context(), claims.UserID)
-	meetings, _ := s.store.ListMeetings(r.Context(), store.MeetingFilter{VisitorID: claims.UserID})
+	bookings, _ := s.store.VisitorBookings(r.Context(), actor.ID)
+	meetings, _ := s.store.ListMeetings(r.Context(), store.MeetingFilter{VisitorID: actor.ID, VisitorEmail: actor.Email})
 	events := []map[string]any{}
 	for _, booking := range bookings {
 		events = append(events, map[string]any{"id": booking.ID, "expoId": booking.ExpoID, "expoName": booking.ExpoName, "date": booking.ExpoDate, "time": "09:00", "venue": booking.Venue, "type": "expo"})

@@ -209,9 +209,10 @@ type ExhibitorCampaignDraftFilter struct {
 }
 
 type MeetingFilter struct {
-	ExpoID      string
-	ExhibitorID string
-	VisitorID   string
+	ExpoID       string
+	ExhibitorID  string
+	VisitorID    string
+	VisitorEmail string
 }
 
 func organizerFeedbackCategory(value string) string {

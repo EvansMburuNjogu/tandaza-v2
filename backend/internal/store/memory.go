@@ -1686,8 +1686,20 @@ func (s *MemoryStore) ListMeetings(ctx context.Context, filter MeetingFilter) ([
 		if filter.ExhibitorID != "" && item.ExhibitorID != filter.ExhibitorID {
 			continue
 		}
-		if filter.VisitorID != "" && item.VisitorID != filter.VisitorID {
-			continue
+		if filter.VisitorID != "" || strings.TrimSpace(filter.VisitorEmail) != "" {
+			matchesVisitor := filter.VisitorID != "" && item.VisitorID == filter.VisitorID
+			if !matchesVisitor && strings.TrimSpace(filter.VisitorEmail) != "" {
+				matchesVisitor = strings.EqualFold(strings.TrimSpace(item.VisitorEmail), strings.TrimSpace(filter.VisitorEmail))
+				for _, email := range item.CCEmails {
+					if strings.EqualFold(strings.TrimSpace(email), strings.TrimSpace(filter.VisitorEmail)) {
+						matchesVisitor = true
+						break
+					}
+				}
+			}
+			if !matchesVisitor {
+				continue
+			}
 		}
 		items = append(items, item)
 	}

@@ -42,6 +42,12 @@ function typeDot(type: string) {
   return map[type] || map.expo
 }
 
+function itemDateTime(item: { date: string; time?: string }) {
+  const time = item.time && item.time.trim() ? item.time : "00:00"
+  const parsed = new Date(`${item.date}T${time}`)
+  return Number.isFinite(parsed.getTime()) ? parsed.getTime() : 0
+}
+
 export default function VisitorCalendarPage() {
   const token = useSessionStore((s) => s.token)
   const today = new Date()
@@ -66,18 +72,22 @@ export default function VisitorCalendarPage() {
 
   if (error) return <ErrorState title="Failed to load calendar" />
 
-  const expos = data
+  const items = data
   const daysInMonth = getDaysInMonth(currentYear, currentMonth)
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth)
   const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate())
 
-  const exposByDate: Record<string, typeof expos> = {}
-  expos.forEach((e) => {
-    if (!exposByDate[e.date]) exposByDate[e.date] = []
-    exposByDate[e.date].push(e)
+  const itemsByDate: Record<string, typeof items> = {}
+  items.forEach((item) => {
+    if (!itemsByDate[item.date]) itemsByDate[item.date] = []
+    itemsByDate[item.date].push(item)
   })
 
-  const selectedExpos = selectedDate ? exposByDate[selectedDate] || [] : []
+  const selectedItems = selectedDate ? itemsByDate[selectedDate] || [] : []
+  const upcomingItems = [...items]
+    .filter((item) => itemDateTime(item) >= Date.now())
+    .sort((a, b) => itemDateTime(a) - itemDateTime(b))
+  const displayItems = selectedDate ? selectedItems : upcomingItems
 
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -113,7 +123,7 @@ export default function VisitorCalendarPage() {
               <p className="mt-2 text-sm text-muted">Expos, meetings, and reminders in one place.</p>
             </div>
             <div className="rounded-2xl bg-primary/10 px-4 py-3 shadow-sm ring-1 ring-primary/15">
-              <p className="text-lg font-semibold text-primary">{expos.length.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-primary">{items.length.toLocaleString()}</p>
               <p className="text-xs font-medium text-primary/70">items</p>
             </div>
           </div>
@@ -147,8 +157,8 @@ export default function VisitorCalendarPage() {
                   const dateStr = formatDate(currentYear, currentMonth, day)
                   const isToday = dateStr === todayStr
                   const isSelected = dateStr === selectedDate
-                  const dayExpos = exposByDate[dateStr] || []
-                  const hasExpos = dayExpos.length > 0
+                  const dayItems = itemsByDate[dateStr] || []
+                  const hasItems = dayItems.length > 0
 
                   return (
                     <button
@@ -157,17 +167,17 @@ export default function VisitorCalendarPage() {
                       className={`relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm transition-all
                         ${isSelected ? "bg-primary text-white shadow-lg shadow-primary/20" : ""}
                         ${isToday && !isSelected ? "bg-primary/10 font-bold text-primary ring-1 ring-primary/15" : ""}
-                        ${hasExpos && !isSelected && !isToday ? "bg-accent/10 text-foreground ring-1 ring-accent/15" : ""}
-                        ${!isSelected && !isToday && !hasExpos ? "hover:bg-elevated" : ""}
+                        ${hasItems && !isSelected && !isToday ? "bg-accent/10 text-foreground ring-1 ring-accent/15" : ""}
+                        ${!isSelected && !isToday && !hasItems ? "hover:bg-elevated" : ""}
                       `}
                     >
                       <span>{day}</span>
-                      {hasExpos && (
+                      {hasItems && (
                         <div className="flex gap-0.5 mt-0.5">
-                          {dayExpos.slice(0, 3).map((e, idx) => (
+                          {dayItems.slice(0, 3).map((item, idx) => (
                             <div
                               key={idx}
-                              className={`w-1 h-1 rounded-full ${isSelected ? "bg-white/70" : typeDot(e.type)}`}
+                              className={`w-1 h-1 rounded-full ${isSelected ? "bg-white/70" : typeDot(item.type)}`}
                             />
                           ))}
                         </div>
@@ -194,29 +204,32 @@ export default function VisitorCalendarPage() {
               )}
 
               <div className="mt-4 space-y-3">
-                {(selectedExpos.length > 0 ? selectedExpos : expos.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())).map((expo) => (
-                  <div key={expo.id} className={`rounded-2xl border p-3 ${typeColor(expo.type)}`}>
+                {displayItems.map((item) => (
+                  <div key={item.id} className={`rounded-2xl border p-3 ${typeColor(item.type)}`}>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${typeDot(expo.type)}`} />
-                      <span className="text-xs font-semibold capitalize">{expo.type}</span>
+                      <div className={`w-2 h-2 rounded-full ${typeDot(item.type)}`} />
+                      <span className="text-xs font-semibold capitalize">{item.type}</span>
                     </div>
-                    <p className="font-medium mt-1">{expo.expoName}</p>
+                    <p className="font-medium mt-1">{item.title || item.expoName}</p>
+                    {item.type === "meeting" && item.expoName && item.title !== item.expoName && (
+                      <p className="mt-1 text-xs opacity-75">{item.expoName}</p>
+                    )}
                     <p className="text-xs opacity-70 mt-1">
-                      {expo.time} {expo.venue && `- ${expo.venue}`}
+                      {item.time} {item.venue && `- ${item.venue}`}
                     </p>
                   </div>
                 ))}
               </div>
 
-              {(selectedExpos.length === 0 && selectedDate) && (
+              {(selectedItems.length === 0 && selectedDate) && (
                 <div className="py-8 text-center text-muted">
-                  <p className="text-sm">No expos on this date</p>
+                  <p className="text-sm">No schedule items on this date</p>
                 </div>
               )}
 
-              {expos.length === 0 && (
+              {!selectedDate && displayItems.length === 0 && (
                 <div className="py-8 text-center text-muted">
-                  <p className="text-sm">No upcoming expos</p>
+                  <p className="text-sm">No upcoming expos or meetings</p>
                 </div>
               )}
           </Card>
