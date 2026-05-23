@@ -65,7 +65,7 @@ export function ForgotPasswordForm() {
               We&apos;ll send a secure link to your email.
             </p>
           </div>
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={44} height={44} className="h-11 w-11 flex-shrink-0 object-contain" priority />
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={60} height={60} className="h-[60px] w-[60px] flex-shrink-0 object-contain" priority />
         </div>
 
         <div className="my-7 h-px w-full bg-border/50" />

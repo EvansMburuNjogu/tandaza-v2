@@ -884,3 +884,4 @@
 - Updated platform, auth, marketing, sidebar, and receipt logo references to use the new PNG mark.
 - Removed the extra Tandaza wordmark text and rounded logo badge treatments from shared logo placements so only the image mark is shown.
 - Added the white logo variant and applied it on dark navigation, auth, sidebar, footer, and receipt header surfaces.
+- Increased rendered logo sizes across navigation, auth, sidebar, footer, and empty/error states so the mark has stronger visual presence without reintroducing wordmark text.

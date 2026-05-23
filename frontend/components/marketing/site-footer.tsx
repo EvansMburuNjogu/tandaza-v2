@@ -9,7 +9,7 @@ export function SiteFooter() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center">
-              <Image src="/tandaza-logo-white.png" alt="Tandaza" width={44} height={44} className="h-11 w-11 object-contain" />
+              <Image src="/tandaza-logo-white.png" alt="Tandaza" width={60} height={60} className="h-[60px] w-[60px] object-contain" />
             </Link>
             <p className="mt-4 max-w-[260px] text-[13px] leading-[1.7] text-slate-400">
               Africa's expo management platform, connecting every stakeholder from listing to settlement.
