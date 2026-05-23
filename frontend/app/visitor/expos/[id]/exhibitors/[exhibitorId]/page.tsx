@@ -243,11 +243,11 @@ export default function VisitorExhibitorPage() {
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Products</h2>
-          {booth.products.length === 0 ? (
+          {(booth.products || []).length === 0 ? (
             <Card className="border-dashed p-8 text-center text-sm text-muted">Products will appear here when the exhibitor publishes them.</Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {booth.products.map((product) => (
+              {(booth.products || []).map((product) => (
                 <Link key={product.id} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/products/${product.id}`} className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
                   <div className="aspect-[4/3] bg-elevated">
                     {firstProductImage(product) ? (

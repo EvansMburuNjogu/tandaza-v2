@@ -839,3 +839,8 @@
 
 - Removed the Spent column from the exhibitor workspace ads table.
 - Changed the ad edit dialog current banner section from a raw URL to a proper banner image preview.
+
+### Visitor Fresh Expo Safety
+
+- Hardened visitor expo and exhibitor profile pages for newly activated expos that do not have products, categories, or files yet.
+- Ensured visitor expo booth responses return empty product arrays instead of null product collections.

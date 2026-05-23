@@ -126,7 +126,7 @@ export default function VisitorExpoDetailPage() {
     return booths.filter((booth) => {
       return booth.exhibitorName.toLowerCase().includes(query) ||
         (booth.description || "").toLowerCase().includes(query) ||
-        (booth.categories || []).some((category) => category.toLowerCase().includes(query))
+        (booth.categories || []).some((category) => (category || "").toLowerCase().includes(query))
     })
   }, [booths, exhibitorSearch])
   const exhibitorTotalPages = Math.max(1, Math.ceil(filteredBooths.length / EXHIBITOR_PAGE_SIZE))
@@ -348,7 +348,7 @@ export default function VisitorExpoDetailPage() {
                         </div>
                         <div className="mt-4 flex items-center justify-between gap-3">
                           <div className="flex flex-wrap gap-2 text-xs font-semibold text-muted">
-                            <span className="rounded-full bg-elevated px-3 py-1">{booth.products.length} products</span>
+                            <span className="rounded-full bg-elevated px-3 py-1">{(booth.products || []).length} products</span>
                             <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
                           </div>
                           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">

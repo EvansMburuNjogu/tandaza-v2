@@ -8038,12 +8038,16 @@ func (s *Server) visitorBoothsForExpo(ctx context.Context, expoID string) ([]dom
 		if logo == "" {
 			logo = strings.TrimSpace(profile.Logo)
 		}
+		exhibitorProducts := productsByExhibitor[assignment.ExhibitorID]
+		if exhibitorProducts == nil {
+			exhibitorProducts = []domain.ProductRecord{}
+		}
 		booths = append(booths, domain.VisitorBoothRecord{
 			ID: assignment.ID, ExpoID: assignment.ExpoID, ExhibitorID: assignment.ExhibitorID,
 			ExhibitorName: nonEmpty(profile.CompanyName, assignment.ExhibitorName), ExhibitorLogo: logo,
 			Description: profile.Description, Website: profile.Website, Email: profile.Email, Phone: profile.Phone, Address: profile.Address,
 			Categories: profile.Categories, SocialLinks: profile.SocialLinks, BoothNumber: assignment.BoothNumber,
-			BoothLabel: nonEmpty(assignment.BoothLabel, assignment.BoothSize), Products: productsByExhibitor[assignment.ExhibitorID],
+			BoothLabel: nonEmpty(assignment.BoothLabel, assignment.BoothSize), Products: exhibitorProducts,
 			CompanyDocuments: companyDocuments, ExpoDocuments: expoDocuments,
 		})
 	}

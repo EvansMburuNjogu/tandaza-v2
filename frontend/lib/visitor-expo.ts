@@ -8,7 +8,7 @@ export function findVisitorBooth(expo: VisitorExpo | undefined, boothId: string)
 export function findVisitorProduct(expo: VisitorExpo | undefined, boothId: string, productId: string): Product | undefined {
   const booth = findVisitorBooth(expo, boothId)
   if (!booth || !productId) return undefined
-  return booth.products.find((product) => product.id === productId)
+  return (booth.products || []).find((product) => product.id === productId)
 }
 
 export function firstProductImage(product: Product | undefined) {
