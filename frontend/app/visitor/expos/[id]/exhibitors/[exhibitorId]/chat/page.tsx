@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
@@ -40,6 +40,15 @@ export default function VisitorExhibitorChatPage() {
   const booth = findVisitorBooth(expoQuery.data, exhibitorId)
   const thread = useMemo(() => conversationsQuery.data?.find((item) => item.exhibitorId === booth?.exhibitorId), [booth?.exhibitorId, conversationsQuery.data])
   const messages = thread?.messages || []
+
+  useEffect(() => {
+    if (!sessionReady || !token || !booth?.exhibitorId || !thread || thread.unreadCount <= 0) return
+    api.markVisitorExpoConversationRead(token, expoId, booth.exhibitorId)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["visitor-expo-conversations", expoId] })
+      })
+      .catch(() => undefined)
+  }, [booth?.exhibitorId, expoId, queryClient, sessionReady, thread, token])
 
   const mutation = useMutation({
     mutationFn: () => {

@@ -1421,6 +1421,7 @@ export interface ApiDriver {
   getVisitorMessages(token: string): Promise<VisitorMessage[]>
   sendMessage(token: string, exhibitorId: string, message: string): Promise<void>
   getVisitorExpoConversations(token: string, expoId: string): Promise<ExhibitorConversationThread[]>
+  markVisitorExpoConversationRead(token: string, expoId: string, exhibitorId: string): Promise<{ updated: number }>
   sendVisitorExpoChatMessage(token: string, expoId: string, exhibitorId: string, data: ChatMessagePayload): Promise<{ thread: ExhibitorConversationThread; message: ChatMessage }>
   getVisitorFeedback(token: string): Promise<VisitorFeedback[]>
   submitFeedback(token: string, expoId: string, rating: number, comment: string, exhibitorId?: string): Promise<VisitorFeedback>

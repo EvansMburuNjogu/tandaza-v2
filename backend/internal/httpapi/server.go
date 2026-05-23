@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -260,6 +261,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/visitor/messages", s.visitorMessages)
 	mux.HandleFunc("POST /api/v1/visitor/messages/{id}", s.visitorSendMessage)
 	mux.HandleFunc("GET /api/v1/visitor/expos/{id}/conversations", s.visitorExpoConversations)
+	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/conversations/{exhibitorId}/read", s.visitorMarkChatRead)
 	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/conversations/{exhibitorId}/messages", s.visitorSendChatMessage)
 	mux.HandleFunc("GET /api/v1/visitor/expos/{id}/conversations/ws", s.chatWebSocket)
 	mux.HandleFunc("GET /api/v1/visitor/feedback", s.visitorFeedback)
@@ -5090,6 +5092,23 @@ func (s *Server) visitorExpoConversations(w http.ResponseWriter, r *http.Request
 		return
 	}
 	writeJSON(w, http.StatusOK, paginatedItems(r, threads))
+}
+
+func (s *Server) visitorMarkChatRead(w http.ResponseWriter, r *http.Request) {
+	actor, ok := s.requireUser(w, r, domain.RoleVisitor)
+	if !ok {
+		return
+	}
+	count, err := s.store.MarkChatThreadRead(r.Context(), r.PathValue("id"), r.PathValue("exhibitorId"), actor)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "conversation_not_found", "Conversation was not found.")
+			return
+		}
+		writeError(w, http.StatusBadRequest, "conversation_read_failed", "Could not mark conversation as read.")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"updated": count})
 }
 
 func (s *Server) visitorSendChatMessage(w http.ResponseWriter, r *http.Request) {

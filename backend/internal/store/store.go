@@ -59,6 +59,7 @@ type Store interface {
 	RecordLeadActivity(ctx context.Context, id string, input domain.LeadActivityInput, actor domain.User) (domain.LeadActivityRecord, error)
 	ListChatThreads(ctx context.Context, filter ChatThreadFilter, actor domain.User) ([]domain.ExhibitorConversationThread, error)
 	CreateChatMessage(ctx context.Context, expoID string, exhibitorID string, input domain.ChatMessageInput, actor domain.User) (domain.ExhibitorConversationThread, domain.ChatMessageRecord, error)
+	MarkChatThreadRead(ctx context.Context, expoID string, exhibitorID string, actor domain.User) (int, error)
 	ExhibitorLiveStream(ctx context.Context, expoID string, exhibitorID string) (domain.ExhibitorLiveStreamRecord, error)
 	UpdateExhibitorLiveStream(ctx context.Context, expoID string, exhibitorID string, input domain.ExhibitorLiveStreamInput, actor domain.User) (domain.ExhibitorLiveStreamRecord, error)
 	ListExhibitorFeedback(ctx context.Context, filter ExhibitorFeedbackFilter) ([]domain.ExhibitorFeedbackRecord, error)

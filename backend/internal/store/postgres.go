@@ -1753,6 +1753,39 @@ func (s *PostgresStore) CreateChatMessage(ctx context.Context, expoID string, ex
 	return threads[0], record, nil
 }
 
+func (s *PostgresStore) MarkChatThreadRead(ctx context.Context, expoID string, exhibitorID string, actor domain.User) (int, error) {
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	if actor.Role != domain.RoleVisitor && actor.Role != domain.RoleExhibitor {
+		return 0, ErrInvalidCredentials
+	}
+	threadID := ""
+	args := []any{expoID, exhibitorID}
+	sql := `SELECT id FROM chat_threads WHERE expo_id=$1 AND exhibitor_id=$2`
+	if actor.Role == domain.RoleVisitor {
+		args = append(args, actor.ID)
+		sql += " AND visitor_id=$3"
+	} else {
+		args = append(args, actor.ID)
+		sql += " AND exhibitor_id=$3"
+	}
+	if err := s.pool.QueryRow(ctx, sql, args...).Scan(&threadID); err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, ErrNotFound
+		}
+		return 0, err
+	}
+	updateSQL := `UPDATE chat_messages SET read_by_visitor=true WHERE thread_id=$1 AND read_by_visitor=false`
+	if actor.Role == domain.RoleExhibitor {
+		updateSQL = `UPDATE chat_messages SET read_by_exhibitor=true WHERE thread_id=$1 AND read_by_exhibitor=false`
+	}
+	tag, err := s.pool.Exec(ctx, updateSQL, threadID)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
+}
+
 func (s *PostgresStore) chatMessages(ctx context.Context, threadID string) ([]domain.ChatMessageRecord, error) {
 	rows, err := s.pool.Query(ctx, `SELECT id, thread_id, expo_id, exhibitor_id, visitor_id, sender_id, sender_role, sender_name, message, read_by_visitor, read_by_exhibitor, created_at
 		FROM chat_messages WHERE thread_id=$1 ORDER BY created_at ASC`, threadID)

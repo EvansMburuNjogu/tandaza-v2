@@ -834,6 +834,9 @@ export const httpApi: ApiDriver = {
   getVisitorExpoConversations(token: string, expoId: string): Promise<ExhibitorConversationThread[]> {
     return requestItems(`/api/v1/visitor/expos/${expoId}/conversations`, { headers: { Authorization: `Bearer ${token}` } })
   },
+  markVisitorExpoConversationRead(token: string, expoId: string, exhibitorId: string): Promise<{ updated: number }> {
+    return request(`/api/v1/visitor/expos/${expoId}/conversations/${exhibitorId}/read`, { method: "POST", headers: { Authorization: `Bearer ${token}` } })
+  },
   sendVisitorExpoChatMessage(token: string, expoId: string, exhibitorId: string, data: ChatMessagePayload): Promise<{ thread: ExhibitorConversationThread; message: ChatMessage }> {
     return request(`/api/v1/visitor/expos/${expoId}/conversations/${exhibitorId}/messages`, { method: "POST", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
   },

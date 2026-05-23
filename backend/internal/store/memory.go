@@ -1484,6 +1484,48 @@ func (s *MemoryStore) CreateChatMessage(ctx context.Context, expoID string, exhi
 	return thread, record, nil
 }
 
+func (s *MemoryStore) MarkChatThreadRead(ctx context.Context, expoID string, exhibitorID string, actor domain.User) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if actor.Role != domain.RoleVisitor && actor.Role != domain.RoleExhibitor {
+		return 0, ErrInvalidCredentials
+	}
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	threadID := ""
+	for _, thread := range s.chatThreads {
+		if thread.ExpoID != expoID || thread.ExhibitorID != exhibitorID {
+			continue
+		}
+		if actor.Role == domain.RoleVisitor && thread.VisitorID != actor.ID {
+			continue
+		}
+		if actor.Role == domain.RoleExhibitor && thread.ExhibitorID != actor.ID {
+			continue
+		}
+		threadID = thread.ID
+		break
+	}
+	if threadID == "" {
+		return 0, ErrNotFound
+	}
+	updated := 0
+	for i, message := range s.chatMessages {
+		if message.ThreadID != threadID {
+			continue
+		}
+		if actor.Role == domain.RoleVisitor && !message.ReadByVisitor {
+			s.chatMessages[i].ReadByVisitor = true
+			updated++
+		}
+		if actor.Role == domain.RoleExhibitor && !message.ReadByExhibitor {
+			s.chatMessages[i].ReadByExhibitor = true
+			updated++
+		}
+	}
+	return updated, nil
+}
+
 func (s *MemoryStore) ExhibitorLiveStream(ctx context.Context, expoID string, exhibitorID string) (domain.ExhibitorLiveStreamRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
