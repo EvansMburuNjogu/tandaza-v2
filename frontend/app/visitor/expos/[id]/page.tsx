@@ -6,7 +6,6 @@ import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
-import { buttonClasses } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -172,11 +171,6 @@ export default function VisitorExpoDetailPage() {
             </div>
           )}
         </section>
-
-        <div className="flex flex-wrap gap-2">
-          <Link href="/visitor/calendar" className={buttonClasses({ variant: "secondary" })}>View calendar</Link>
-          <Link href="/visitor/settings" className={buttonClasses({ variant: "outline" })}>Update profile</Link>
-        </div>
       </div>
     </SessionGuard>
   )
