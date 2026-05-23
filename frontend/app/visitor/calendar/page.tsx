@@ -6,7 +6,9 @@ import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
+import { buttonClasses } from "@/components/ui/button"
 import { api } from "@/lib/api"
+import { VisitorCalendarItem } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -48,12 +50,31 @@ function itemDateTime(item: { date: string; time?: string }) {
   return Number.isFinite(parsed.getTime()) ? parsed.getTime() : 0
 }
 
+function isJoinLink(value?: string) {
+  const cleaned = (value || "").trim()
+  return /^https?:\/\//i.test(cleaned)
+}
+
+function formatMeetingDate(item: VisitorCalendarItem) {
+  const parsed = new Date(`${item.date}T${item.time || "00:00"}`)
+  if (!Number.isFinite(parsed.getTime())) return `${item.date} ${item.time}`.trim()
+  return parsed.toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  })
+}
+
 export default function VisitorCalendarPage() {
   const token = useSessionStore((s) => s.token)
   const today = new Date()
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedMeeting, setSelectedMeeting] = useState<VisitorCalendarItem | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-calendar"],
@@ -205,7 +226,13 @@ export default function VisitorCalendarPage() {
 
               <div className="mt-4 space-y-3">
                 {displayItems.map((item) => (
-                  <div key={item.id} className={`rounded-2xl border p-3 ${typeColor(item.type)}`}>
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => item.type === "meeting" ? setSelectedMeeting(item) : undefined}
+                    className={`w-full rounded-2xl border p-3 text-left transition ${typeColor(item.type)} ${item.type === "meeting" ? "hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-4 focus:ring-primary/15" : "cursor-default"}`}
+                    aria-label={item.type === "meeting" ? `View meeting details for ${item.title || item.expoName}` : undefined}
+                  >
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${typeDot(item.type)}`} />
                       <span className="text-xs font-semibold capitalize">{item.type}</span>
@@ -217,7 +244,7 @@ export default function VisitorCalendarPage() {
                     <p className="text-xs opacity-70 mt-1">
                       {item.time} {item.venue && `- ${item.venue}`}
                     </p>
-                  </div>
+                  </button>
                 ))}
               </div>
 
@@ -234,6 +261,61 @@ export default function VisitorCalendarPage() {
               )}
           </Card>
         </div>
+
+        {selectedMeeting ? (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 py-8 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="visitor-meeting-title"
+            onClick={() => setSelectedMeeting(null)}
+          >
+            <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-5 shadow-2xl sm:p-6" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/75">Meeting</p>
+                  <h2 id="visitor-meeting-title" className="mt-2 text-xl font-semibold tracking-tight text-foreground">
+                    {selectedMeeting.title || selectedMeeting.expoName}
+                  </h2>
+                  {selectedMeeting.expoName && selectedMeeting.title !== selectedMeeting.expoName ? (
+                    <p className="mt-1 text-sm text-muted">{selectedMeeting.expoName}</p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMeeting(null)}
+                  className="shrink-0 rounded-full border border-border px-3 py-1.5 text-sm font-semibold text-muted transition hover:text-foreground"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="mt-5 space-y-3 rounded-2xl border border-border/70 bg-elevated/60 p-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Date and time</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{formatMeetingDate(selectedMeeting)}</p>
+                </div>
+                {selectedMeeting.venue ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Meeting link</p>
+                    <p className="mt-1 break-all text-sm text-foreground">{selectedMeeting.venue}</p>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setSelectedMeeting(null)} className={buttonClasses({ variant: "secondary" })}>
+                  Done
+                </button>
+                {isJoinLink(selectedMeeting.venue) ? (
+                  <a href={selectedMeeting.venue} target="_blank" rel="noreferrer" className={buttonClasses()}>
+                    Join meeting
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </SessionGuard>
   )
