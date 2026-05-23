@@ -66,7 +66,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             onToggleSidebar={toggleCollapsed}
             showAdminScopeControls
           />
-          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 pb-32 sm:px-6 sm:py-5 sm:pb-28 lg:px-8 lg:py-7 lg:pb-8">
+          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-32 pt-[80px] sm:px-6 sm:pb-28 sm:pt-[84px] lg:px-8 lg:py-7 lg:pb-8">
             <div className="mx-auto w-full min-w-0 max-w-[1600px]">
               {children}
             </div>
