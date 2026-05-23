@@ -1187,8 +1187,14 @@ func (s *PostgresStore) EnsureExhibitorQRCode(ctx context.Context, expoID string
 		return domain.QRCodeRecord{}, ErrInvalidCredentials
 	}
 	expoExhibitorID := exhibitors[0].ID
+	targetPath := exhibitorQRTargetPath(expoID, expoExhibitorID)
 	existing, err := s.qrByExpoExhibitor(ctx, expoExhibitorID)
 	if err == nil {
+		if existing.TargetPath != targetPath {
+			if _, updateErr := s.pool.Exec(ctx, `UPDATE qr_codes SET target_path=$1 WHERE id=$2`, targetPath, existing.ID); updateErr == nil {
+				existing.TargetPath = targetPath
+			}
+		}
 		return existing, nil
 	}
 	now := time.Now().UTC()
@@ -1198,7 +1204,7 @@ func (s *PostgresStore) EnsureExhibitorQRCode(ctx context.Context, expoID string
 	}
 	record := domain.QRCodeRecord{
 		ID: fmt.Sprintf("qr_%d", now.UnixNano()), ExpoID: expoID, ExpoExhibitorID: expoExhibitorID,
-		Code: shortCode, TargetPath: fmt.Sprintf("/visitor/expos/%s?exhibitor=%s", expoID, expoExhibitorID),
+		Code: shortCode, TargetPath: targetPath,
 		Type: "exhibitor_booth", Active: true, CreatedAt: now.Format(time.RFC3339),
 	}
 	_, err = s.pool.Exec(ctx, `INSERT INTO qr_codes (id, expo_id, expo_exhibitor_id, code, target_path, type, active, created_at)

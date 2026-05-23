@@ -860,3 +860,8 @@
 
 - Raised the shared topbar, notification popover, and profile dropdown above sticky workspace content on mobile.
 - Kept the side drawer above the topbar so mobile navigation still opens cleanly.
+
+### QR Direct Exhibitor Profile
+
+- Updated exhibitor workspace QR codes to resolve directly to the visitor exhibitor profile route.
+- Existing QR records with older expo query-string targets are normalized to the direct exhibitor profile path when reused or resolved.

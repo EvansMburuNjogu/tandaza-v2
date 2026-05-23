@@ -2,6 +2,7 @@ package store
 
 import (
 	"crypto/rand"
+	"fmt"
 	"strings"
 )
 
@@ -21,4 +22,8 @@ func randomShortCode(length int) string {
 		out.WriteByte(shortCodeAlphabet[int(b)%len(shortCodeAlphabet)])
 	}
 	return out.String()
+}
+
+func exhibitorQRTargetPath(expoID string, expoExhibitorID string) string {
+	return fmt.Sprintf("/visitor/expos/%s/exhibitors/%s", strings.TrimSpace(expoID), strings.TrimSpace(expoExhibitorID))
 }

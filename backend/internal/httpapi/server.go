@@ -945,6 +945,9 @@ func (s *Server) resolveQRCode(w http.ResponseWriter, r *http.Request) {
 		user, _ := s.store.UserByID(r.Context(), claims.UserID)
 		_ = s.store.RecordVisitorActivity(r.Context(), user, code.ExpoID, code.ExpoExhibitorID, "visited", "Opened exhibitor QR code")
 	}
+	if code.ExpoID != "" && code.ExpoExhibitorID != "" && strings.Contains(code.TargetPath, "?exhibitor=") {
+		code.TargetPath = "/visitor/expos/" + code.ExpoID + "/exhibitors/" + code.ExpoExhibitorID
+	}
 	s.recordAudit(r, domain.AuditLog{Action: "qr_resolved", EntityType: "qr_code", EntityID: code.ID, ExpoID: code.ExpoID})
 	writeJSON(w, http.StatusOK, code)
 }

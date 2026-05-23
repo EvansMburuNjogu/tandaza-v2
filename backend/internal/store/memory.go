@@ -148,7 +148,7 @@ func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
 			},
 		},
 		qrCodes: []domain.QRCodeRecord{
-			{ID: "qr_001", ExpoID: "expo_001", ExpoExhibitorID: "exe_001", Code: "TANDAZA-EXE-001", TargetPath: "/visitor/expos/expo_001?exhibitor=exe_001", Type: "exhibitor_booth", Active: true, CreatedAt: time.Now().UTC().Format(time.RFC3339)},
+			{ID: "qr_001", ExpoID: "expo_001", ExpoExhibitorID: "exe_001", Code: "TANDAZA-EXE-001", TargetPath: "/visitor/expos/expo_001/exhibitors/exe_001", Type: "exhibitor_booth", Active: true, CreatedAt: time.Now().UTC().Format(time.RFC3339)},
 		},
 		leads: []domain.LeadRecord{
 			{ID: "lead_001", ExpoID: "expo_001", ExpoName: "Nairobi Tech Expo", ExhibitorID: "usr_exhibitor_001", VisitorName: "Demo Visitor", VisitorEmail: "visitor@tandaza.demo", VisitorPhone: "+254700000001", Notes: "Interested in remote demo after expo.", Source: "booth_qr", Temperature: "hot", Status: "new", NextFollowUpAt: time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339), FollowUpNotes: "Send demo link after the expo.", InterestedProductIds: []string{"prd_001"}, CapturedAt: time.Now().UTC().Add(-24 * time.Hour).Format(time.RFC3339)},
@@ -1099,15 +1099,20 @@ func (s *MemoryStore) EnsureExhibitorQRCode(ctx context.Context, expoID string, 
 	defer s.mu.Unlock()
 	for _, exhibitor := range s.exhibitors {
 		if exhibitor.ExpoID == expoID && exhibitor.ExhibitorID == exhibitorID && exhibitor.ActivationStatus == "active" {
-			for _, code := range s.qrCodes {
+			targetPath := exhibitorQRTargetPath(expoID, exhibitor.ID)
+			for index, code := range s.qrCodes {
 				if code.ExpoExhibitorID == exhibitor.ID {
+					if code.TargetPath != targetPath {
+						code.TargetPath = targetPath
+						s.qrCodes[index] = code
+					}
 					return code, nil
 				}
 			}
 			shortCode := uniqueMemoryQRCode(s.qrCodes)
 			code := domain.QRCodeRecord{
 				ID: fmt.Sprintf("qr_%06d", len(s.qrCodes)+1), ExpoID: expoID, ExpoExhibitorID: exhibitor.ID,
-				Code: shortCode, TargetPath: fmt.Sprintf("/visitor/expos/%s?exhibitor=%s", expoID, exhibitor.ID),
+				Code: shortCode, TargetPath: targetPath,
 				Type: "exhibitor_booth", Active: true, CreatedAt: time.Now().UTC().Format(time.RFC3339),
 			}
 			s.qrCodes = append(s.qrCodes, code)
