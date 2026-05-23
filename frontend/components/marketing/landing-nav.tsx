@@ -58,7 +58,7 @@ export function LandingNav() {
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
             style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)", boxShadow: "0 0 18px hsl(234,79%,61%,0.28)" }}
           >
-            <Image src="/tandaza-logo.svg" alt="" width={20} height={20} className="h-5 w-5" />
+            <Image src="/tandaza-logo.png" alt="" width={20} height={20} className="h-5 w-5" />
           </span>
           <span className={cn("font-brand text-[17px] font-bold tracking-tight transition-colors", frosted ? "text-slate-900" : "text-white")}>
             Tandaza

@@ -136,7 +136,7 @@ function BrandPanel({ title, kicker }: { title: string; kicker: string }) {
           className="flex w-fit items-center gap-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-            <Image src="/tandaza-logo.svg" alt="" width={24} height={24} priority />
+            <Image src="/tandaza-logo.png" alt="" width={24} height={24} priority />
           </span>
           <span className="text-sm font-bold tracking-tight text-white">Tandaza</span>
         </Link>
@@ -303,7 +303,7 @@ function MobileBrand() {
       className="mb-7 flex w-fit items-center gap-2.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/30 lg:hidden"
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-        <Image src="/tandaza-logo.svg" alt="" width={22} height={22} priority />
+        <Image src="/tandaza-logo.png" alt="" width={22} height={22} priority />
       </span>
       <span className="text-sm font-bold tracking-tight">Tandaza</span>
     </Link>

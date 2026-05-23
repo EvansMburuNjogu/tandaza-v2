@@ -13,7 +13,7 @@ export default function NotFound() {
         <Link href="/" className="mb-10 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-[13px]"
             style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)" }}>
-            <Image src="/tandaza-logo.svg" alt="Tandaza" width={22} height={22} className="h-[22px] w-[22px]" />
+            <Image src="/tandaza-logo.png" alt="Tandaza" width={22} height={22} className="h-[22px] w-[22px]" />
           </span>
           <span className="font-brand text-[18px] font-bold text-white">Tandaza</span>
         </Link>

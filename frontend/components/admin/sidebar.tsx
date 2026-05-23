@@ -60,7 +60,7 @@ export function AdminSidebar({
         <div className="relative flex h-[64px] shrink-0 items-center gap-3 border-b border-white/[0.08] px-4">
           {/* Logo mark */}
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,hsl(var(--primary)/0.55),hsl(var(--accent)/0.35))] ring-1 ring-white/20 shadow-[inset_0_1px_0_hsl(var(--primary-foreground)/0.18)]">
-            <Image src="/tandaza-logo.svg" alt="Tandaza" width={22} height={22} className="h-[22px] w-[22px]" priority />
+            <Image src="/tandaza-logo.png" alt="Tandaza" width={22} height={22} className="h-[22px] w-[22px]" priority />
           </div>
 
           {/* Brand text — slides out on desktop collapse */}

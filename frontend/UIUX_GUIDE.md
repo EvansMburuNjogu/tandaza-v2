@@ -111,7 +111,7 @@ Always the first child inside the card:
 ### Logo badge (card header, top-right)
 ```tsx
 <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/15">
-  <Image src="/tandaza-logo.svg" alt="Tandaza" width={24} height={24} priority />
+  <Image src="/tandaza-logo.png" alt="Tandaza" width={24} height={24} priority />
 </span>
 ```
 

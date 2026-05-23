@@ -11,7 +11,7 @@ export function SiteFooter() {
             <Link href="/" className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-[11px]"
                 style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)" }}>
-                <Image src="/tandaza-logo.svg" alt="Tandaza" width={20} height={20} className="h-5 w-5" />
+                <Image src="/tandaza-logo.png" alt="Tandaza" width={20} height={20} className="h-5 w-5" />
               </span>
               <span className="font-brand text-[17px] font-bold text-white">Tandaza</span>
             </Link>

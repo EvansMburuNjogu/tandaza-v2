@@ -877,3 +877,8 @@
 - Added unread visitor conversation polling on the visitor-facing exhibitor profile page.
 - The Chat quick action now shows a compact unread badge for the specific exhibitor when new messages are waiting.
 - Added a read endpoint and chat-page read acknowledgement so the badge clears after the visitor opens the conversation.
+
+### Tandaza Logo Refresh
+
+- Added the new PNG Tandaza logo to frontend public assets and app icon metadata.
+- Updated platform, auth, marketing, sidebar, and receipt logo references to use the new PNG mark.

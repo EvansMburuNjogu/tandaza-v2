@@ -7,7 +7,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/((?!_next/static|_next/image|favicon.ico|tandaza-logo.svg).*)',
+        source: '/((?!_next/static|_next/image|favicon.ico|tandaza-logo.png).*)',
         headers: [
           {
             key: 'Cache-Control',
