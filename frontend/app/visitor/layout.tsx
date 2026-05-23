@@ -4,7 +4,7 @@ import { VisitorShell } from "@/components/visitor/visitor-shell"
 
 export const metadata: Metadata = {
   title: "Tandaza - Visitor",
-  description: "Tandaza visitor workspace"
+  description: "Tandaza visitor account"
 }
 
 export default function VisitorLayout({ children }: { children: React.ReactNode }) {

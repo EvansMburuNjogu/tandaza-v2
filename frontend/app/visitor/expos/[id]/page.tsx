@@ -172,9 +172,8 @@ export default function VisitorExpoDetailPage() {
       email: user?.email,
       source: exhibitorFromQr ? "booth_qr" : "remote_visit",
       notes: exhibitorFromQr ? "Opened exhibitor profile from QR code." : "Opened exhibitor profile remotely."
-    })
+      })
       .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["visitor-timeline"] })
         queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
       })
       .catch(() => {
@@ -188,7 +187,6 @@ export default function VisitorExpoDetailPage() {
       toast.success(action === "meeting" ? "Meeting request sent" : action === "pre_order" ? "Pre-order interest sent" : "Interest shared")
       setNotes("")
       setScheduledAt("")
-      queryClient.invalidateQueries({ queryKey: ["visitor-timeline"] })
       queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send visitor action")

@@ -69,7 +69,7 @@ export const visitorNavItems: AdminNavItem[] = [
   { label: "Home", href: "/visitor", section: "Core", icon: "home" },
   { label: "Expos", href: "/visitor/expos", section: "Discover", icon: "explore" },
   { label: "Favorites", href: "/visitor/favorites", section: "Discover", icon: "favorite" },
-  { label: "Calendar", href: "/visitor/calendar", section: "My Expos", icon: "calendar" },
+  { label: "Calendar", href: "/visitor/calendar", section: "Activity", icon: "calendar" },
   { label: "Settings", href: "/visitor/settings", section: "Configuration", icon: "settings" }
 ]
 
@@ -223,9 +223,9 @@ const dynamicPageTitles: Array<{ test: RegExp; meta: { title: string; descriptio
   { test: /^\/sponsor\/payments\/[^/]+\/receipt$/, meta: { title: "Payment Receipt", description: "View and download payment receipt." } },
   { test: /^\/sponsor\/settings$/, meta: { title: "Settings", description: "Manage your sponsor profile and account settings." } },
   // Visitor routes
-  { test: /^\/visitor$/, meta: { title: "Home", description: "Your visitor dashboard for upcoming expos, recent activity, and quick actions." } },
-  { test: /^\/visitor\/explore$/, meta: { title: "Explore", description: "Discover upcoming expos and exhibitors." } },
-  { test: /^\/visitor\/expos\/[^/]+$/, meta: { title: "Expo Details", description: "View expo details, exhibitors, products, and remote access options." } },
+  { test: /^\/visitor$/, meta: { title: "Home", description: "Your quick view of expos, meetings, and recent activity." } },
+  { test: /^\/visitor\/explore$/, meta: { title: "Explore", description: "Discover expos and exhibitors." } },
+  { test: /^\/visitor\/expos\/[^/]+$/, meta: { title: "Expo Details", description: "View exhibitors, products, chat, and visitor actions." } },
   { test: /^\/visitor\/favorites$/, meta: { title: "Favorites", description: "Your saved expos and exhibitors." } },
   { test: /^\/visitor\/messages$/, meta: { title: "Messages", description: "Chat with exhibitors and manage contacts." } },
   { test: /^\/visitor\/calendar$/, meta: { title: "Calendar", description: "Your expo schedule, meetings, and reminders." } },
