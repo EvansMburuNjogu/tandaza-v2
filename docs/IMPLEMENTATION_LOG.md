@@ -891,3 +891,4 @@
 - Refined the visitor shell background to better match the premium workspace feel used by organizer and exhibitor accounts.
 - Reworked the visitor homepage with a stronger hero, larger metric cards, richer expo cards, and clearer desktop content hierarchy.
 - Upgraded visitor expo discovery with a more premium header, stronger search treatment, larger expo imagery, and more polished desktop card spacing.
+- Converted visitor favorites from full-width stretched rows into bounded responsive cards with stable image ratios.

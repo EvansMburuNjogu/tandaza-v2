@@ -19,31 +19,31 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
       : undefined
 
   return (
-    <Card className="relative overflow-hidden transition hover:border-primary/30 hover:shadow-lg">
+    <Card className="group relative overflow-hidden rounded-3xl border-border/70 bg-card/95 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card">
       <span className="absolute right-3 top-3 z-10 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold capitalize text-white shadow-sm">
         {favorite.type}
       </span>
       <Link
         href={href || "/visitor/expos"}
         aria-label={`Open ${favorite.name}`}
-        className="grid gap-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 sm:grid-cols-[9rem_minmax(0,1fr)]"
+        className="block focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
       >
-        <div className="flex aspect-[16/10] min-h-32 items-center justify-center bg-elevated p-3 sm:aspect-auto sm:min-h-36">
+        <div className="flex aspect-[4/3] items-center justify-center bg-elevated p-4">
           {favorite.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={favorite.image} alt={favorite.name} className="max-h-full max-w-full object-contain" />
+            <img src={favorite.image} alt={favorite.name} className="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-105" />
           ) : (
-            <div className="flex h-full min-h-32 items-center justify-center bg-[linear-gradient(135deg,rgba(124,58,237,0.14),rgba(255,255,255,0.6))] text-sm font-semibold text-primary">
+            <div className="flex h-full w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(124,58,237,0.14),rgba(255,255,255,0.6))] text-sm font-semibold text-primary">
               {favorite.type === "expo" ? "Expo" : "Exhibitor"}
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="p-4">
           <div className="min-w-0">
             <h3 className="line-clamp-2 text-lg font-semibold text-foreground">{favorite.name}</h3>
           </div>
 
-          <span className={buttonClasses({ className: "shrink-0" })}>Open</span>
+          <span className={buttonClasses({ className: "mt-4 w-full justify-center" })}>Open</span>
         </div>
       </Link>
     </Card>
@@ -101,7 +101,7 @@ export default function VisitorFavoritesPage() {
             <Link href="/visitor/expos" className={buttonClasses({ className: "mt-5" })}>Browse expos</Link>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid max-w-6xl gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {data.map((favorite) => (
               <FavoriteItem key={favorite.id} favorite={favorite} />
             ))}
