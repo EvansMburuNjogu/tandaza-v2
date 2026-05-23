@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { SessionGuard } from "@/components/auth/session-guard"
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { api } from "@/lib/api"
@@ -12,17 +12,34 @@ import { callingCodeOptions } from "@/lib/calling-codes"
 import { useSessionStore } from "@/store/session-store"
 import { toast } from "sonner"
 
-type TabType = "profile" | "notifications"
+const INDUSTRY_OPTIONS = [
+  "Agriculture",
+  "Construction",
+  "Education",
+  "Energy",
+  "Financial Services",
+  "Food & Beverage",
+  "Healthcare",
+  "Hospitality",
+  "Manufacturing",
+  "Media & Creative",
+  "Non-profit",
+  "Professional Services",
+  "Real Estate",
+  "Retail & Ecommerce",
+  "Technology",
+  "Transport & Logistics",
+  "Travel & Tourism"
+]
 
 export default function VisitorSettingsPage() {
   const token = useSessionStore((s) => s.token)
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<TabType>("profile")
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
-    company: ""
+    company: "",
+    industry: ""
   })
   const [callingCode, setCallingCode] = useState("+254")
   const [phoneLocal, setPhoneLocal] = useState("")
@@ -40,45 +57,50 @@ export default function VisitorSettingsPage() {
   })
 
   useEffect(() => {
-    if (settings) {
-      const phoneParts = splitPhone(settings.phone || "")
-      setForm({
-        name: settings.name,
-        email: settings.email,
-        phone: settings.phone || "",
-        company: settings.company || ""
-      })
-      setCallingCode(phoneParts.code)
-      setPhoneLocal(phoneParts.local)
-      setNotifications({
-        email: settings.notifications.email,
-        push: settings.notifications.push,
-        expoUpdates: settings.notifications.expoUpdates ?? true,
-        reminders: settings.notifications.reminders
-      })
-    }
+    if (!settings) return
+    const phoneParts = splitPhone(settings.phone || "")
+    setForm({
+      name: settings.name,
+      email: settings.email,
+      company: settings.company || "",
+      industry: settings.industry || ""
+    })
+    setCallingCode(phoneParts.code)
+    setPhoneLocal(phoneParts.local)
+    setNotifications({
+      email: settings.notifications.email,
+      push: settings.notifications.push,
+      expoUpdates: settings.notifications.expoUpdates ?? true,
+      reminders: settings.notifications.reminders
+    })
   }, [settings])
 
   const updateMutation = useMutation({
-    mutationFn: (data: { name: string; phone: string; company: string; notifications: typeof notifications }) => api.updateVisitorSettings(token || "", data),
+    mutationFn: (data: { name: string; phone: string; company: string; industry: string; notifications: typeof notifications }) => api.updateVisitorSettings(token || "", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["visitor-settings"] })
-      toast.success("Settings updated", { description: "Your visitor profile has been saved." })
+      toast.success("Profile saved")
     },
     onError: (error) => {
-      toast.error("Could not save settings", { description: error instanceof Error ? error.message : "Please check your details and try again." })
+      toast.error("Could not save profile", { description: error instanceof Error ? error.message : "Please check your details and try again." })
     }
   })
 
   const handleSave = () => {
     const name = form.name.trim()
     if (!name) {
-      toast.error("Could not save settings", { description: "Enter your full name." })
+      toast.error("Could not save profile", { description: "Enter your full name." })
       return
     }
     const localPhone = phoneLocal.replace(/[^\d]/g, "")
     const phone = localPhone ? `${callingCode}${localPhone}` : ""
-    updateMutation.mutate({ name, company: form.company.trim(), phone, notifications })
+    updateMutation.mutate({
+      name,
+      company: form.company.trim(),
+      industry: form.industry.trim(),
+      phone,
+      notifications
+    })
   }
 
   if (isLoading || !settings) {
@@ -90,11 +112,6 @@ export default function VisitorSettingsPage() {
     )
   }
 
-  const tabs: { id: TabType; label: string }[] = [
-    { id: "profile", label: "Profile" },
-    { id: "notifications", label: "Notifications" }
-  ]
-
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="max-w-full space-y-6 overflow-hidden">
@@ -102,8 +119,8 @@ export default function VisitorSettingsPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/75">Account</p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
-              <p className="mt-2 text-sm text-muted">Contact details and notification preferences.</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Profile</h1>
+              <p className="mt-2 text-sm text-muted">Keep your details clear for meetings and exhibitor follow-up.</p>
             </div>
             <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
               <p className="text-xs font-medium text-muted">Signed in as</p>
@@ -112,157 +129,93 @@ export default function VisitorSettingsPage() {
           </div>
         </Card>
 
-        <div className="flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-border/70 bg-card/80 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
-                activeTab === tab.id
-                  ? "bg-primary text-white shadow-sm"
-                   : "text-muted hover:bg-elevated hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Card className="p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold">Profile details</h2>
+          <p className="mb-5 mt-1 text-sm leading-6 text-muted">Used for exhibitor follow-up, meeting reminders, and better expo recommendations.</p>
 
-        {activeTab === "profile" && (
-          <Card className="p-5 shadow-sm sm:p-6">
-            <div>
-              <h2 className="text-lg font-semibold">Profile</h2>
-              <p className="mb-5 mt-1 text-sm leading-6 text-muted">Used for exhibitor follow-up and meeting reminders.</p>
-              <div className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="visitorName" className="text-sm font-medium text-foreground">Full Name <span className="text-primary" aria-hidden>*</span></label>
-                    <Input
-                      id="visitorName"
-                      required
-                      aria-required="true"
-                      value={form.name}
-                      onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="Jane Wanjiku"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="visitorEmail" className="text-sm font-medium text-foreground">Email</label>
-                    <Input
-                      id="visitorEmail"
-                      value={form.email}
-                      type="email"
-                      readOnly
-                      aria-readonly="true"
-                      className="bg-elevated/60 text-muted"
-                    />
-                    <p className="text-xs leading-5 text-muted">Email changes require re-verification and will be handled separately.</p>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="visitorPhone" className="text-sm font-medium text-foreground">Phone number</label>
-                    <div className="grid min-w-0 grid-cols-[minmax(6.5rem,7.75rem)_minmax(0,1fr)] gap-2">
-                      <select
-                        value={callingCode}
-                        onChange={(event) => setCallingCode(event.target.value)}
-                        className="h-12 rounded-xl border border-border bg-elevated px-3 text-sm text-foreground shadow-sm focus:border-primary/70 focus:outline-none focus:ring-4 focus:ring-ring/10"
-                        aria-label="Country calling code"
-                      >
-                        {callingCodeOptions.map((option) => (
-                          <option key={`${option.iso}-${option.code}`} value={option.code}>{option.iso} {option.code}</option>
-                        ))}
-                      </select>
-                      <Input
-                        id="visitorPhone"
-                        value={phoneLocal}
-                        inputMode="tel"
-                        onChange={(e) => setPhoneLocal(e.target.value)}
-                        placeholder="799010210"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="visitorCompany" className="text-sm font-medium text-foreground">Company (optional)</label>
-                    <Input
-                      id="visitorCompany"
-                      value={form.company}
-                      onChange={(e) => setForm(f => ({ ...f, company: e.target.value }))}
-                      placeholder="Maalim Group Limited"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end border-t border-border pt-4">
-                  <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save profile"}</Button>
-                </div>
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="visitorName" className="text-sm font-medium text-foreground">Full Name <span className="text-primary" aria-hidden>*</span></label>
+                <Input
+                  id="visitorName"
+                  required
+                  aria-required="true"
+                  value={form.name}
+                  onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))}
+                  placeholder="Jane Wanjiku"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="visitorEmail" className="text-sm font-medium text-foreground">Email</label>
+                <Input
+                  id="visitorEmail"
+                  value={form.email}
+                  type="email"
+                  readOnly
+                  aria-readonly="true"
+                  className="bg-elevated/60 text-muted"
+                />
+                <p className="text-xs leading-5 text-muted">Email changes require re-verification and will be handled separately.</p>
               </div>
             </div>
-          </Card>
-        )}
 
-        {activeTab === "notifications" && (
-          <Card className="p-5 shadow-sm sm:p-6">
-            <div>
-              <h2 className="text-lg font-semibold">Notifications</h2>
-              <p className="mb-5 mt-1 text-sm leading-6 text-muted">Choose what should reach you.</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
-                  <div>
-                    <p className="font-medium">Email</p>
-                    <p className="text-sm text-muted">Meeting and expo updates</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.email}
-                    onChange={(e) => setNotifications(n => ({ ...n, email: e.target.checked }))}
-                    className="h-5 w-5 rounded accent-primary"
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="visitorPhone" className="text-sm font-medium text-foreground">Phone number</label>
+                <div className="grid min-w-0 grid-cols-[minmax(6.5rem,7.75rem)_minmax(0,1fr)] gap-2">
+                  <select
+                    value={callingCode}
+                    onChange={(event) => setCallingCode(event.target.value)}
+                    className="h-12 rounded-xl border border-border bg-elevated px-3 text-sm text-foreground shadow-sm focus:border-primary/70 focus:outline-none focus:ring-4 focus:ring-ring/10"
+                    aria-label="Country calling code"
+                  >
+                    {callingCodeOptions.map((option) => (
+                      <option key={`${option.iso}-${option.code}`} value={option.code}>{option.iso} {option.code}</option>
+                    ))}
+                  </select>
+                  <Input
+                    id="visitorPhone"
+                    value={phoneLocal}
+                    inputMode="tel"
+                    onChange={(e) => setPhoneLocal(e.target.value)}
+                    placeholder="799010210"
                   />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
-                  <div>
-                    <p className="font-medium">Push</p>
-                    <p className="text-sm text-muted">In-app device alerts</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.push}
-                    onChange={(e) => setNotifications(n => ({ ...n, push: e.target.checked }))}
-                    className="h-5 w-5 rounded accent-primary"
-                  />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
-                  <div>
-                    <p className="font-medium">Expo updates</p>
-                    <p className="text-sm text-muted">Changes and exhibitor replies</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.expoUpdates}
-                    onChange={(e) => setNotifications(n => ({ ...n, expoUpdates: e.target.checked }))}
-                    className="h-5 w-5 rounded accent-primary"
-                  />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/60 bg-elevated p-4">
-                  <div>
-                    <p className="font-medium">Reminders</p>
-                    <p className="text-sm text-muted">Before meetings and activities</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.reminders}
-                    onChange={(e) => setNotifications(n => ({ ...n, reminders: e.target.checked }))}
-                    className="h-5 w-5 rounded accent-primary"
-                  />
-                </label>
+                </div>
               </div>
-              <div className="mt-6 flex justify-end border-t border-border pt-4">
-                <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save preferences"}</Button>
+              <div className="space-y-2">
+                <label htmlFor="visitorCompany" className="text-sm font-medium text-foreground">Company (optional)</label>
+                <Input
+                  id="visitorCompany"
+                  value={form.company}
+                  onChange={(e) => setForm((current) => ({ ...current, company: e.target.value }))}
+                  placeholder="Maalim Group Limited"
+                />
               </div>
             </div>
-          </Card>
-        )}
+
+            <div className="space-y-2">
+              <label htmlFor="visitorIndustry" className="text-sm font-medium text-foreground">Industry (optional)</label>
+              <Input
+                id="visitorIndustry"
+                list="visitor-industry-options"
+                value={form.industry}
+                onChange={(e) => setForm((current) => ({ ...current, industry: e.target.value }))}
+                placeholder="Select or type your industry"
+              />
+              <datalist id="visitor-industry-options">
+                {INDUSTRY_OPTIONS.map((industry) => (
+                  <option key={industry} value={industry} />
+                ))}
+              </datalist>
+              <p className="text-xs leading-5 text-muted">Choose from the list or type your own industry.</p>
+            </div>
+
+            <div className="flex justify-end border-t border-border pt-4">
+              <Button onClick={handleSave} disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save profile"}</Button>
+            </div>
+          </div>
+        </Card>
       </div>
     </SessionGuard>
   )

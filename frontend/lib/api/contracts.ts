@@ -1631,6 +1631,7 @@ export interface VisitorSettings {
   email: string
   phone: string
   company?: string
+  industry?: string
   notifications: {
     email: boolean
     push: boolean

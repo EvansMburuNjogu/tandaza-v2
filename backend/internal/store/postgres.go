@@ -329,8 +329,8 @@ func (s *PostgresStore) VisitorSettings(ctx context.Context, visitorID string) (
 	}
 	input := domain.VisitorSettingsInput{Email: true, Push: true, ExpoUpdates: true, Reminders: true}
 	var phoneCipher string
-	err = s.pool.QueryRow(ctx, `SELECT COALESCE(phone,''), COALESCE(phone_cipher,''), email_notifications, push_notifications, expo_updates, reminders FROM visitor_profiles WHERE visitor_id=$1`, user.ID).
-		Scan(&input.Phone, &phoneCipher, &input.Email, &input.Push, &input.ExpoUpdates, &input.Reminders)
+	err = s.pool.QueryRow(ctx, `SELECT COALESCE(phone,''), COALESCE(phone_cipher,''), COALESCE(industry,''), email_notifications, push_notifications, expo_updates, reminders FROM visitor_profiles WHERE visitor_id=$1`, user.ID).
+		Scan(&input.Phone, &phoneCipher, &input.Industry, &input.Email, &input.Push, &input.ExpoUpdates, &input.Reminders)
 	if err != nil && err != pgx.ErrNoRows {
 		return domain.VisitorSettings{}, err
 	}
@@ -352,15 +352,16 @@ func (s *PostgresStore) UpdateVisitorSettings(ctx context.Context, visitorID str
 		return domain.VisitorSettings{}, ErrInvalidCredentials
 	}
 	company := strings.TrimSpace(input.Company)
+	industry := strings.TrimSpace(input.Industry)
 	phone := strings.TrimSpace(input.Phone)
 	if _, err := s.pool.Exec(ctx, `UPDATE users SET name=$1, company_name=$2, name_cipher=$3, company_name_cipher=$4, updated_at=NOW() WHERE id=$5 AND role='visitor'`,
 		storagePIIValue(s.pii, name), storagePIIValue(s.pii, company), s.pii.MustEncrypt(name), s.pii.MustEncrypt(company), user.ID); err != nil {
 		return domain.VisitorSettings{}, err
 	}
-	if _, err := s.pool.Exec(ctx, `INSERT INTO visitor_profiles (visitor_id, phone, phone_cipher, email_notifications, push_notifications, expo_updates, reminders, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
-		ON CONFLICT (visitor_id) DO UPDATE SET phone=EXCLUDED.phone, phone_cipher=EXCLUDED.phone_cipher, email_notifications=EXCLUDED.email_notifications, push_notifications=EXCLUDED.push_notifications, expo_updates=EXCLUDED.expo_updates, reminders=EXCLUDED.reminders, updated_at=NOW()`,
-		user.ID, storagePIIValue(s.pii, phone), s.pii.MustEncrypt(phone), input.Email, input.Push, input.ExpoUpdates, input.Reminders); err != nil {
+	if _, err := s.pool.Exec(ctx, `INSERT INTO visitor_profiles (visitor_id, phone, phone_cipher, industry, email_notifications, push_notifications, expo_updates, reminders, updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
+		ON CONFLICT (visitor_id) DO UPDATE SET phone=EXCLUDED.phone, phone_cipher=EXCLUDED.phone_cipher, industry=EXCLUDED.industry, email_notifications=EXCLUDED.email_notifications, push_notifications=EXCLUDED.push_notifications, expo_updates=EXCLUDED.expo_updates, reminders=EXCLUDED.reminders, updated_at=NOW()`,
+		user.ID, storagePIIValue(s.pii, phone), s.pii.MustEncrypt(phone), industry, input.Email, input.Push, input.ExpoUpdates, input.Reminders); err != nil {
 		return domain.VisitorSettings{}, err
 	}
 	return s.VisitorSettings(ctx, user.ID)

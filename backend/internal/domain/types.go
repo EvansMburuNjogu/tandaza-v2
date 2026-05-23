@@ -46,6 +46,7 @@ type VisitorSettingsInput struct {
 	Name        string `json:"name"`
 	Phone       string `json:"phone"`
 	Company     string `json:"company"`
+	Industry    string `json:"industry"`
 	Email       bool   `json:"emailNotifications"`
 	Push        bool   `json:"pushNotifications"`
 	ExpoUpdates bool   `json:"expoUpdates"`
@@ -57,6 +58,7 @@ type VisitorSettings struct {
 	Email         string `json:"email"`
 	Phone         string `json:"phone"`
 	Company       string `json:"company"`
+	Industry      string `json:"industry"`
 	Notifications struct {
 		Email       bool `json:"email"`
 		Push        bool `json:"push"`

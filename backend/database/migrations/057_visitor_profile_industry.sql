@@ -1,0 +1,2 @@
+ALTER TABLE visitor_profiles
+  ADD COLUMN IF NOT EXISTS industry TEXT NOT NULL DEFAULT '';

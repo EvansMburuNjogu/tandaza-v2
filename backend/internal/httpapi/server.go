@@ -5012,6 +5012,7 @@ func (s *Server) updateVisitorSettings(w http.ResponseWriter, r *http.Request) {
 		Name          string `json:"name"`
 		Phone         string `json:"phone"`
 		Company       string `json:"company"`
+		Industry      string `json:"industry"`
 		Notifications struct {
 			Email       bool `json:"email"`
 			Push        bool `json:"push"`
@@ -5024,7 +5025,7 @@ func (s *Server) updateVisitorSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	settings, err := s.store.UpdateVisitorSettings(r.Context(), user.ID, domain.VisitorSettingsInput{
-		Name: payload.Name, Phone: payload.Phone, Company: payload.Company,
+		Name: payload.Name, Phone: payload.Phone, Company: payload.Company, Industry: payload.Industry,
 		Email: payload.Notifications.Email, Push: payload.Notifications.Push, ExpoUpdates: payload.Notifications.ExpoUpdates, Reminders: payload.Notifications.Reminders,
 	})
 	if err != nil {

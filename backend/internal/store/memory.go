@@ -426,6 +426,7 @@ func (s *MemoryStore) UpdateVisitorSettings(ctx context.Context, visitorID strin
 		s.users[i].User.CompanyName = strings.TrimSpace(input.Company)
 		input.Name = name
 		input.Company = strings.TrimSpace(input.Company)
+		input.Industry = strings.TrimSpace(input.Industry)
 		input.Phone = strings.TrimSpace(input.Phone)
 		s.visitorProfiles[id] = input
 		return visitorSettingsFrom(s.users[i].User, input), nil
@@ -4039,7 +4040,7 @@ func defaultMeetingSettings() domain.MeetingSettings {
 }
 
 func visitorSettingsFrom(user domain.User, input domain.VisitorSettingsInput) domain.VisitorSettings {
-	settings := domain.VisitorSettings{Name: user.Name, Email: user.Email, Phone: strings.TrimSpace(input.Phone), Company: user.CompanyName}
+	settings := domain.VisitorSettings{Name: user.Name, Email: user.Email, Phone: strings.TrimSpace(input.Phone), Company: user.CompanyName, Industry: strings.TrimSpace(input.Industry)}
 	settings.Notifications.Email = input.Email
 	settings.Notifications.Push = input.Push
 	settings.Notifications.ExpoUpdates = input.ExpoUpdates
