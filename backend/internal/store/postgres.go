@@ -3660,9 +3660,9 @@ func (s *PostgresStore) ExhibitorLiveStream(ctx context.Context, expoID string, 
 	}
 	var item domain.ExhibitorLiveStreamRecord
 	var updatedAt time.Time
-	err := s.pool.QueryRow(ctx, `SELECT expo_id, exhibitor_id, title, youtube_url, embed_url, enabled, updated_at
+	err := s.pool.QueryRow(ctx, `SELECT expo_id, exhibitor_id, title, youtube_url, embed_url, enabled, live_chat_enabled, updated_at
 		FROM exhibitor_live_streams WHERE expo_id=$1 AND exhibitor_id=$2`, strings.TrimSpace(expoID), strings.TrimSpace(exhibitorID)).
-		Scan(&item.ExpoID, &item.ExhibitorID, &item.Title, &item.YoutubeURL, &item.EmbedURL, &item.Enabled, &updatedAt)
+		Scan(&item.ExpoID, &item.ExhibitorID, &item.Title, &item.YoutubeURL, &item.EmbedURL, &item.Enabled, &item.LiveChatEnabled, &updatedAt)
 	if err == pgx.ErrNoRows {
 		return domain.ExhibitorLiveStreamRecord{ExpoID: strings.TrimSpace(expoID), ExhibitorID: strings.TrimSpace(exhibitorID), Title: "Expo live stream", Enabled: false}, nil
 	}
@@ -3691,12 +3691,12 @@ func (s *PostgresStore) UpdateExhibitorLiveStream(ctx context.Context, expoID st
 	enabled := input.Enabled && embedURL != ""
 	var item domain.ExhibitorLiveStreamRecord
 	var updatedAt time.Time
-	err := s.pool.QueryRow(ctx, `INSERT INTO exhibitor_live_streams (expo_id, exhibitor_id, title, youtube_url, embed_url, enabled, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,NOW())
-		ON CONFLICT (expo_id, exhibitor_id) DO UPDATE SET title=EXCLUDED.title, youtube_url=EXCLUDED.youtube_url, embed_url=EXCLUDED.embed_url, enabled=EXCLUDED.enabled, updated_at=NOW()
-		RETURNING expo_id, exhibitor_id, title, youtube_url, embed_url, enabled, updated_at`,
-		expoID, exhibitorID, title, url, embedURL, enabled).
-		Scan(&item.ExpoID, &item.ExhibitorID, &item.Title, &item.YoutubeURL, &item.EmbedURL, &item.Enabled, &updatedAt)
+	err := s.pool.QueryRow(ctx, `INSERT INTO exhibitor_live_streams (expo_id, exhibitor_id, title, youtube_url, embed_url, enabled, live_chat_enabled, updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
+		ON CONFLICT (expo_id, exhibitor_id) DO UPDATE SET title=EXCLUDED.title, youtube_url=EXCLUDED.youtube_url, embed_url=EXCLUDED.embed_url, enabled=EXCLUDED.enabled, live_chat_enabled=EXCLUDED.live_chat_enabled, updated_at=NOW()
+		RETURNING expo_id, exhibitor_id, title, youtube_url, embed_url, enabled, live_chat_enabled, updated_at`,
+		expoID, exhibitorID, title, url, embedURL, enabled, input.LiveChatEnabled && enabled).
+		Scan(&item.ExpoID, &item.ExhibitorID, &item.Title, &item.YoutubeURL, &item.EmbedURL, &item.Enabled, &item.LiveChatEnabled, &updatedAt)
 	if err != nil {
 		return domain.ExhibitorLiveStreamRecord{}, err
 	}

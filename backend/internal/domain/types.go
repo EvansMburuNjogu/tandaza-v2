@@ -770,19 +770,21 @@ type ExhibitorConversationThread struct {
 }
 
 type ExhibitorLiveStreamInput struct {
-	Title      string `json:"title"`
-	YoutubeURL string `json:"youtubeUrl"`
-	Enabled    bool   `json:"enabled"`
+	Title           string `json:"title"`
+	YoutubeURL      string `json:"youtubeUrl"`
+	Enabled         bool   `json:"enabled"`
+	LiveChatEnabled bool   `json:"liveChatEnabled"`
 }
 
 type ExhibitorLiveStreamRecord struct {
-	ExpoID      string `json:"expoId"`
-	ExhibitorID string `json:"exhibitorId"`
-	Title       string `json:"title"`
-	YoutubeURL  string `json:"youtubeUrl"`
-	EmbedURL    string `json:"embedUrl"`
-	Enabled     bool   `json:"enabled"`
-	UpdatedAt   string `json:"updatedAt"`
+	ExpoID          string `json:"expoId"`
+	ExhibitorID     string `json:"exhibitorId"`
+	Title           string `json:"title"`
+	YoutubeURL      string `json:"youtubeUrl"`
+	EmbedURL        string `json:"embedUrl"`
+	Enabled         bool   `json:"enabled"`
+	LiveChatEnabled bool   `json:"liveChatEnabled"`
+	UpdatedAt       string `json:"updatedAt"`
 }
 
 type LeadActivityRecord struct {
@@ -856,23 +858,24 @@ type ProductRecord struct {
 }
 
 type VisitorBoothRecord struct {
-	ID               string                  `json:"id"`
-	ExpoID           string                  `json:"expoId"`
-	ExhibitorID      string                  `json:"exhibitorId"`
-	ExhibitorName    string                  `json:"exhibitorName"`
-	ExhibitorLogo    string                  `json:"exhibitorLogo,omitempty"`
-	Description      string                  `json:"description,omitempty"`
-	Website          string                  `json:"website,omitempty"`
-	Email            string                  `json:"email,omitempty"`
-	Phone            string                  `json:"phone,omitempty"`
-	Address          string                  `json:"address,omitempty"`
-	Categories       []string                `json:"categories,omitempty"`
-	SocialLinks      map[string]string       `json:"socialLinks,omitempty"`
-	BoothNumber      string                  `json:"boothNumber"`
-	BoothLabel       string                  `json:"boothLabel"`
-	Products         []ProductRecord         `json:"products"`
-	CompanyDocuments []CompanyDocumentRecord `json:"companyDocuments,omitempty"`
-	ExpoDocuments    []ExpoDocumentRecord    `json:"expoDocuments,omitempty"`
+	ID               string                     `json:"id"`
+	ExpoID           string                     `json:"expoId"`
+	ExhibitorID      string                     `json:"exhibitorId"`
+	ExhibitorName    string                     `json:"exhibitorName"`
+	ExhibitorLogo    string                     `json:"exhibitorLogo,omitempty"`
+	Description      string                     `json:"description,omitempty"`
+	Website          string                     `json:"website,omitempty"`
+	Email            string                     `json:"email,omitempty"`
+	Phone            string                     `json:"phone,omitempty"`
+	Address          string                     `json:"address,omitempty"`
+	Categories       []string                   `json:"categories,omitempty"`
+	SocialLinks      map[string]string          `json:"socialLinks,omitempty"`
+	BoothNumber      string                     `json:"boothNumber"`
+	BoothLabel       string                     `json:"boothLabel"`
+	Products         []ProductRecord            `json:"products"`
+	CompanyDocuments []CompanyDocumentRecord    `json:"companyDocuments,omitempty"`
+	ExpoDocuments    []ExpoDocumentRecord       `json:"expoDocuments,omitempty"`
+	LiveStream       *ExhibitorLiveStreamRecord `json:"liveStream,omitempty"`
 }
 
 type ProductInput struct {

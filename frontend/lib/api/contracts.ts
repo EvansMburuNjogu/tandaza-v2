@@ -1123,6 +1123,7 @@ export interface ExhibitorLiveStream {
   youtubeUrl: string
   embedUrl: string
   enabled: boolean
+  liveChatEnabled?: boolean
   updatedAt?: string
 }
 
@@ -1130,6 +1131,7 @@ export interface ExhibitorLiveStreamPayload {
   title: string
   youtubeUrl: string
   enabled: boolean
+  liveChatEnabled?: boolean
 }
 
 export interface ExhibitorProfile {
@@ -1556,6 +1558,7 @@ export interface VisitorBooth {
   products: Product[]
   companyDocuments?: CompanyDocument[]
   expoDocuments?: ExpoDocument[]
+  liveStream?: ExhibitorLiveStream
 }
 
 export interface VisitorExpoActionPayload {

@@ -1509,7 +1509,7 @@ func (s *MemoryStore) UpdateExhibitorLiveStream(ctx context.Context, expoID stri
 	now := time.Now().UTC().Format(time.RFC3339)
 	item := domain.ExhibitorLiveStreamRecord{
 		ExpoID: expoID, ExhibitorID: exhibitorID, Title: defaultString(strings.TrimSpace(input.Title), "Expo live stream"),
-		YoutubeURL: url, EmbedURL: youtubeEmbedURL(url), Enabled: input.Enabled && url != "", UpdatedAt: now,
+		YoutubeURL: url, EmbedURL: youtubeEmbedURL(url), Enabled: input.Enabled && url != "", LiveChatEnabled: input.LiveChatEnabled && input.Enabled && url != "", UpdatedAt: now,
 	}
 	for i, existing := range s.exhibitorLiveStreams {
 		if existing.ExpoID == expoID && existing.ExhibitorID == exhibitorID {

@@ -168,7 +168,7 @@ export default function MyExpoPage() {
   const [conversationSearch, setConversationSearch] = useState("")
   const [selectedConversationId, setSelectedConversationId] = useState("")
   const [conversationMessage, setConversationMessage] = useState("")
-  const [liveStreamForm, setLiveStreamForm] = useState({ title: "Expo live stream", youtubeUrl: "", enabled: false })
+  const [liveStreamForm, setLiveStreamForm] = useState({ title: "Expo live stream", youtubeUrl: "", enabled: false, liveChatEnabled: false })
   const [siteOrigin, setSiteOrigin] = useState("")
   const [qrImageUrl, setQrImageUrl] = useState("")
   const [shortenedVisitorUrl, setShortenedVisitorUrl] = useState("")
@@ -335,7 +335,8 @@ export default function MyExpoPage() {
     setLiveStreamForm({
       title: liveStreamQuery.data.title || "Expo live stream",
       youtubeUrl: liveStreamQuery.data.youtubeUrl || "",
-      enabled: Boolean(liveStreamQuery.data.enabled)
+      enabled: Boolean(liveStreamQuery.data.enabled),
+      liveChatEnabled: Boolean(liveStreamQuery.data.liveChatEnabled)
     })
   }, [liveStreamQuery.data])
 
@@ -652,7 +653,8 @@ export default function MyExpoPage() {
     mutationFn: () => api.updateExpoLiveStream(token || "", params.id, {
       title: liveStreamForm.title.trim() || "Expo live stream",
       youtubeUrl: liveStreamForm.youtubeUrl.trim(),
-      enabled: liveStreamForm.enabled
+      enabled: liveStreamForm.enabled,
+      liveChatEnabled: liveStreamForm.liveChatEnabled
     }),
     onSuccess: () => {
       toast.success("Live stream settings saved.")
@@ -3182,6 +3184,15 @@ export default function MyExpoPage() {
                     className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                   />
                   Show live stream to remote visitors
+                </label>
+                <label className="flex items-center gap-3 rounded-2xl border border-border/70 bg-elevated/50 p-3 text-sm font-semibold text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={liveStreamForm.liveChatEnabled}
+                    onChange={(event) => setLiveStreamForm((form) => ({ ...form, liveChatEnabled: event.target.checked }))}
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  />
+                  Enable live chat beside the stream
                 </label>
                 <Button type="submit" className="w-full" disabled={liveStreamMutation.isPending}>
                   Save live stream

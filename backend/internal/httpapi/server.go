@@ -8042,13 +8042,18 @@ func (s *Server) visitorBoothsForExpo(ctx context.Context, expoID string) ([]dom
 		if exhibitorProducts == nil {
 			exhibitorProducts = []domain.ProductRecord{}
 		}
+		stream, _ := s.store.ExhibitorLiveStream(ctx, assignment.ExpoID, assignment.ExhibitorID)
+		var liveStream *domain.ExhibitorLiveStreamRecord
+		if stream.Enabled && strings.TrimSpace(stream.EmbedURL) != "" {
+			liveStream = &stream
+		}
 		booths = append(booths, domain.VisitorBoothRecord{
 			ID: assignment.ID, ExpoID: assignment.ExpoID, ExhibitorID: assignment.ExhibitorID,
 			ExhibitorName: nonEmpty(profile.CompanyName, assignment.ExhibitorName), ExhibitorLogo: logo,
 			Description: profile.Description, Website: profile.Website, Email: profile.Email, Phone: profile.Phone, Address: profile.Address,
 			Categories: profile.Categories, SocialLinks: profile.SocialLinks, BoothNumber: assignment.BoothNumber,
 			BoothLabel: nonEmpty(assignment.BoothLabel, assignment.BoothSize), Products: exhibitorProducts,
-			CompanyDocuments: companyDocuments, ExpoDocuments: expoDocuments,
+			CompanyDocuments: companyDocuments, ExpoDocuments: expoDocuments, LiveStream: liveStream,
 		})
 	}
 	return booths, nil

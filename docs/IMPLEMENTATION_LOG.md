@@ -849,3 +849,9 @@
 
 - Added an Add to calendar action for leads with meeting booked status.
 - The action opens a focused dialog to enter the meeting link, confirm the meeting time, and schedule the visitor meeting into the expo calendar.
+
+### Live Stream Chat
+
+- Added a live chat enablement flag to exhibitor livestream settings.
+- Exposed enabled livestream details on visitor exhibitor booth payloads.
+- Upgraded the visitor live stream page to show the live video beside a visitor chat panel when chat is enabled.
