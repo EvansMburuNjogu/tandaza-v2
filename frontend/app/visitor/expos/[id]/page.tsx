@@ -19,9 +19,9 @@ type VisitorAction = VisitorExpoActionPayload["action"]
 type VisibleVisitorAction = Exclude<VisitorAction, "visit">
 
 const actionLabels: Record<VisibleVisitorAction, string> = {
-  interest: "Share interest",
-  meeting: "Request meeting",
-  pre_order: "Pre-order intent"
+  interest: "Interested",
+  meeting: "Meeting",
+  pre_order: "Pre-order"
 }
 
 function ExhibitorCard({
@@ -44,10 +44,9 @@ function ExhibitorCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-foreground">{exhibitor.exhibitorName}</p>
-          <p className="mt-1 text-sm text-muted">Expo workspace</p>
+          <p className="mt-1 text-sm text-muted">{exhibitor.products.length} products</p>
         </div>
       </div>
-      <p className="mt-4 text-xs font-medium text-muted">{exhibitor.products.length} products</p>
     </button>
   )
 }
@@ -260,7 +259,7 @@ export default function VisitorExpoDetailPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.1),transparent_34%),linear-gradient(135deg,#ffffff,#faf8ff_62%,#f8fafc)] shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <div className="p-5 sm:p-6">
               <Link href="/visitor/expos" className="text-sm font-medium text-primary hover:underline">Back to expos</Link>
@@ -270,21 +269,17 @@ export default function VisitorExpoDetailPage() {
                 <span className="rounded-full bg-elevated px-3 py-1">{data.venue}</span>
               </div>
               <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground lg:text-[2rem]">{data.name}</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border/70 bg-elevated/50 p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Exhibitors</p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">{exhibitors.length.toLocaleString()}</p>
+              {data.description ? <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{data.description}</p> : null}
+              <div className="mt-5 flex flex-wrap gap-2">
+                <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
+                  <p className="text-xs font-medium text-muted">Exhibitors</p>
+                  <p className="mt-1 text-xl font-semibold text-primary">{exhibitors.length.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-border/70 bg-elevated/50 p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Products</p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">
+                <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
+                  <p className="text-xs font-medium text-muted">Products</p>
+                  <p className="mt-1 text-xl font-semibold text-primary">
                     {exhibitors.reduce((total, exhibitor) => total + exhibitor.products.length, 0).toLocaleString()}
                   </p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-elevated/50 p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Access</p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">Remote</p>
                 </div>
               </div>
             </div>
@@ -293,10 +288,10 @@ export default function VisitorExpoDetailPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.bannerImage} alt={data.name} className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full min-h-56 items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.22),transparent_32%),linear-gradient(135deg,#fafafa,#f2efff)] px-8 text-center">
+                <div className="flex h-full min-h-56 items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.16),transparent_32%),linear-gradient(135deg,#fafafa,#f6f2ff)] px-8 text-center">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Tandaza Remote Access</p>
-                    <p className="mt-3 text-lg font-semibold text-foreground">Explore exhibitors from anywhere</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Remote access</p>
+                    <p className="mt-3 text-lg font-semibold text-foreground">Open exhibitors anywhere</p>
                   </div>
                 </div>
               )}
@@ -309,8 +304,8 @@ export default function VisitorExpoDetailPage() {
             <Card className="p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold">Exhibitor Workspaces</h2>
-                  <p className="mt-1 text-sm text-muted">Open an exhibitor workspace to view products and take action.</p>
+                  <h2 className="text-lg font-semibold">Exhibitors</h2>
+                  <p className="mt-1 text-sm text-muted">Choose one to view products and interact.</p>
                 </div>
                 <span className="rounded-full bg-elevated px-3 py-1 text-xs font-semibold text-muted">
                   {exhibitors.length.toLocaleString()} exhibitors
@@ -318,7 +313,7 @@ export default function VisitorExpoDetailPage() {
               </div>
               {exhibitors.length === 0 ? (
                 <div className="mt-5 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
-                  Active exhibitor workspaces will appear when exhibitors activate their digital workspace.
+                  Exhibitors will appear here when they activate.
                 </div>
               ) : (
                 <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -361,8 +356,7 @@ export default function VisitorExpoDetailPage() {
 
           <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <Card className="p-5">
-              <h2 className="text-lg font-semibold">Take action</h2>
-              <p className="mt-1 text-sm text-muted">Share interest, request a meeting, or send pre-order intent.</p>
+              <h2 className="text-lg font-semibold">Action</h2>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {(["interest", "meeting", "pre_order"] as VisibleVisitorAction[]).map((item) => (
                   <button
@@ -405,7 +399,7 @@ export default function VisitorExpoDetailPage() {
                   id="visitor-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="What would you like the exhibitor to know?"
+                  placeholder="Optional note"
                   rows={4}
                   className="w-full rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm outline-none focus:border-primary"
                 />
@@ -421,7 +415,7 @@ export default function VisitorExpoDetailPage() {
                       </p>
                     </div>
                   ) : action === "pre_order" ? (
-                    <p className="mt-3 text-xs leading-5 text-muted">Choose a product from the catalog before sending pre-order intent.</p>
+                    <p className="mt-3 text-xs leading-5 text-muted">Choose a product first.</p>
                   ) : null}
                 </div>
                 <Button onClick={submitAction} disabled={actionMutation.isPending || !selectedExhibitor} className="w-full">
@@ -431,8 +425,8 @@ export default function VisitorExpoDetailPage() {
             </Card>
 
             <Card className="p-5">
-              <h2 className="text-lg font-semibold">Chat with exhibitor</h2>
-              <p className="mt-1 text-sm text-muted">Send a realtime message to {selectedExhibitor?.exhibitorName || "the selected exhibitor"}.</p>
+              <h2 className="text-lg font-semibold">Chat</h2>
+              <p className="mt-1 text-sm text-muted">{selectedExhibitor?.exhibitorName || "Choose an exhibitor"}</p>
               <div className="mt-4 max-h-72 space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-elevated/40 p-3">
                 {selectedConversation?.messages?.length ? selectedConversation.messages.map((message) => (
                   <div key={message.id} className={`max-w-[86%] rounded-2xl p-3 text-sm ${message.senderRole === "visitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground"}`}>
