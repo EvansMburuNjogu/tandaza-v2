@@ -148,6 +148,44 @@ func countTemplate(items []domain.Notification, templateKey string) int {
 	return count
 }
 
+func countTemplateChannel(items []domain.Notification, templateKey string, channel string) int {
+	count := 0
+	for _, item := range items {
+		if item.TemplateKey == templateKey && item.Channel == channel {
+			count++
+		}
+	}
+	return count
+}
+
+func TestVisitorInterestNotifiesExhibitorAdmins(t *testing.T) {
+	cfg := config.Config{FrontendURL: "http://localhost:3000"}
+	tokenService := auth.NewTokenService("test-secret", time.Hour)
+	mem := store.NewMemoryStore(tokenService)
+	server := NewServer(cfg, slog.Default(), mem, tokenService)
+	handler := server.Routes()
+	visitorToken := loginForTest(t, handler, "visitor@tandaza.demo", "visitor123")
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/visitor/expos/expo_001/actions?exhibitor=exe_001", bytes.NewBufferString(`{"action":"interest","phone":"+254700000001","notes":"Please send me product information after the expo."}`))
+	req.Header.Set("Authorization", "Bearer "+visitorToken)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("visitor interest failed: status=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	notifications, err := mem.ListNotifications(t.Context(), store.NotificationFilter{})
+	if err != nil {
+		t.Fatalf("list notifications after interest: %v", err)
+	}
+	if countTemplateChannel(notifications, "new_lead_captured", "email") != 2 {
+		t.Fatalf("expected new lead emails for exhibitor owner and active team member, notifications=%+v", notifications)
+	}
+	if countTemplateChannel(notifications, "new_lead_captured", "in_app") < 2 || countTemplateChannel(notifications, "new_lead_captured", "push") < 2 {
+		t.Fatalf("expected in-app and push notifications for exhibitor admins, notifications=%+v", notifications)
+	}
+}
+
 func TestPublicRegisterRejectsOperationalRoles(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"name":"Public Organizer","role":"organizer","countryCode":"KE"}`))
 	req.SetBasicAuth("public.organizer@tandaza.demo", "organizer456")

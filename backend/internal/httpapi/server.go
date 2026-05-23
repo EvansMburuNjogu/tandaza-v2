@@ -1612,6 +1612,76 @@ func (s *Server) queueMeetingNotifications(ctx context.Context, meeting domain.M
 	_ = actor
 }
 
+func (s *Server) queueNewLeadNotifications(ctx context.Context, lead domain.LeadRecord, action string) {
+	expo, _ := s.store.ExpoByID(ctx, lead.ExpoID)
+	exhibitor, err := s.store.UserByID(ctx, lead.ExhibitorID)
+	if err != nil {
+		s.logger.Warn("lead notification exhibitor lookup failed", "error", err, "lead", lead.ID)
+		return
+	}
+	targets := s.exhibitorNotificationTargets(ctx, exhibitor)
+	exhibitorName := notificationDisplayName(exhibitor)
+	visitorName := nonEmpty(lead.VisitorName, "A visitor")
+	leadType := "new lead"
+	switch strings.TrimSpace(action) {
+	case "meeting":
+		leadType = "meeting request"
+	case "interest":
+		leadType = "visitor interest"
+	}
+	subject := fmt.Sprintf("New %s from %s", leadType, visitorName)
+	if strings.TrimSpace(expo.Name) != "" {
+		subject = fmt.Sprintf("%s at %s", subject, expo.Name)
+	}
+	messageParts := []string{
+		fmt.Sprintf("%s has created a %s for %s.", visitorName, leadType, nonEmpty(exhibitorName, "your exhibitor workspace")),
+	}
+	if strings.TrimSpace(expo.Name) != "" {
+		messageParts = append(messageParts, "Expo: "+expo.Name+".")
+	}
+	if strings.TrimSpace(lead.VisitorEmail) != "" {
+		messageParts = append(messageParts, "Email: "+lead.VisitorEmail+".")
+	}
+	if strings.TrimSpace(lead.VisitorPhone) != "" {
+		messageParts = append(messageParts, "Phone: "+lead.VisitorPhone+".")
+	}
+	if strings.TrimSpace(lead.Notes) != "" {
+		messageParts = append(messageParts, "Message: "+lead.Notes)
+	}
+	messageParts = append(messageParts, "Open Tandaza to review the lead, assign the next step, and follow up while the visitor context is still fresh.")
+	message := strings.Join(messageParts, "\n\n")
+	ctaURL := frontendLink(s.cfg.FrontendURL, "/exhibitor/my-expos/"+lead.ExpoID+"?tab=leads")
+	payload := map[string]any{
+		"subject": subject, "title": "New visitor lead", "message": message, "ctaLabel": "Review lead", "ctaUrl": ctaURL,
+		"expoName": expo.Name, "exhibitorName": exhibitorName, "leadId": lead.ID, "leadType": leadType,
+		"visitorName": lead.VisitorName, "visitorEmail": lead.VisitorEmail, "visitorPhone": lead.VisitorPhone,
+		"nextStep": "Review the visitor details, qualify the lead, and schedule the next follow-up from your Tandaza workspace.",
+	}
+	for _, target := range targets {
+		if strings.TrimSpace(target.email) != "" {
+			emailPayload := cloneNotificationPayload(payload)
+			emailPayload["email"] = target.email
+			emailPayload["to"] = target.email
+			emailPayload["recipient"] = target.name
+			s.queueAndSendAuthEmail(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: lead.ExpoID, Channel: "email", TemplateKey: "new_lead_captured", Payload: emailPayload})
+		}
+		if target.canReceiveAppNotifications() {
+			appPayload := cloneNotificationPayload(payload)
+			appPayload["recipient"] = target.name
+			s.queueAndSendStoredNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: lead.ExpoID, Channel: "in_app", TemplateKey: "new_lead_captured", Payload: appPayload})
+			s.queueAndSendStoredNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: lead.ExpoID, Channel: "push", TemplateKey: "new_lead_captured", Payload: appPayload})
+		}
+	}
+}
+
+func cloneNotificationPayload(payload map[string]any) map[string]any {
+	cloned := make(map[string]any, len(payload))
+	for key, value := range payload {
+		cloned[key] = value
+	}
+	return cloned
+}
+
 func (s *Server) queueAndSendStoredNotification(ctx context.Context, input domain.NotificationInput) {
 	system := domain.User{ID: "system_meetings", Name: "Meeting Scheduler", Role: domain.RoleAdministrator}
 	notification, err := s.store.CreateNotification(ctx, input, system)
@@ -4491,12 +4561,16 @@ func (s *Server) createExpoLeadForExpo(w http.ResponseWriter, r *http.Request) {
 	switch strings.TrimSpace(input.Action) {
 	case "meeting":
 		action = "meeting_requested"
+		s.queueNewLeadNotifications(r.Context(), lead, "meeting")
 	case "pre_order":
 		action = "pre_order_intent_created"
 	case "interest":
 		action = "visitor_interest_created"
+		s.queueNewLeadNotifications(r.Context(), lead, "interest")
 	case "visit":
 		action = "visitor_exhibit_visited"
+	default:
+		s.queueNewLeadNotifications(r.Context(), lead, "interest")
 	}
 	s.recordAudit(r, domain.AuditLog{ActorID: claims.UserID, Actor: user.Name, ActorRole: user.Role, ExpoID: lead.ExpoID, Action: action, EntityType: "lead", EntityID: lead.ID})
 	writeJSON(w, http.StatusCreated, lead)
@@ -4678,6 +4752,7 @@ func (s *Server) visitorExpoAction(w http.ResponseWriter, r *http.Request) {
 		action = "visitor_exhibit_visited"
 	case "meeting":
 		action = "visitor_meeting_requested"
+		s.queueNewLeadNotifications(r.Context(), lead, "meeting")
 		if strings.TrimSpace(input.ScheduledAt) == "" {
 			break
 		}
@@ -4700,6 +4775,10 @@ func (s *Server) visitorExpoAction(w http.ResponseWriter, r *http.Request) {
 	case "pre_order":
 		action = "visitor_pre_order_intent_created"
 		s.queuePreOrderNotifications(r.Context(), lead, user)
+	case "interest":
+		s.queueNewLeadNotifications(r.Context(), lead, "interest")
+	default:
+		s.queueNewLeadNotifications(r.Context(), lead, "interest")
 	}
 	s.recordAudit(r, domain.AuditLog{ActorID: claims.UserID, Actor: user.Name, ActorRole: user.Role, ExpoID: lead.ExpoID, Action: action, EntityType: "lead", EntityID: lead.ID})
 	writeJSON(w, http.StatusCreated, lead)

@@ -805,3 +805,9 @@
 - Expanded meeting reminders to queue SMS alongside email, in-app system notifications, and push webhook records when recipients have the required contact details.
 - Expanded lead follow-up reminders to queue in-app system notifications and push webhook records in addition to existing email/SMS reminders.
 - Improved browser notification fan-out so multiple newly unread reminders can appear without waiting for each notification to become the latest item.
+
+### Visitor Lead Notification Coverage
+
+- Added professional new-lead notifications when a visitor shares interest or requests a meeting from an exhibitor profile.
+- New lead alerts are sent to the exhibitor owner and active exhibitor team members by email, with matching in-app and push records for workspace notifications.
+- Added backend coverage to confirm visitor interest queues new-lead notifications for all exhibitor admins.
