@@ -107,6 +107,8 @@ export default function MyExpoPage() {
   const [leadFollowUpDialog, setLeadFollowUpDialog] = useState<Lead | null>(null)
   const [leadNotesDialog, setLeadNotesDialog] = useState<Lead | null>(null)
   const [leadFollowUpForm, setLeadFollowUpForm] = useState({ scheduledAt: "", notes: "" })
+  const [leadCalendarDialog, setLeadCalendarDialog] = useState<Lead | null>(null)
+  const [leadCalendarForm, setLeadCalendarForm] = useState({ meetingLink: "", scheduledAt: "", title: "", notes: "" })
   const [leadEntryMode, setLeadEntryMode] = useState<"existing" | "new">("existing")
   const [leadForm, setLeadForm] = useState({
     visitorId: "",
@@ -455,6 +457,46 @@ export default function MyExpoPage() {
     setLeadFollowUpDialog(lead)
     setLeadFollowUpForm({ scheduledAt: lead.nextFollowUpAt ? dateTimeLocalFromISO(lead.nextFollowUpAt, expoTimezone) : "", notes: "" })
   }
+
+  const openLeadCalendarDialog = (lead: Lead) => {
+    setLeadCalendarDialog(lead)
+    setLeadCalendarForm({
+      meetingLink: "",
+      scheduledAt: lead.nextFollowUpAt ? dateTimeLocalFromISO(lead.nextFollowUpAt, expoTimezone) : "",
+      title: `Meeting with ${lead.visitorName || "visitor"}`,
+      notes: lead.followUpNotes || lead.notes || ""
+    })
+  }
+
+  const leadCalendarMutation = useMutation({
+    mutationFn: () => {
+      if (!leadCalendarDialog) throw new Error("Choose a lead.")
+      if (!leadCalendarForm.scheduledAt) throw new Error("Choose a meeting date and time.")
+      if (!leadCalendarForm.meetingLink.trim()) throw new Error("Meeting link is required.")
+      if (!leadCalendarDialog.visitorEmail) throw new Error("Lead email is required to schedule a meeting.")
+      return api.createExpoMeeting(token || "", params.id, {
+        leadId: leadCalendarDialog.id,
+        visitorName: leadCalendarDialog.visitorName || "Visitor",
+        visitorEmail: leadCalendarDialog.visitorEmail,
+        visitorPhone: leadCalendarDialog.visitorPhone || "",
+        title: leadCalendarForm.title.trim() || `Meeting with ${leadCalendarDialog.visitorName || "visitor"}`,
+        meetingType: meetingCategories[0] || "Online demo",
+        scheduledAt: zonedDateTimeToUtcISO(leadCalendarForm.scheduledAt, expoTimezone),
+        location: leadCalendarForm.meetingLink.trim(),
+        notes: leadCalendarForm.notes.trim(),
+        ccEmails: []
+      })
+    },
+    onSuccess: () => {
+      toast.success("Meeting added to calendar.")
+      setLeadCalendarDialog(null)
+      setLeadCalendarForm({ meetingLink: "", scheduledAt: "", title: "", notes: "" })
+      client.invalidateQueries({ queryKey: ["expo-meetings", params.id] })
+      client.invalidateQueries({ queryKey: ["expo-leads", params.id] })
+      client.invalidateQueries({ queryKey: ["exhibitor-overview"] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not add meeting to calendar")
+  })
 
   const createLeadMutation = useMutation({
     mutationFn: () => {
@@ -1696,6 +1738,7 @@ export default function MyExpoPage() {
               pagination={{ page: leadsPage, pageSize: PAGE_SIZE, total: filteredLeads.length, onPageChange: setLeadsPage }}
               rowActions={[
                 { label: "Add follow-up", onClick: openLeadFollowUp },
+                { label: "Add to calendar", hidden: (r) => r.status !== "meeting_booked", onClick: openLeadCalendarDialog },
                 { label: "View notes", onClick: (r) => setLeadNotesDialog(r) },
                 { label: "Mark contacted", hidden: (r) => r.status === "contacted", onClick: (r) => leadMutation.mutate({ leadId: r.id, status: "contacted", temperature: r.temperature || "warm" }) },
                 { label: "Mark hot", hidden: (r) => r.temperature === "hot", onClick: (r) => leadMutation.mutate({ leadId: r.id, status: r.status || "new", temperature: "hot" }) },
@@ -1724,6 +1767,7 @@ export default function MyExpoPage() {
                 {(lead.followUpNotes || lead.notes) && <p className="mt-3 line-clamp-2 text-sm text-slate-500">{lead.followUpNotes || lead.notes}</p>}
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button variant="secondary" onClick={() => openLeadFollowUp(lead)}>Follow-up</Button>
+                  {lead.status === "meeting_booked" ? <Button variant="secondary" onClick={() => openLeadCalendarDialog(lead)}>Calendar</Button> : null}
                   <Button variant="secondary" onClick={() => setLeadNotesDialog(lead)}>Notes</Button>
                   {lead.temperature !== "hot" ? <Button variant="secondary" onClick={() => leadMutation.mutate({ leadId: lead.id, status: lead.status || "new", temperature: "hot" })}>Mark hot</Button> : null}
                   {lead.status !== "contacted" ? <Button variant="secondary" onClick={() => leadMutation.mutate({ leadId: lead.id, status: "contacted", temperature: lead.temperature || "warm" })}>Contacted</Button> : null}
@@ -1937,6 +1981,55 @@ export default function MyExpoPage() {
                 <div className="mt-5 flex justify-end gap-2">
                   <Button type="button" variant="secondary" disabled={leadFollowUpMutation.isPending} onClick={() => setLeadFollowUpDialog(null)}>Cancel</Button>
                   <Button type="submit" disabled={leadFollowUpMutation.isPending}>{leadFollowUpMutation.isPending ? "Saving..." : "Save Follow-up"}</Button>
+                </div>
+              </form>
+            </div>
+          )}
+          {leadCalendarDialog && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 py-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="lead-calendar-dialog-title" onClick={() => !leadCalendarMutation.isPending && setLeadCalendarDialog(null)}>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  leadCalendarMutation.mutate()
+                }}
+                className="w-full max-w-lg rounded-3xl border border-border/80 bg-card p-5 shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 id="lead-calendar-dialog-title" className="text-lg font-semibold text-foreground">Add to calendar</h3>
+                    <p className="mt-1 text-sm text-slate-500">{leadCalendarDialog.visitorName || "Lead"} · {leadCalendarDialog.visitorEmail || "No email"}</p>
+                  </div>
+                  <button type="button" onClick={() => setLeadCalendarDialog(null)} className="rounded-full border border-border px-3 py-1 text-sm font-semibold">Close</button>
+                </div>
+                <div className="mt-5 space-y-4">
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Meeting title</span>
+                    <Input value={leadCalendarForm.title} onChange={(event) => setLeadCalendarForm((form) => ({ ...form, title: event.target.value }))} placeholder="Meeting title" />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Meeting date and time</span>
+                    <Input type="datetime-local" value={leadCalendarForm.scheduledAt} onChange={(event) => setLeadCalendarForm((form) => ({ ...form, scheduledAt: event.target.value }))} />
+                    <span className="block text-xs font-medium text-slate-500">Expo timezone: {expoTimezone}</span>
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Meeting link</span>
+                    <Input value={leadCalendarForm.meetingLink} onChange={(event) => setLeadCalendarForm((form) => ({ ...form, meetingLink: event.target.value }))} placeholder="Paste Google Meet, Zoom, or Teams link" required />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Notes</span>
+                    <textarea
+                      value={leadCalendarForm.notes}
+                      onChange={(event) => setLeadCalendarForm((form) => ({ ...form, notes: event.target.value }))}
+                      placeholder="Agenda or internal meeting notes"
+                      rows={4}
+                      className="w-full rounded-xl border border-border/80 bg-elevated px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    />
+                  </label>
+                </div>
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button type="button" variant="secondary" disabled={leadCalendarMutation.isPending} onClick={() => setLeadCalendarDialog(null)}>Cancel</Button>
+                  <Button type="submit" disabled={leadCalendarMutation.isPending}>{leadCalendarMutation.isPending ? "Scheduling..." : "Schedule Meeting"}</Button>
                 </div>
               </form>
             </div>

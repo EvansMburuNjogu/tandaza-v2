@@ -844,3 +844,8 @@
 
 - Hardened visitor expo and exhibitor profile pages for newly activated expos that do not have products, categories, or files yet.
 - Ensured visitor expo booth responses return empty product arrays instead of null product collections.
+
+### Exhibitor Lead Calendar Action
+
+- Added an Add to calendar action for leads with meeting booked status.
+- The action opens a focused dialog to enter the meeting link, confirm the meeting time, and schedule the visitor meeting into the expo calendar.
