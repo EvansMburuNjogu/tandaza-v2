@@ -31,7 +31,7 @@ export function VerifyEmailForm() {
         if (!active) return
         setSession({ token: httpOnlySessionToken, user: response.user })
         setStatus("success")
-        toast.success("Email verified", { description: "Your workspace is ready." })
+        toast.success("Email verified", { description: "Your account is ready." })
         const pendingNext = window.localStorage.getItem("tandaza:postVerifyNext") || ""
         if (pendingNext) window.localStorage.removeItem("tandaza:postVerifyNext")
         const redirectTo = response.user.role === "visitor" && pendingNext.startsWith("/visitor/") ? pendingNext : response.redirectTo
@@ -69,7 +69,7 @@ export function VerifyEmailForm() {
               {status === "loading"
                 ? "Confirming your account, hold on."
                 : status === "success"
-                ? "Redirecting to your workspace."
+                ? "Redirecting to your account."
                 : "The link may be expired or already used."}
             </p>
           </div>
@@ -99,7 +99,7 @@ export function VerifyEmailForm() {
                 <CheckIcon />
               </div>
               <p className="mt-4 font-semibold text-foreground">Email confirmed</p>
-              <p className="mt-1.5 text-[13px] text-slate-500">Opening your Tandaza workspace…</p>
+              <p className="mt-1.5 text-[13px] text-slate-500">Opening your Tandaza account…</p>
             </>
           )}
 

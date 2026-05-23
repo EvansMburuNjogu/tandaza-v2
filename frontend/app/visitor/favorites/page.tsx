@@ -36,7 +36,7 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
             </div>
             <h3 className="mt-3 line-clamp-2 text-lg font-semibold text-foreground">{favorite.name}</h3>
             <p className="mt-1 text-sm text-muted">
-              {favorite.type === "expo" ? "Open the expo workspace and continue exploring exhibitors." : "Saved exhibitor profile."}
+              {favorite.type === "expo" ? "Open this expo and continue exploring exhibitors." : "Saved exhibitor profile."}
             </p>
           </div>
 

@@ -38,8 +38,8 @@ export function SessionGuard({ children, allowedRoles }: { children: ReactNode; 
       ? "Checking your secure session..."
       : !user
         ? "Redirecting to login..."
-        : "Opening the right workspace for your account..."
-    const actionLabel = user ? "Open workspace" : "Go to login"
+        : "Opening the right account..."
+    const actionLabel = user ? "Open account" : "Go to login"
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">

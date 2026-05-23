@@ -5,7 +5,7 @@ import { Spinner } from "@/components/ui/spinner"
 
 export const metadata: Metadata = {
   title: "Choose a new Tandaza password",
-  description: "Set a new Tandaza password with your emailed reset link and continue to your expo workspace."
+  description: "Set a new Tandaza password with your emailed reset link and continue to your account."
 }
 
 export default function ResetPasswordPage() {

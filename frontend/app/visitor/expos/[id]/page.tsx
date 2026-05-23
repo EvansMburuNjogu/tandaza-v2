@@ -247,7 +247,7 @@ export default function VisitorExpoDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-32">
         <Spinner className="h-8 w-8 text-primary" />
-        <p className="text-sm font-medium text-muted">Loading expo workspace...</p>
+        <p className="text-sm font-medium text-muted">Loading expo...</p>
       </div>
     )
   }

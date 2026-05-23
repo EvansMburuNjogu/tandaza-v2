@@ -24,7 +24,7 @@ export function AuthShell({
   title,
   description,
   children,
-  panelTitle = "One workspace. Every expo role.",
+  panelTitle = "One platform. Every expo role.",
   panelKicker = "Africa's expo digital platform",
   cardClassName,
   footer,

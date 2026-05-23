@@ -95,7 +95,7 @@ export function LoginForm() {
               Welcome back
             </h2>
             <p className="mt-1.5 text-[13px] text-slate-500">
-              Sign in to continue to your expo workspace.
+              Sign in to continue to your Tandaza account.
             </p>
           </div>
 
