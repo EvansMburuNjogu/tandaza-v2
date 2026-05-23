@@ -86,15 +86,15 @@ export default function VisitorDashboardPage() {
               <Button>Explore expos</Button>
             </Link>
           </div>
-          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+          <div className="mt-5 grid grid-cols-3 gap-2">
             {[
               ["Upcoming", stats.upcomingExposCount],
               ["Visits", stats.totalVisits],
               ["Saved", stats.favoritesCount]
             ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl bg-elevated px-4 py-3">
-                <p className="text-xs font-medium text-muted">{label}</p>
-                <p className="mt-1 text-xl font-semibold text-foreground">{Number(value || 0).toLocaleString()}</p>
+              <div key={label} className="min-w-0 rounded-2xl bg-elevated px-2.5 py-3 text-center sm:px-4 sm:text-left">
+                <p className="truncate text-[11px] font-medium text-muted sm:text-xs">{label}</p>
+                <p className="mt-1 truncate text-lg font-semibold text-foreground sm:text-xl">{Number(value || 0).toLocaleString()}</p>
               </div>
             ))}
           </div>
