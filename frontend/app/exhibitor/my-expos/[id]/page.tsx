@@ -17,7 +17,7 @@ import { AdCampaign, CalendarInvite, ExpoDocument, ExpoVisitor, Lead, PreOrder, 
 import { callingCodeOptions } from "@/lib/calling-codes"
 import { useSessionStore } from "@/store/session-store"
 import { ErrorState } from "@/components/ui/error-state"
-import { ChatIcon, ChevronDownIcon, DownloadIcon, MenuIcon, PlusIcon, TrashIcon } from "@/components/ui/icons"
+import { ChatIcon, ChevronDownIcon, DownloadIcon, MenuIcon, PlusIcon, SearchIcon, TrashIcon } from "@/components/ui/icons"
 import { cn, formatCurrency, formatDate, mediaUrl } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -2450,12 +2450,17 @@ export default function MyExpoPage() {
         <div className="space-y-4">
           <Card className="p-4">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem_auto]">
-              <Input
-                value={visitorSearch}
-                onChange={(event) => setVisitorSearch(event.target.value)}
-                placeholder="Search visitors by name, email, phone, or visit source"
-                aria-label="Search visitors"
-              />
+              <label className="relative">
+                <span className="sr-only">Search visitors</span>
+                <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                <Input
+                  value={visitorSearch}
+                  onChange={(event) => setVisitorSearch(event.target.value)}
+                  placeholder="Search visitors by name, email, phone, or visit source"
+                  aria-label="Search visitors"
+                  className="pl-11"
+                />
+              </label>
               <select
                 value={visitorSourceFilter}
                 onChange={(event) => setVisitorSourceFilter(event.target.value)}
@@ -2659,7 +2664,11 @@ export default function MyExpoPage() {
                 <p className="mt-1 text-xs text-slate-500">Filter, update fulfillment status, export records, and download purchase order PDFs.</p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Input placeholder="Search customer, email, phone, product" value={orderSearch} onChange={(event) => { setOrderSearch(event.target.value); setOrdersPage(1) }} className="sm:w-72" />
+                <label className="relative sm:w-72">
+                  <span className="sr-only">Search pre-orders</span>
+                  <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <Input placeholder="Search customer, email, phone, product" value={orderSearch} onChange={(event) => { setOrderSearch(event.target.value); setOrdersPage(1) }} className="pl-11" />
+                </label>
                 <span className="relative block">
                   <select value={orderStatusFilter} onChange={(event) => { setOrderStatusFilter(event.target.value as PreOrder["status"] | "all"); setOrdersPage(1) }} className="h-11 w-full appearance-none rounded-xl border border-border bg-elevated px-4 pr-10 text-sm font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary/70 focus:ring-4 focus:ring-ring/10 sm:w-48">
                     <option value="all">All statuses</option>
@@ -2918,12 +2927,16 @@ export default function MyExpoPage() {
                     <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
                     <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Chat with visitors captured from this expo workspace. Messages are saved against the visitor lead so your team can continue follow-up after the expo.</p>
                   </div>
-                  <Input
-                    value={conversationSearch}
-                    onChange={(event) => setConversationSearch(event.target.value)}
-                    placeholder="Search visitor conversations"
-                    className="md:max-w-xs"
-                  />
+                  <label className="relative md:w-80">
+                    <span className="sr-only">Search visitor conversations</span>
+                    <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                    <Input
+                      value={conversationSearch}
+                      onChange={(event) => setConversationSearch(event.target.value)}
+                      placeholder="Search visitor conversations"
+                      className="pl-11"
+                    />
+                  </label>
                 </div>
               </div>
               {filteredConversations.length ? (

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
+import { SearchIcon } from "@/components/ui/icons"
 import { api } from "@/lib/api"
 import { ExpoRecord } from "@/lib/api/contracts"
 import { formatCurrency, mediaUrl, safeDisplay } from "@/lib/utils"
@@ -71,13 +72,17 @@ export default function ExposPage() {
 
       <Card className="border-border/60 bg-card/86 p-3 shadow-card backdrop-blur-xl">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-          <input
-            type="search"
-            value={queryText}
-            onChange={(event) => { setQueryText(event.target.value); setPage(1) }}
-            placeholder="Search expos by name, location, or organizer..."
-            className="h-11 w-full rounded-2xl border border-border/70 bg-elevated px-4 text-sm text-foreground shadow-sm placeholder:text-slate-400/70 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 sm:max-w-md"
-          />
+          <label className="relative w-full sm:max-w-md">
+            <span className="sr-only">Search expos</span>
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <input
+              type="search"
+              value={queryText}
+              onChange={(event) => { setQueryText(event.target.value); setPage(1) }}
+              placeholder="Search expos by name, location, or organizer..."
+              className="h-11 w-full rounded-2xl border border-border/70 bg-elevated pl-11 pr-4 text-sm text-foreground shadow-sm placeholder:text-slate-400/70 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10"
+            />
+          </label>
           <div className="flex items-center gap-2">
             <select
               value={status}

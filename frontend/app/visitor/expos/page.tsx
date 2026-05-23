@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Button, buttonClasses } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
+import { SearchIcon } from "@/components/ui/icons"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
 import { VisitorExpo } from "@/lib/api/contracts"
@@ -131,14 +132,15 @@ export default function VisitorExposPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-5">
+            <div className="relative mt-5">
+              <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 type="text"
                 aria-label="Search expos"
                 placeholder="Search expos, venue, organizer, or category"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="min-h-12 w-full rounded-2xl border border-white/70 bg-white/85 px-4 py-3 text-sm text-foreground shadow-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                className="min-h-12 w-full rounded-2xl border border-white/70 bg-white/85 py-3 pl-11 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
               />
             </div>
           </div>

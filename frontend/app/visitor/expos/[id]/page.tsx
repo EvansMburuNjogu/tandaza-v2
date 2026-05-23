@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
-import { ArrowRightIcon, StarIcon } from "@/components/ui/icons"
+import { ArrowRightIcon, SearchIcon, StarIcon } from "@/components/ui/icons"
 import { api } from "@/lib/api"
 import { SponsorAd, VisitorActivityItem, VisitorBooth } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
@@ -252,13 +252,14 @@ export default function VisitorExpoDetailPage() {
               <h2 className="text-lg font-semibold text-foreground">Exhibitors</h2>
               <p className="text-sm text-muted">{filteredBooths.length.toLocaleString()} of {booths.length.toLocaleString()} exhibitors</p>
             </div>
-            <label className="w-full sm:max-w-xs">
+            <label className="relative w-full sm:max-w-xs">
               <span className="sr-only">Search exhibitors</span>
+              <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 value={exhibitorSearch}
                 onChange={(event) => setExhibitorSearch(event.target.value)}
                 placeholder="Search exhibitors"
-                className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="h-11 w-full rounded-2xl border border-border bg-card pl-11 pr-4 text-sm text-foreground shadow-sm outline-none placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/10"
               />
             </label>
           </div>
@@ -293,7 +294,7 @@ export default function VisitorExpoDetailPage() {
                           </div>
                           <div className="min-w-0">
                             <h3 className="truncate font-semibold text-foreground group-hover:text-primary">{booth.exhibitorName}</h3>
-                            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
+                            {booth.description ? <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description}</p> : null}
                           </div>
                         </div>
                         <div className="mt-4 flex items-center justify-between gap-3">

@@ -35,17 +35,30 @@ function ActivityIcon({ type }: { type: string }) {
 
 function ExpoCard({ expo, tone = "upcoming" }: { expo: VisitorExpo; tone?: "live" | "upcoming" }) {
   const date = new Date(expo.startDate)
+  const showImage = tone === "live"
   return (
-    <Link href={`/visitor/expos/${expo.id}`} className="group block min-w-0 rounded-2xl border border-border/70 bg-elevated p-4 transition hover:border-primary/25 hover:bg-elevated/80 focus:outline-none focus:ring-4 focus:ring-primary/10">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-foreground group-hover:text-primary">{expo.name}</p>
-          <p className="mt-1 text-sm text-muted">{Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Date pending"}</p>
-          {expo.venue ? <p className="mt-1 truncate text-xs text-muted">{expo.venue}</p> : null}
+    <Link href={`/visitor/expos/${expo.id}`} className="group block min-w-0 rounded-2xl border border-border/70 bg-elevated p-3 transition hover:border-primary/25 hover:bg-elevated/80 focus:outline-none focus:ring-4 focus:ring-primary/10">
+      <div className="flex items-start gap-3">
+        {showImage ? (
+          <div className="h-20 w-24 shrink-0 overflow-hidden rounded-2xl bg-card">
+            {expo.bannerImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={expo.bannerImage} alt={expo.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-semibold text-primary">Expo</div>
+            )}
+          </div>
+        ) : null}
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-3 py-1">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground group-hover:text-primary">{expo.name}</p>
+            <p className="mt-1 text-sm text-muted">{Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Date pending"}</p>
+            {expo.venue ? <p className="mt-1 truncate text-xs text-muted">{expo.venue}</p> : null}
+          </div>
+          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "live" ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>
+            {tone === "live" ? "Live" : "Soon"}
+          </span>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "live" ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>
-          {tone === "live" ? "Live" : "Soon"}
-        </span>
       </div>
     </Link>
   )

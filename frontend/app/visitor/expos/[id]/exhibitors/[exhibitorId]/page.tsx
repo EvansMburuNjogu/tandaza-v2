@@ -178,7 +178,7 @@ export default function VisitorExhibitorPage() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Exhibitor</p>
                   <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{booth.exhibitorName}</h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
+                  {booth.description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{booth.description}</p> : null}
                 </div>
               </div>
             </div>
