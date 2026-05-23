@@ -41,6 +41,7 @@ export default function VisitorSettingsPage() {
     company: "",
     industry: ""
   })
+  const [customIndustry, setCustomIndustry] = useState(false)
   const [callingCode, setCallingCode] = useState("+254")
   const [phoneLocal, setPhoneLocal] = useState("")
   const [notifications, setNotifications] = useState({
@@ -49,6 +50,8 @@ export default function VisitorSettingsPage() {
     expoUpdates: true,
     reminders: true
   })
+  const selectedIndustryIsPreset = !form.industry || INDUSTRY_OPTIONS.includes(form.industry)
+  const industrySelectValue = customIndustry || !selectedIndustryIsPreset ? "__other" : form.industry
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["visitor-settings"],
@@ -65,6 +68,7 @@ export default function VisitorSettingsPage() {
       company: settings.company || "",
       industry: settings.industry || ""
     })
+    setCustomIndustry(Boolean(settings.industry && !INDUSTRY_OPTIONS.includes(settings.industry)))
     setCallingCode(phoneParts.code)
     setPhoneLocal(phoneParts.local)
     setNotifications({
@@ -196,19 +200,31 @@ export default function VisitorSettingsPage() {
 
             <div className="space-y-2">
               <label htmlFor="visitorIndustry" className="text-sm font-medium text-foreground">Industry (optional)</label>
-              <Input
+              <select
                 id="visitorIndustry"
-                list="visitor-industry-options"
-                value={form.industry}
-                onChange={(e) => setForm((current) => ({ ...current, industry: e.target.value }))}
-                placeholder="Select or type your industry"
-              />
-              <datalist id="visitor-industry-options">
+                value={industrySelectValue}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setCustomIndustry(value === "__other")
+                  setForm((current) => ({ ...current, industry: value === "__other" ? "" : value }))
+                }}
+                className="h-12 w-full rounded-xl border border-border bg-elevated px-4 text-sm text-foreground shadow-sm focus:border-primary/70 focus:outline-none focus:ring-4 focus:ring-ring/10"
+              >
+                <option value="">Select industry</option>
                 {INDUSTRY_OPTIONS.map((industry) => (
-                  <option key={industry} value={industry} />
+                  <option key={industry} value={industry}>{industry}</option>
                 ))}
-              </datalist>
-              <p className="text-xs leading-5 text-muted">Choose from the list or type your own industry.</p>
+                <option value="__other">Other industry</option>
+              </select>
+              {industrySelectValue === "__other" ? (
+                <Input
+                  aria-label="Enter industry"
+                  value={form.industry}
+                  onChange={(event) => setForm((current) => ({ ...current, industry: event.target.value }))}
+                  placeholder="Enter your industry"
+                />
+              ) : null}
+              <p className="text-xs leading-5 text-muted">Select an industry, or choose Other industry to enter your own.</p>
             </div>
 
             <div className="flex justify-end border-t border-border pt-4">
