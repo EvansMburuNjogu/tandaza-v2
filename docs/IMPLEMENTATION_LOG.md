@@ -885,3 +885,9 @@
 - Removed the extra Tandaza wordmark text and rounded logo badge treatments from shared logo placements so only the image mark is shown.
 - Added the white logo variant and applied it on dark navigation, auth, sidebar, footer, and receipt header surfaces.
 - Increased rendered logo sizes across navigation, auth, sidebar, footer, and empty/error states so the mark has stronger visual presence without reintroducing wordmark text.
+
+### Visitor Desktop UI Polish
+
+- Refined the visitor shell background to better match the premium workspace feel used by organizer and exhibitor accounts.
+- Reworked the visitor homepage with a stronger hero, larger metric cards, richer expo cards, and clearer desktop content hierarchy.
+- Upgraded visitor expo discovery with a more premium header, stronger search treatment, larger expo imagery, and more polished desktop card spacing.

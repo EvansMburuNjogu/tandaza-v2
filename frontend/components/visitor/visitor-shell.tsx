@@ -40,10 +40,9 @@ export function VisitorShell({
   }
 
   return (
-    <div className="relative min-h-screen w-full max-w-[100dvw] overflow-x-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-100" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_18%_-10%,hsl(var(--primary)/0.10),transparent_58%),radial-gradient(ellipse_55%_40%_at_100%_12%,hsl(var(--accent)/0.08),transparent_55%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 border-b border-border/40 bg-gradient-to-b from-card/35 to-transparent" />
+    <div className="relative min-h-screen w-full max-w-[100dvw] overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--secondary)/0.45)_42%,hsl(var(--background)))] text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-45" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_72%_48%_at_18%_-12%,hsl(var(--primary)/0.16),transparent_62%),radial-gradient(ellipse_50%_42%_at_94%_8%,hsl(var(--accent)/0.10),transparent_56%)]" />
       <AdminSidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
