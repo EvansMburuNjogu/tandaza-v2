@@ -8,12 +8,8 @@ export function SiteFooter() {
         <div className="grid gap-8 border-b border-white/10 pb-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-[11px]"
-                style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)" }}>
-                <Image src="/tandaza-logo.png" alt="Tandaza" width={20} height={20} className="h-5 w-5" />
-              </span>
-              <span className="font-brand text-[17px] font-bold text-white">Tandaza</span>
+            <Link href="/" className="flex items-center">
+              <Image src="/tandaza-logo.png" alt="Tandaza" width={44} height={44} className="h-11 w-11 object-contain" />
             </Link>
             <p className="mt-4 max-w-[260px] text-[13px] leading-[1.7] text-slate-400">
               Africa's expo management platform, connecting every stakeholder from listing to settlement.

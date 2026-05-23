@@ -54,12 +54,9 @@ export default function OrganizerPaymentReceiptPage() {
             <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.34),transparent_45%)]" />
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
-                  <img src="/tandaza-logo.png" alt="Tandaza" className="h-9 w-9 object-contain" />
-                </div>
+                <img src="/tandaza-logo.png" alt="Tandaza" className="h-14 w-14 object-contain" />
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/60">Tandaza</p>
-                  <h2 className="mt-1 text-3xl font-semibold tracking-tight">Payment Receipt</h2>
+                  <h2 className="text-3xl font-semibold tracking-tight">Payment Receipt</h2>
                 </div>
               </div>
               <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4 text-left backdrop-blur sm:text-right">
@@ -153,10 +150,7 @@ export default function OrganizerPaymentReceiptPage() {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-8 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/tandaza-logo.png" alt="" className="h-5 w-5 object-contain" />
-              <span className="font-semibold text-slate-700">Tandaza</span>
-            </div>
+            <img src="/tandaza-logo.png" alt="Tandaza" className="h-6 w-6 object-contain" />
             <p>hello@tandaza.africa · +254 799 010 210</p>
           </div>
         </Card>

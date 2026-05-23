@@ -52,17 +52,8 @@ export function LandingNav() {
     )}>
       <div className="mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6 lg:px-8">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
-            style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)", boxShadow: "0 0 18px hsl(234,79%,61%,0.28)" }}
-          >
-            <Image src="/tandaza-logo.png" alt="" width={20} height={20} className="h-5 w-5" />
-          </span>
-          <span className={cn("font-brand text-[17px] font-bold tracking-tight transition-colors", frosted ? "text-slate-900" : "text-white")}>
-            Tandaza
-          </span>
+        <Link href="/" className="flex items-center">
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={44} height={44} className="h-11 w-11 object-contain" priority />
         </Link>
 
         {/* Desktop nav */}

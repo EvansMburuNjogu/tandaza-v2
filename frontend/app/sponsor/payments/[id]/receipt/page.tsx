@@ -51,11 +51,8 @@ export default function SponsorPaymentReceiptPage() {
           <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/95 shadow-sm">
-                  <img src="/tandaza-logo.png" alt="Tandaza" className="h-7 w-7" />
-                </div>
+                <img src="/tandaza-logo.png" alt="Tandaza" className="mb-3 h-12 w-12 object-contain" />
                 <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Payment Receipt</p>
-                <div className="text-2xl font-bold mt-1">Tandaza</div>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold">{r.reference}</p>

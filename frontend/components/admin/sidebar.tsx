@@ -58,21 +58,16 @@ export function AdminSidebar({
 
         {/* ── Brand header ─────────────────────────── */}
         <div className="relative flex h-[64px] shrink-0 items-center gap-3 border-b border-white/[0.08] px-4">
-          {/* Logo mark */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,hsl(var(--primary)/0.55),hsl(var(--accent)/0.35))] ring-1 ring-white/20 shadow-[inset_0_1px_0_hsl(var(--primary-foreground)/0.18)]">
-            <Image src="/tandaza-logo.png" alt="Tandaza" width={22} height={22} className="h-[22px] w-[22px]" priority />
-          </div>
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={42} height={42} className="h-10 w-10 shrink-0 object-contain" priority />
 
-          {/* Brand text — slides out on desktop collapse */}
           <div
             className={cn(
               "flex flex-col overflow-hidden transition-[width,opacity] duration-300",
               collapsed ? "lg:w-0 lg:opacity-0" : "w-[200px] opacity-100"
             )}
           >
-            <span className="whitespace-nowrap text-[15px] font-bold leading-tight tracking-tight text-white">Tandaza</span>
             <span className={cn(
-              "mt-0.5 whitespace-nowrap text-[10px] font-semibold uppercase leading-tight tracking-[0.22em] text-slate-400/75",
+              "whitespace-nowrap text-[10px] font-semibold uppercase leading-tight tracking-[0.22em] text-slate-400/75",
               collapsed && "lg:hidden"
             )}>
               {user?.role === "visitor" ? "Visitor Account" : user?.role === "organizer" ? "Organizer Workspace" : user?.role === "administrator" || user?.role === "super_administrator" ? "Admin Console" : user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) + " Workspace" : "Admin Console"}

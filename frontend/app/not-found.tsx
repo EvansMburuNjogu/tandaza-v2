@@ -9,13 +9,8 @@ export default function NotFound() {
       <div className="pointer-events-none absolute inset-0 bg-topo opacity-60" />
 
       <div className="relative z-10 flex flex-col items-center">
-        {/* Logo */}
-        <Link href="/" className="mb-10 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-[13px]"
-            style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)" }}>
-            <Image src="/tandaza-logo.png" alt="Tandaza" width={22} height={22} className="h-[22px] w-[22px]" />
-          </span>
-          <span className="font-brand text-[18px] font-bold text-white">Tandaza</span>
+        <Link href="/" className="mb-10 flex items-center">
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={52} height={52} className="h-12 w-12 object-contain" />
         </Link>
 
         {/* 404 number */}

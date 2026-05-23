@@ -73,9 +73,7 @@ export function VerifyEmailForm() {
                 : "The link may be expired or already used."}
             </p>
           </div>
-          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/15">
-            <Image src="/tandaza-logo.png" alt="Tandaza" width={24} height={24} priority />
-          </span>
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={44} height={44} className="h-11 w-11 flex-shrink-0 object-contain" priority />
         </div>
 
         <div className="my-7 h-px w-full bg-border/50" />

@@ -84,10 +84,7 @@ export default function PaymentReceiptPage() {
         <Card className="receipt-card p-8">
           {/* Header */}
           <div className="text-center border-b border-border pb-6">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white shadow-sm">
-              <img src="/tandaza-logo.png" alt="Tandaza" className="h-7 w-7" />
-            </div>
-            <div className="mt-3 text-2xl font-bold text-foreground">Tandaza</div>
+            <img src="/tandaza-logo.png" alt="Tandaza" className="mx-auto h-14 w-14 object-contain" />
             <p className="text-lg text-primary mt-1">Payment Receipt</p>
           </div>
 
