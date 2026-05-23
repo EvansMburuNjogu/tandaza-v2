@@ -63,6 +63,7 @@ export default function ExhibitorSettingsPage() {
     description: "",
     phone: "",
     address: "",
+    website: "",
     logoUrl: "",
     categories: [] as string[],
     linkedin: "",
@@ -94,11 +95,12 @@ export default function ExhibitorSettingsPage() {
       description: profile.description,
       phone: profile.phone,
       address: profile.address,
+      website: profile.website || "",
       logoUrl: profile.logoUrl || "",
       categories: profile.categories || [],
-      linkedin: profile.socialLinks.linkedin || "",
-      twitter: profile.socialLinks.twitter || "",
-      instagram: profile.socialLinks.instagram || ""
+      linkedin: profile.socialLinks?.linkedin || "",
+      twitter: profile.socialLinks?.twitter || "",
+      instagram: profile.socialLinks?.instagram || ""
     })
   }, [profileQuery.data])
 
@@ -111,7 +113,7 @@ export default function ExhibitorSettingsPage() {
     mutationFn: () => api.updateExhibitorProfile(token || "", {
       companyName: form.companyName,
       description: form.description,
-      website: "",
+      website: form.website,
       phone: form.phone,
       address: form.address,
       logoUrl: form.logoUrl,
@@ -437,6 +439,15 @@ export default function ExhibitorSettingsPage() {
                     placeholder="Nairobi, Kenya"
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-600">Website</label>
+                  <Input
+                    type="url"
+                    value={form.website}
+                    onChange={(e) => setForm(f => ({ ...f, website: e.target.value }))}
+                    placeholder="https://yourcompany.com"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end pt-4 border-t border-border">
@@ -551,7 +562,7 @@ export default function ExhibitorSettingsPage() {
           <div className="relative">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-foreground">Social Media Links</h3>
-              <p className="text-sm text-slate-500">Connect your social profiles</p>
+              <p className="text-sm text-slate-500">Add the public links visitors should use after viewing your exhibitor profile.</p>
             </div>
 
             <div className="space-y-6">

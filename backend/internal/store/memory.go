@@ -2739,7 +2739,7 @@ func (s *MemoryStore) UpdateExhibitorProfile(ctx context.Context, exhibitorID st
 		profile.CompanyName = company
 	}
 	profile.Description = strings.TrimSpace(input.Description)
-	profile.Website = ""
+	profile.Website = strings.TrimSpace(input.Website)
 	profile.Phone = strings.TrimSpace(input.Phone)
 	profile.Address = strings.TrimSpace(input.Address)
 	profile.LogoURL = strings.TrimSpace(input.LogoURL)

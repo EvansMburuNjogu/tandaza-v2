@@ -72,6 +72,21 @@ function QuickAction({
   )
 }
 
+function externalHref(value?: string) {
+  const cleaned = (value || "").trim()
+  if (!cleaned) return ""
+  return /^https?:\/\//i.test(cleaned) ? cleaned : `https://${cleaned}`
+}
+
+function socialLabel(key: string) {
+  const labels: Record<string, string> = {
+    linkedin: "LinkedIn",
+    twitter: "X",
+    instagram: "Instagram"
+  }
+  return labels[key] || key
+}
+
 export default function VisitorExhibitorPage() {
   const params = useParams()
   const queryClient = useQueryClient()
@@ -158,6 +173,10 @@ export default function VisitorExhibitorPage() {
     )
   }
   if (error || !data || !booth) return <ErrorState title="Exhibitor was not found" />
+  const websiteHref = externalHref(booth.website)
+  const socialLinks = Object.entries(booth.socialLinks || {})
+    .map(([key, value]) => ({ key, label: socialLabel(key), href: externalHref(value) }))
+    .filter((item) => item.href)
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
@@ -186,6 +205,26 @@ export default function VisitorExhibitorPage() {
                 <p><span className="font-semibold text-muted">Email:</span> <span className="text-foreground">{booth.email || "Not provided"}</span></p>
                 <p><span className="font-semibold text-muted">Phone:</span> <span className="text-foreground">{booth.phone || "Not provided"}</span></p>
                 <p><span className="font-semibold text-muted">Address:</span> <span className="text-foreground">{booth.address || "Not provided"}</span></p>
+                {websiteHref ? (
+                  <p>
+                    <span className="font-semibold text-muted">Website:</span>{" "}
+                    <a href={websiteHref} target="_blank" rel="noreferrer" className="break-all font-semibold text-primary hover:underline">
+                      {booth.website}
+                    </a>
+                  </p>
+                ) : null}
+                {socialLinks.length ? (
+                  <div>
+                    <p className="font-semibold text-muted">Social links</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {socialLinks.map((item) => (
+                        <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition hover:bg-primary hover:text-white">
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

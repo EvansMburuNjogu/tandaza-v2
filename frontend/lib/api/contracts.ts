@@ -1541,10 +1541,16 @@ export interface VisitorBooth {
   exhibitorName: string
   exhibitorLogo?: string
   description?: string
+  website?: string
   email?: string
   phone?: string
   address?: string
   categories?: string[]
+  socialLinks?: {
+    linkedin?: string
+    twitter?: string
+    instagram?: string
+  }
   boothNumber: string
   boothLabel: string
   products: Product[]

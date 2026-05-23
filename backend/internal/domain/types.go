@@ -862,10 +862,12 @@ type VisitorBoothRecord struct {
 	ExhibitorName    string                  `json:"exhibitorName"`
 	ExhibitorLogo    string                  `json:"exhibitorLogo,omitempty"`
 	Description      string                  `json:"description,omitempty"`
+	Website          string                  `json:"website,omitempty"`
 	Email            string                  `json:"email,omitempty"`
 	Phone            string                  `json:"phone,omitempty"`
 	Address          string                  `json:"address,omitempty"`
 	Categories       []string                `json:"categories,omitempty"`
+	SocialLinks      map[string]string       `json:"socialLinks,omitempty"`
 	BoothNumber      string                  `json:"boothNumber"`
 	BoothLabel       string                  `json:"boothLabel"`
 	Products         []ProductRecord         `json:"products"`

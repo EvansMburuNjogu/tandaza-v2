@@ -811,3 +811,9 @@
 - Added professional new-lead notifications when a visitor shares interest or requests a meeting from an exhibitor profile.
 - New lead alerts are sent to the exhibitor owner and active exhibitor team members by email, with matching in-app and push records for workspace notifications.
 - Added backend coverage to confirm visitor interest queues new-lead notifications for all exhibitor admins.
+
+### Exhibitor Contact Links
+
+- Restored exhibitor website saving from company settings and preserved it in memory mode.
+- Added website and social links to visitor-facing exhibitor company details when exhibitors have provided them.
+- Extended visitor booth API contracts so frontend pages receive exhibitor website and social link data from the backend.
