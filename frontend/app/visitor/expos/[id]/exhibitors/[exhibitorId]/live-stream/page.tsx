@@ -2,9 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
-import Link from "next/link"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
+import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -41,7 +41,7 @@ export default function VisitorLiveStreamPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="mx-auto max-w-4xl space-y-4">
-        <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="text-sm font-semibold text-primary hover:underline">Back to exhibitor</Link>
+        <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="overflow-hidden">
           <div className="aspect-video bg-[linear-gradient(135deg,#f6f2ff,#ffffff)]" />
           <div className="p-5">

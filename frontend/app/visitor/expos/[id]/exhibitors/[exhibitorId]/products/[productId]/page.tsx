@@ -6,6 +6,7 @@ import Link from "next/link"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
 import { buttonClasses } from "@/components/ui/button"
+import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -76,7 +77,7 @@ export default function VisitorProductPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="space-y-6">
-        <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="text-sm font-semibold text-primary hover:underline">Back to exhibitor</Link>
+        <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="space-y-4">

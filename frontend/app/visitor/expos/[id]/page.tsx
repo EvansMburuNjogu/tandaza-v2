@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
+import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -92,7 +93,7 @@ export default function VisitorExpoDetailPage() {
         <section className="overflow-hidden rounded-3xl border border-primary/15 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.12),transparent_34%),linear-gradient(135deg,#ffffff,#faf8ff_62%,#f8fafc)] shadow-sm">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_23rem]">
             <div className="p-5 sm:p-6">
-              <Link href="/visitor/expos" className="text-sm font-semibold text-primary hover:underline">Back to expos</Link>
+              <BackLink href="/visitor/expos" label="Back to expos" />
               <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-muted">
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{data.category}</span>
                 <span className="rounded-full bg-white/75 px-3 py-1">{formatDate(data.startDate)} - {formatDate(data.endDate)}</span>

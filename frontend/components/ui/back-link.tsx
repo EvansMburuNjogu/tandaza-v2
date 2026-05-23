@@ -6,10 +6,12 @@ export function BackLink({ href, label = "Back" }: { href: string; label?: strin
   return (
     <Link
       href={href}
-      className={buttonClasses({ variant: "secondary", size: "md" })}
+      aria-label={label}
+      title={label}
+      className={buttonClasses({ variant: "secondary", size: "icon", className: "rounded-full" })}
     >
       <ArrowLeftIcon className="h-4 w-4" />
-      {label}
+      <span className="sr-only">{label}</span>
     </Link>
   )
 }

@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
-import Link from "next/link"
 import { toast } from "sonner"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -71,7 +71,7 @@ export default function VisitorMeetingPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="mx-auto max-w-2xl space-y-4">
-        <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="text-sm font-semibold text-primary hover:underline">Back to exhibitor</Link>
+        <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="p-5 sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Request meeting</p>
           <h1 className="mt-2 text-2xl font-semibold text-foreground">{booth.exhibitorName}</h1>

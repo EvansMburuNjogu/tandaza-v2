@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
-import Link from "next/link"
 import { toast } from "sonner"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -71,7 +71,7 @@ export default function VisitorExhibitorChatPage() {
   return (
     <SessionGuard allowedRoles={["visitor"]}>
       <div className="mx-auto flex max-w-4xl flex-col gap-4">
-        <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="text-sm font-semibold text-primary hover:underline">Back to exhibitor</Link>
+        <BackLink href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} label="Back to exhibitor" />
         <Card className="overflow-hidden">
           <div className="border-b border-border/70 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Chat</p>

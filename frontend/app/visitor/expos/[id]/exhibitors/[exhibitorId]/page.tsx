@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { BellIcon, CalendarIcon, ChatIcon, DownloadIcon, FeedbackIcon, HeartIcon } from "@/components/ui/icons"
@@ -138,7 +139,7 @@ export default function VisitorExhibitorPage() {
         <section className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="p-5 sm:p-6">
-              <Link href={`/visitor/expos/${expoId}`} className="text-sm font-semibold text-primary hover:underline">Back to expo</Link>
+              <BackLink href={`/visitor/expos/${expoId}`} label="Back to expo" />
               <div className="mt-5 flex items-start gap-4">
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-primary/10 text-2xl font-semibold text-primary">
                   {booth.exhibitorLogo ? (
