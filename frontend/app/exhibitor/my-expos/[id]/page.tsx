@@ -1303,8 +1303,8 @@ export default function MyExpoPage() {
           <nav
             id="expo-workspace-mobile-nav"
             className={cn(
-              "space-y-1 overflow-y-auto",
-              mobileNavOpen ? "mt-2 block max-h-[60vh] border-t border-border/70 pt-2" : "hidden"
+              "space-y-1 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]",
+              mobileNavOpen ? "mt-2 block max-h-[min(52vh,360px)] border-t border-border/70 pt-2" : "hidden"
             )}
           >
             {renderWorkspaceItems(true)}

@@ -829,3 +829,8 @@
 - Moved live stream management out of the exhibitor Conversations tab into its own Live Stream workspace menu.
 - Conversations now focuses only on visitor chat and saved message threads.
 - Kept the existing YouTube Live URL settings, visitor visibility toggle, and embedded preview behavior unchanged.
+
+### Exhibitor Workspace Mobile Menu
+
+- Tightened the mobile expo workspace menu height so it stays inside the visible screen.
+- Added touch-friendly vertical scrolling for the mobile workspace menu when many expo tools are available.
