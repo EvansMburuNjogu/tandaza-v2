@@ -94,7 +94,7 @@ export default function VisitorCalendarPage() {
 
   if (error) return <ErrorState title="Failed to load calendar" />
 
-  const items = data
+  const items = data.filter((item) => item.type !== "expo")
   const daysInMonth = getDaysInMonth(currentYear, currentMonth)
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth)
   const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate())
@@ -142,7 +142,7 @@ export default function VisitorCalendarPage() {
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/75">Schedule</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Calendar</h1>
-              <p className="mt-2 text-sm text-muted">Expos, meetings, and reminders in one place.</p>
+              <p className="mt-2 text-sm text-muted">Meetings and reminders in one place.</p>
             </div>
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function VisitorCalendarPage() {
 
               {!selectedDate && displayItems.length === 0 && (
                 <div className="py-8 text-center text-muted">
-                  <p className="text-sm">No upcoming expos or meetings</p>
+                  <p className="text-sm">No upcoming meetings or reminders</p>
                 </div>
               )}
           </Card>
