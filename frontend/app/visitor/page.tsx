@@ -41,6 +41,13 @@ function ActivityIcon({ type }: { type: string }) {
   )
 }
 
+function greetingForNow(date: Date) {
+  const hour = date.getHours()
+  if (hour < 12) return "Good morning"
+  if (hour < 17) return "Good afternoon"
+  return "Good evening"
+}
+
 function ExpoCard({ expo, tone = "upcoming" }: { expo: VisitorExpo; tone?: "live" | "upcoming" }) {
   const date = new Date(expo.startDate)
   const showImage = tone === "live"
@@ -90,6 +97,7 @@ function MeetingCard({ meeting }: { meeting: VisitorCalendarItem }) {
 
 export default function VisitorDashboardPage() {
   const token = useSessionStore((s) => s.token)
+  const user = useSessionStore((s) => s.user)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-dashboard"],
@@ -138,6 +146,7 @@ export default function VisitorDashboardPage() {
     .filter((item) => item.type === "meeting" && new Date(`${item.date}T${item.time || "00:00"}`) >= now)
     .sort((a, b) => new Date(`${a.date}T${a.time || "00:00"}`).getTime() - new Date(`${b.date}T${b.time || "00:00"}`).getTime())
   const recentActivity = stats.recentActivity || []
+  const visitorName = user?.name?.trim() || "there"
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
@@ -145,7 +154,7 @@ export default function VisitorDashboardPage() {
         <Card className="p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Visitor account</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{greetingForNow(now)}, {visitorName}</h1>
               <p className="mt-2 text-sm text-muted">Find expos, open exhibitors, and manage meetings.</p>
             </div>
             <Link href="/visitor/expos">
