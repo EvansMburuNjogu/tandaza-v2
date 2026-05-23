@@ -12,14 +12,22 @@ import { useSessionStore } from "@/store/session-store"
 import { VisitorFavorite } from "@/lib/api/contracts"
 
 function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
-  const href = favorite.type === "expo" ? `/visitor/expos/${favorite.itemId}` : undefined
+  const href = favorite.type === "expo"
+    ? `/visitor/expos/${favorite.itemId}`
+    : favorite.expoId
+      ? `/visitor/expos/${favorite.expoId}/exhibitors/${favorite.itemId}`
+      : undefined
 
   return (
     <Card className="relative overflow-hidden transition hover:border-primary/30 hover:shadow-lg">
       <span className="absolute right-3 top-3 z-10 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold capitalize text-white shadow-sm">
         {favorite.type}
       </span>
-      <div className="grid gap-0 sm:grid-cols-[9rem_minmax(0,1fr)]">
+      <Link
+        href={href || "/visitor/expos"}
+        aria-label={`Open ${favorite.name}`}
+        className="grid gap-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 sm:grid-cols-[9rem_minmax(0,1fr)]"
+      >
         <div className="aspect-[16/10] bg-elevated sm:aspect-auto">
           {favorite.image ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -35,13 +43,9 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
             <h3 className="line-clamp-2 text-lg font-semibold text-foreground">{favorite.name}</h3>
           </div>
 
-          {href ? (
-            <Link href={href} className={buttonClasses({ className: "shrink-0" })}>Open</Link>
-          ) : (
-            <span className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted">Saved</span>
-          )}
+          <span className={buttonClasses({ className: "shrink-0" })}>Open</span>
         </div>
-      </div>
+      </Link>
     </Card>
   )
 }

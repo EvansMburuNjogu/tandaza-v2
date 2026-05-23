@@ -2158,7 +2158,19 @@ func (s *PostgresStore) VisitorTimeline(ctx context.Context, visitorID string) (
 }
 
 func (s *PostgresStore) VisitorFavorites(ctx context.Context, visitorID string) ([]domain.VisitorFavoriteRecord, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, type, item_id, name, image_url, created_at FROM visitor_favorites WHERE visitor_id=$1 ORDER BY created_at DESC`, visitorID)
+	rows, err := s.pool.Query(ctx, `SELECT vf.id, vf.type, vf.item_id,
+			CASE WHEN vf.type='expo' THEN vf.item_id ELSE COALESCE(ee.expo_id, '') END AS expo_id,
+			vf.name, vf.image_url, vf.created_at
+		FROM visitor_favorites vf
+		LEFT JOIN LATERAL (
+			SELECT expo_id
+			FROM expo_exhibitors
+			WHERE vf.type='exhibitor' AND (id=vf.item_id OR exhibitor_id=vf.item_id)
+			ORDER BY created_at DESC
+			LIMIT 1
+		) ee ON TRUE
+		WHERE vf.visitor_id=$1
+		ORDER BY vf.created_at DESC`, visitorID)
 	if err != nil {
 		return nil, err
 	}
@@ -2167,7 +2179,7 @@ func (s *PostgresStore) VisitorFavorites(ctx context.Context, visitorID string) 
 	for rows.Next() {
 		var item domain.VisitorFavoriteRecord
 		var created time.Time
-		if err := rows.Scan(&item.ID, &item.Type, &item.ItemID, &item.Name, &item.Image, &created); err != nil {
+		if err := rows.Scan(&item.ID, &item.Type, &item.ItemID, &item.ExpoID, &item.Name, &item.Image, &created); err != nil {
 			return nil, err
 		}
 		item.AddedAt = created.Format(time.RFC3339)
@@ -2182,7 +2194,7 @@ func (s *PostgresStore) AddVisitorFavorite(ctx context.Context, visitorID string
 	if visitorID == "" || itemID == "" || (favoriteType != "expo" && favoriteType != "exhibitor") {
 		return domain.VisitorFavoriteRecord{}, ErrInvalidCredentials
 	}
-	name, image, err := s.resolveVisitorFavoriteTarget(ctx, favoriteType, itemID)
+	name, image, expoID, err := s.resolveVisitorFavoriteTarget(ctx, favoriteType, itemID)
 	if err != nil {
 		return domain.VisitorFavoriteRecord{}, err
 	}
@@ -2197,6 +2209,7 @@ func (s *PostgresStore) AddVisitorFavorite(ctx context.Context, visitorID string
 	if err != nil {
 		return domain.VisitorFavoriteRecord{}, err
 	}
+	record.ExpoID = expoID
 	record.AddedAt = created.Format(time.RFC3339)
 	return record, nil
 }
@@ -2212,24 +2225,24 @@ func (s *PostgresStore) DeleteVisitorFavorite(ctx context.Context, visitorID str
 	return nil
 }
 
-func (s *PostgresStore) resolveVisitorFavoriteTarget(ctx context.Context, favoriteType string, itemID string) (string, string, error) {
+func (s *PostgresStore) resolveVisitorFavoriteTarget(ctx context.Context, favoriteType string, itemID string) (string, string, string, error) {
 	if favoriteType == "expo" {
 		var name, image string
 		if err := s.pool.QueryRow(ctx, `SELECT name, COALESCE(cover_image_url,'') FROM expos WHERE id=$1`, itemID).Scan(&name, &image); err != nil {
-			return "", "", err
+			return "", "", "", err
 		}
-		return name, image, nil
+		return name, image, itemID, nil
 	}
-	var company, name, companyCipher, nameCipher, logo string
-	err := s.pool.QueryRow(ctx, `SELECT COALESCE(u.company_name,''), COALESCE(u.name,''), COALESCE(u.company_name_cipher,''), COALESCE(u.name_cipher,''), COALESCE(ep.logo_url, u.avatar_url, '')
+	var company, name, companyCipher, nameCipher, logo, expoID string
+	err := s.pool.QueryRow(ctx, `SELECT COALESCE(u.company_name,''), COALESCE(u.name,''), COALESCE(u.company_name_cipher,''), COALESCE(u.name_cipher,''), COALESCE(ep.logo_url, u.avatar_url, ''), ee.expo_id
 		FROM expo_exhibitors ee
 		JOIN users u ON u.id=ee.exhibitor_id
 		LEFT JOIN exhibitor_profiles ep ON ep.exhibitor_id=u.id
 		WHERE ee.id=$1 OR ee.exhibitor_id=$1
 		ORDER BY ee.created_at DESC
-		LIMIT 1`, itemID).Scan(&company, &name, &companyCipher, &nameCipher, &logo)
+		LIMIT 1`, itemID).Scan(&company, &name, &companyCipher, &nameCipher, &logo, &expoID)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	display := strings.TrimSpace(s.pii.Decrypt(companyCipher))
 	if display == "" {
@@ -2242,9 +2255,9 @@ func (s *PostgresStore) resolveVisitorFavoriteTarget(ctx context.Context, favori
 		display = strings.TrimSpace(name)
 	}
 	if display == "" {
-		return "", "", ErrNotFound
+		return "", "", "", ErrNotFound
 	}
-	return display, logo, nil
+	return display, logo, expoID, nil
 }
 
 func (s *PostgresStore) CreateVisitorBooking(ctx context.Context, expoID string, ticketType string, actor domain.User) (domain.VisitorBookingRecord, error) {

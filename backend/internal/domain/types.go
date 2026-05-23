@@ -949,6 +949,7 @@ type VisitorFavoriteRecord struct {
 	ID      string `json:"id"`
 	Type    string `json:"type"`
 	ItemID  string `json:"itemId"`
+	ExpoID  string `json:"expoId,omitempty"`
 	Name    string `json:"name"`
 	Image   string `json:"image"`
 	AddedAt string `json:"addedAt"`

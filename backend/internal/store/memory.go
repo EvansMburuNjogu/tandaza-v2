@@ -1889,6 +1889,16 @@ func (s *MemoryStore) AddVisitorFavorite(ctx context.Context, visitorID string, 
 	record := domain.VisitorFavoriteRecord{
 		ID: fmt.Sprintf("vf_%06d", len(s.favorites)+1), Type: favoriteType, ItemID: itemID, Name: name, Image: image, AddedAt: time.Now().UTC().Format(time.RFC3339),
 	}
+	if favoriteType == "expo" {
+		record.ExpoID = itemID
+	} else {
+		for _, assignment := range s.exhibitors {
+			if assignment.ID == itemID || assignment.ExhibitorID == itemID {
+				record.ExpoID = assignment.ExpoID
+				break
+			}
+		}
+	}
 	s.favorites = append([]memoryFavorite{{VisitorID: visitorID, Record: record}}, s.favorites...)
 	return record, nil
 }

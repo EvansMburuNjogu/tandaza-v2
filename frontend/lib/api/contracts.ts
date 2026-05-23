@@ -1575,6 +1575,7 @@ export interface VisitorFavorite {
   id: string
   type: "expo" | "exhibitor"
   itemId: string
+  expoId?: string
   name: string
   image: string
   addedAt: string
