@@ -76,7 +76,7 @@ export function AdminSidebar({
               "mt-0.5 whitespace-nowrap text-[10px] font-semibold uppercase leading-tight tracking-[0.22em] text-slate-400/75",
               collapsed && "lg:hidden"
             )}>
-              {user?.role === "organizer" ? "Organizer Workspace" : user?.role === "administrator" || user?.role === "super_administrator" ? "Admin Console" : user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) + " Workspace" : "Admin Console"}
+              {user?.role === "visitor" ? "Visitor Account" : user?.role === "organizer" ? "Organizer Workspace" : user?.role === "administrator" || user?.role === "super_administrator" ? "Admin Console" : user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) + " Workspace" : "Admin Console"}
             </span>
           </div>
         </div>

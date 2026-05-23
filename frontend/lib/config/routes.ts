@@ -225,6 +225,7 @@ const dynamicPageTitles: Array<{ test: RegExp; meta: { title: string; descriptio
   // Visitor routes
   { test: /^\/visitor$/, meta: { title: "Home", description: "Your quick view of expos, meetings, and recent activity." } },
   { test: /^\/visitor\/explore$/, meta: { title: "Explore", description: "Discover expos and exhibitors." } },
+  { test: /^\/visitor\/expos$/, meta: { title: "Expos", description: "Find expos and open exhibitor profiles." } },
   { test: /^\/visitor\/expos\/[^/]+$/, meta: { title: "Expo Details", description: "View exhibitors, products, chat, and visitor actions." } },
   { test: /^\/visitor\/favorites$/, meta: { title: "Favorites", description: "Your saved expos and exhibitors." } },
   { test: /^\/visitor\/messages$/, meta: { title: "Messages", description: "Chat with exhibitors and manage contacts." } },
