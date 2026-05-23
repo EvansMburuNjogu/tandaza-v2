@@ -865,3 +865,9 @@
 
 - Updated exhibitor workspace QR codes to resolve directly to the visitor exhibitor profile route.
 - Existing QR records with older expo query-string targets are normalized to the direct exhibitor profile path when reused or resolved.
+
+### Visitor Upcoming Meeting Count
+
+- Added an upcoming meeting count to the visitor dashboard backend response.
+- Aligned the visitor homepage meeting count with the same non-expo upcoming schedule items shown by the visitor calendar.
+- Added a frontend fallback so the homepage count remains useful while the calendar query is still loading.

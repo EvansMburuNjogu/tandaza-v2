@@ -944,6 +944,7 @@ type VisitorTimelineDay struct {
 type VisitorDashboardStats struct {
 	TotalBookings    int                    `json:"totalBookings"`
 	UpcomingEvents   int                    `json:"upcomingEvents"`
+	UpcomingMeetings int                    `json:"upcomingMeetings"`
 	TotalVisits      int                    `json:"totalVisits"`
 	FavoritesCount   int                    `json:"favoritesCount"`
 	RecentActivity   []VisitorActivityItem  `json:"recentActivity"`

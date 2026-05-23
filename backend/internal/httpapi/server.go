@@ -4846,12 +4846,25 @@ func (s *Server) visitorDashboard(w http.ResponseWriter, r *http.Request) {
 	timeline, _ := s.store.VisitorTimeline(r.Context(), claims.UserID)
 	bookings, _ := s.store.VisitorBookings(r.Context(), claims.UserID)
 	favorites, _ := s.store.VisitorFavorites(r.Context(), claims.UserID)
+	user, _ := s.store.UserByID(r.Context(), claims.UserID)
+	meetings, _ := s.store.ListMeetings(r.Context(), store.MeetingFilter{VisitorID: claims.UserID, VisitorEmail: user.Email})
 	activities := []domain.VisitorActivityItem{}
 	for _, day := range timeline {
 		activities = append(activities, day.Activities...)
 	}
+	upcomingMeetings := 0
+	now := time.Now()
+	for _, meeting := range meetings {
+		if meeting.Status == "cancelled" {
+			continue
+		}
+		scheduledAt, err := time.Parse(time.RFC3339, meeting.ScheduledAt)
+		if err == nil && !scheduledAt.Before(now) {
+			upcomingMeetings++
+		}
+	}
 	writeJSON(w, http.StatusOK, domain.VisitorDashboardStats{
-		TotalBookings: len(bookings), UpcomingEvents: len(bookings), TotalVisits: len(activities), FavoritesCount: len(favorites),
+		TotalBookings: len(bookings), UpcomingEvents: len(bookings), UpcomingMeetings: upcomingMeetings, TotalVisits: len(activities), FavoritesCount: len(favorites),
 		RecentActivity: activities, UpcomingBookings: bookings,
 	})
 }

@@ -48,6 +48,15 @@ function greetingForNow(date: Date) {
   return "Good evening"
 }
 
+function calendarItemTime(item: VisitorCalendarItem) {
+  const parsed = new Date(`${item.date}T${item.time || "00:00"}`)
+  return Number.isFinite(parsed.getTime()) ? parsed.getTime() : 0
+}
+
+function isUpcomingMeetingItem(item: VisitorCalendarItem, now: Date) {
+  return item.type !== "expo" && calendarItemTime(item) >= now.getTime()
+}
+
 function ExpoCard({ expo, tone = "upcoming" }: { expo: VisitorExpo; tone?: "live" | "upcoming" }) {
   const date = new Date(expo.startDate)
   const showImage = tone === "live"
@@ -143,8 +152,11 @@ export default function VisitorDashboardPage() {
     })
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
   const upcomingMeetings = (calendarQuery.data || [])
-    .filter((item) => item.type === "meeting" && new Date(`${item.date}T${item.time || "00:00"}`) >= now)
-    .sort((a, b) => new Date(`${a.date}T${a.time || "00:00"}`).getTime() - new Date(`${b.date}T${b.time || "00:00"}`).getTime())
+    .filter((item) => isUpcomingMeetingItem(item, now))
+    .sort((a, b) => calendarItemTime(a) - calendarItemTime(b))
+  const upcomingMeetingCount = calendarQuery.isSuccess
+    ? upcomingMeetings.length
+    : stats.upcomingMeetings || 0
   const recentActivity = stats.recentActivity || []
   const visitorName = user?.name?.trim() || "there"
 
@@ -165,7 +177,7 @@ export default function VisitorDashboardPage() {
             {[
               ["Live expos", liveExpos.length],
               ["Upcoming", upcomingExpos.length],
-              ["Meetings", upcomingMeetings.length]
+              ["Meetings", upcomingMeetingCount]
             ].map(([label, value]) => (
               <div key={label} className="min-w-0 rounded-2xl bg-elevated px-2.5 py-3 text-center sm:px-4 sm:text-left">
                 <p className="truncate text-[11px] font-medium text-muted sm:text-xs">{label}</p>

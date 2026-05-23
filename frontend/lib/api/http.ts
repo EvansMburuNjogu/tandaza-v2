@@ -785,6 +785,7 @@ export const httpApi: ApiDriver = {
     return {
       ...dashboard,
       upcomingExposCount: dashboard.upcomingExposCount ?? 0,
+      upcomingMeetings: dashboard.upcomingMeetings ?? 0,
       upcomingExpos: dashboard.upcomingExpos ?? []
     }
   },

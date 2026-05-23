@@ -1494,6 +1494,7 @@ export interface SponsorDashboardStats {
 // Visitor Interfaces
 export interface VisitorDashboardStats {
   upcomingExposCount: number
+  upcomingMeetings?: number
   totalVisits: number
   favoritesCount: number
   recentActivity: VisitorActivityItem[]
