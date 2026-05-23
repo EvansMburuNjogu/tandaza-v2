@@ -77,17 +77,18 @@ export function AdminTopbar({
 
   useEffect(() => {
     if (typeof window === "undefined" || !browserNotificationsEnabled || unreadNotifications.length === 0) return
-    const latest = unreadNotifications[0]
-    const key = `tandaza:last-browser-notification:${latest.id}`
-    if (window.localStorage.getItem(key)) return
-    window.localStorage.setItem(key, "shown")
-    const notification = new window.Notification(latest.subject || "Tandaza notification", {
-      body: latest.message || "You have a new Tandaza update.",
-      tag: latest.id
-    })
-    notification.onclick = () => {
-      window.focus()
-      openNotification(latest)
+    const unseen = unreadNotifications.filter((item) => !window.localStorage.getItem(`tandaza:last-browser-notification:${item.id}`))
+    const nextNotifications = unseen.slice(0, 3)
+    for (const item of nextNotifications) {
+      window.localStorage.setItem(`tandaza:last-browser-notification:${item.id}`, "shown")
+      const notification = new window.Notification(item.subject || "Tandaza notification", {
+        body: item.message || "You have a new Tandaza update.",
+        tag: item.id
+      })
+      notification.onclick = () => {
+        window.focus()
+        openNotification(item)
+      }
     }
   }, [browserNotificationsEnabled, unreadNotifications])
 

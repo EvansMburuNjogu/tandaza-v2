@@ -799,3 +799,9 @@
 - Added a dedicated visitor activity capture endpoint for analytics events that should not create leads.
 - Started capturing exhibitor profile views, product views, document opens/downloads, meeting joins, and saved favourites into the visitor timeline event store.
 - Updated visitor activity UI labels so the new analytics events render cleanly in visitor activity surfaces.
+
+### Reminder Notification Coverage
+
+- Expanded meeting reminders to queue SMS alongside email, in-app system notifications, and push webhook records when recipients have the required contact details.
+- Expanded lead follow-up reminders to queue in-app system notifications and push webhook records in addition to existing email/SMS reminders.
+- Improved browser notification fan-out so multiple newly unread reminders can appear without waiting for each notification to become the latest item.

@@ -1645,6 +1645,9 @@ func (s *Server) queueMeetingReminders(ctx context.Context, meeting domain.Meeti
 			if strings.TrimSpace(target.email) != "" {
 				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: meeting.ExpoID, Channel: "email", TemplateKey: "meeting_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
 			}
+			if strings.TrimSpace(target.phone) != "" {
+				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: meeting.ExpoID, Channel: "sms", TemplateKey: "meeting_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
+			}
 			if target.canReceiveAppNotifications() {
 				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: meeting.ExpoID, Channel: "in_app", TemplateKey: "meeting_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
 				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: meeting.ExpoID, Channel: "push", TemplateKey: "meeting_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
@@ -1832,6 +1835,10 @@ func (s *Server) queueLeadFollowUpReminders(ctx context.Context, lead domain.Lea
 			}
 			if strings.TrimSpace(target.phone) != "" {
 				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: lead.ExpoID, Channel: "sms", TemplateKey: "lead_follow_up_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
+			}
+			if target.canReceiveAppNotifications() {
+				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: lead.ExpoID, Channel: "in_app", TemplateKey: "lead_follow_up_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
+				_, _ = s.store.CreateNotification(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: lead.ExpoID, Channel: "push", TemplateKey: "lead_follow_up_reminder", ScheduledAt: reminderAt.Format(time.RFC3339), Payload: payload}, system)
 			}
 		}
 	}
