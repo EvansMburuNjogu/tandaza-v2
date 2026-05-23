@@ -312,6 +312,15 @@ export function ArrowLeftIcon(props: IconProps) {
   )
 }
 
+export function ArrowRightIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M5 12H19" />
+      <path d="M13 6L19 12L13 18" />
+    </BaseIcon>
+  )
+}
+
 export function MenuIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

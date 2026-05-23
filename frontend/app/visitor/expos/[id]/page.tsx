@@ -9,12 +9,14 @@ import { Card } from "@/components/ui/card"
 import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
+import { ArrowRightIcon } from "@/components/ui/icons"
 import { api } from "@/lib/api"
 import { SponsorAd, VisitorActivityItem, VisitorBooth } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
 import { formatDate } from "@/lib/utils"
 
 const EXHIBITOR_PAGE_SIZE = 9
+const TIMELINE_PAGE_SIZE = 8
 
 function activityLabel(type: VisitorActivityItem["type"]) {
   const labels: Record<string, string> = {
@@ -64,6 +66,7 @@ export default function VisitorExpoDetailPage() {
   const sessionReady = Boolean(token && user?.role === "visitor")
   const [exhibitorSearch, setExhibitorSearch] = useState("")
   const [exhibitorPage, setExhibitorPage] = useState(1)
+  const [timelinePage, setTimelinePage] = useState(1)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-expo-details", expoId],
@@ -95,6 +98,8 @@ export default function VisitorExpoDetailPage() {
       .filter((activity) => activity.expoId === expoId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   }, [expoId, timelineQuery.data])
+  const timelineTotalPages = Math.max(1, Math.ceil(timeline.length / TIMELINE_PAGE_SIZE))
+  const pagedTimeline = timeline.slice((timelinePage - 1) * TIMELINE_PAGE_SIZE, timelinePage * TIMELINE_PAGE_SIZE)
 
   useEffect(() => {
     if (!sessionReady || !expoId || !token || !user || !booths.length) return
@@ -121,6 +126,10 @@ export default function VisitorExpoDetailPage() {
   useEffect(() => {
     setExhibitorPage(1)
   }, [exhibitorSearch, booths.length])
+
+  useEffect(() => {
+    setTimelinePage(1)
+  }, [expoId, timeline.length])
 
   if (!sessionReady) {
     return <SessionGuard allowedRoles={["visitor"]}><div /></SessionGuard>
@@ -240,9 +249,14 @@ export default function VisitorExpoDetailPage() {
                         <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{booth.description || "Company description not provided."}</p>
                       </div>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-muted">
-                      <span className="rounded-full bg-elevated px-3 py-1">{booth.products.length} products</span>
-                      <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="flex flex-wrap gap-2 text-xs font-semibold text-muted">
+                        <span className="rounded-full bg-elevated px-3 py-1">{booth.products.length} products</span>
+                        <span className="rounded-full bg-elevated px-3 py-1">{(booth.companyDocuments?.length || 0) + (booth.expoDocuments?.length || 0)} files</span>
+                      </div>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">
+                        <ArrowRightIcon className="h-4 w-4" />
+                      </span>
                     </div>
                   </Link>
                 ))}
@@ -286,7 +300,7 @@ export default function VisitorExpoDetailPage() {
           ) : (
             <Card className="overflow-hidden">
               <div className="divide-y divide-border/70">
-                {timeline.slice(0, 8).map((activity) => (
+                {pagedTimeline.map((activity) => (
                   <div key={activity.id} className="flex gap-3 p-4">
                     <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
                     <div>
@@ -301,6 +315,29 @@ export default function VisitorExpoDetailPage() {
                   </div>
                 ))}
               </div>
+              {timelineTotalPages > 1 ? (
+                <div className="flex flex-col gap-3 border-t border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted">Page {timelinePage} of {timelineTotalPages}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTimelinePage((page) => Math.max(1, page - 1))}
+                      disabled={timelinePage === 1}
+                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTimelinePage((page) => Math.min(timelineTotalPages, page + 1))}
+                      disabled={timelinePage === timelineTotalPages}
+                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </Card>
           )}
         </section>
