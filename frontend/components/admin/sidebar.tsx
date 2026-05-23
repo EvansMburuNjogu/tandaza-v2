@@ -22,9 +22,8 @@ export function AdminSidebar({
   const pathname = usePathname()
   const user = useSessionStore((state) => state.user)
   const currentNavItems = navItems || adminNavItems
-  
-  // Dynamically get unique sections from nav items
-  const sections = [...new Set(currentNavItems.map((item) => item.section))] as string[]
+  const isVisitorAccount = user?.role === "visitor"
+  const sections = isVisitorAccount ? [""] : ([...new Set(currentNavItems.map((item) => item.section))] as string[])
 
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -87,7 +86,7 @@ export function AdminSidebar({
             {sections.map((section, sectionIndex) => (
               <div key={section}>
                 {/* Section label (expanded) or divider (collapsed) */}
-                <div className="mb-1 h-5 overflow-hidden">
+                <div className={cn("mb-1 h-5 overflow-hidden", isVisitorAccount && "hidden")}>
                   {/* Label — always shown on mobile; hidden on desktop when collapsed */}
                   <p
                     className={cn(
@@ -100,8 +99,7 @@ export function AdminSidebar({
                 </div>
 
                 <div className="space-y-0.5">
-                  {currentNavItems
-                    .filter((item) => item.section === section)
+                  {(isVisitorAccount ? currentNavItems : currentNavItems.filter((item) => item.section === section))
                     .map((item) => {
                       const active = pathname === item.href
                       const Icon = iconForKey(item.icon)
@@ -176,7 +174,7 @@ export function AdminSidebar({
                 </div>
 
                 {/* Divider between sections when collapsed on desktop */}
-                {sectionIndex < sections.length - 1 && (
+                {!isVisitorAccount && sectionIndex < sections.length - 1 && (
                   <div
                     className={cn(
                       "mt-3 h-px bg-white/[0.06] transition-opacity duration-200",
