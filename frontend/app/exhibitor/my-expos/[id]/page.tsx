@@ -1021,6 +1021,10 @@ export default function MyExpoPage() {
   const maxProductInterest = Math.max(...productInterestItems.map((item) => item.value), 1)
   const maxLeadSource = Math.max(...leadSourceItems.map((item) => item.value), 1)
   const maxVisitorSource = Math.max(...visitorSourceItems.map((item) => item.value), 1)
+  const visitorInsights = ai?.visitorInsights
+  const leadQualityScore = clampPercent(Number(visitorInsights?.leadQualityScore) || 0)
+  const peakHours = Array.isArray(visitorInsights?.peakHours) ? visitorInsights.peakHours : []
+  const aiRecommendations = Array.isArray(ai?.recommendations) ? ai.recommendations : []
   const roi = ai?.roi
   const roiPipelineByTemperature = Object.entries(roi?.pipelineByTemperature || {})
     .filter(([, value]) => Number(value) > 0)
@@ -1063,6 +1067,7 @@ export default function MyExpoPage() {
       .some((value) => String(value || "").toLowerCase().includes(query))
   })
   const selectedConversation = filteredConversations.find((thread) => thread.id === selectedConversationId) || filteredConversations[0]
+  const selectedConversationMessages = selectedConversation?.messages || []
   const visibleLeads = paginate(filteredLeads, leadsPage)
   const visibleVisitors = paginate(filteredVisitors, visitorsPage)
   const visibleProducts = paginate(products, productsPage)
@@ -2241,16 +2246,16 @@ export default function MyExpoPage() {
               <p className="text-sm font-semibold text-foreground">Lead quality score</p>
               <p className="mt-1 text-xs text-slate-500">Weighted signal from visitor engagement and follow-up readiness</p>
               <div className="mt-6 flex items-center justify-center">
-                <div className="relative flex h-40 w-40 items-center justify-center rounded-full bg-[conic-gradient(hsl(var(--primary))_var(--score),hsl(var(--elevated))_0)] p-3" style={{ "--score": `${ai.visitorInsights.leadQualityScore}%` } as CSSProperties}>
+                <div className="relative flex h-40 w-40 items-center justify-center rounded-full bg-[conic-gradient(hsl(var(--primary))_var(--score),hsl(var(--elevated))_0)] p-3" style={{ "--score": `${leadQualityScore}%` } as CSSProperties}>
                   <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-card text-center shadow-inner">
-                    <span className="text-4xl font-semibold tracking-tight text-foreground">{ai.visitorInsights.leadQualityScore}%</span>
+                    <span className="text-4xl font-semibold tracking-tight text-foreground">{leadQualityScore}%</span>
                     <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Quality</span>
                   </div>
                 </div>
               </div>
               <div className="mt-5 rounded-2xl bg-elevated/70 p-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Peak activity</p>
-                <p className="mt-2 text-sm font-medium text-foreground">{ai.visitorInsights.peakHours.length ? ai.visitorInsights.peakHours.join(", ") : "Not enough activity yet"}</p>
+                <p className="mt-2 text-sm font-medium text-foreground">{peakHours.length ? peakHours.join(", ") : "Not enough activity yet"}</p>
               </div>
             </Card>
           </div>
@@ -2309,7 +2314,7 @@ export default function MyExpoPage() {
           <Card className="p-6">
             <h3 className="text-lg font-semibold">Recommendations</h3>
             <ul className="mt-4 grid gap-3 md:grid-cols-2">
-              {ai.recommendations.map((rec, i) => (
+              {(aiRecommendations.length ? aiRecommendations : ["Keep collecting visitor activity, leads, meetings, and pre-orders to build stronger recommendations."]).map((rec, i) => (
                 <li key={i} className="rounded-2xl border border-border/80 bg-elevated/55 p-4 text-sm leading-6 text-slate-600">
                   {rec}
                 </li>
@@ -2980,13 +2985,17 @@ export default function MyExpoPage() {
                           </div>
                         </div>
                         <div className="flex-1 space-y-3 overflow-y-auto bg-elevated/30 p-4">
-                          {selectedConversation.messages.map((message) => (
+                          {selectedConversationMessages.length ? selectedConversationMessages.map((message) => (
                             <div key={message.id} className={cn("max-w-[82%] rounded-2xl p-3", message.senderRole === "exhibitor" ? "ml-auto bg-primary text-white" : "bg-card text-foreground border border-border/70")}>
                               <p className={cn("text-xs font-semibold uppercase tracking-[0.16em]", message.senderRole === "exhibitor" ? "text-white/65" : "text-slate-400")}>{message.senderName || message.senderRole}</p>
                               <p className={cn("mt-2 text-sm leading-6", message.senderRole === "exhibitor" ? "text-white/90" : "text-slate-600")}>{message.message || "Message recorded."}</p>
                               <p className={cn("mt-2 text-[11px]", message.senderRole === "exhibitor" ? "text-white/60" : "text-slate-400")}>{formatDate(message.createdAt)}</p>
                             </div>
-                          ))}
+                          )) : (
+                            <div className="rounded-2xl border border-dashed border-border/80 bg-card p-5 text-center text-sm text-slate-500">
+                              No messages in this conversation yet.
+                            </div>
+                          )}
                         </div>
                         <form
                           className="border-t border-border/70 bg-card p-4"
@@ -3383,6 +3392,11 @@ function formatFileSize(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB"
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024)).toLocaleString()} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(100, Math.round(value)))
 }
 
 function parseMoneyValue(value: string) {
