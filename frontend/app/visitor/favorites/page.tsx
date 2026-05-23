@@ -16,7 +16,10 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
   const href = favorite.type === "expo" ? `/visitor/expos/${favorite.itemId}` : undefined
 
   return (
-    <Card className="overflow-hidden transition hover:border-primary/30 hover:shadow-lg">
+    <Card className="relative overflow-hidden transition hover:border-primary/30 hover:shadow-lg">
+      <span className="absolute right-3 top-3 z-10 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold capitalize text-white shadow-sm">
+        {favorite.type}
+      </span>
       <div className="grid gap-0 sm:grid-cols-[9rem_minmax(0,1fr)]">
         <div className="aspect-[16/10] bg-elevated sm:aspect-auto">
           {favorite.image ? (
@@ -31,7 +34,6 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
         <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold capitalize text-primary">{favorite.type}</span>
               <span className="text-xs font-medium text-muted">Saved {formatDate(favorite.addedAt)}</span>
             </div>
             <h3 className="mt-3 line-clamp-2 text-lg font-semibold text-foreground">{favorite.name}</h3>
@@ -88,10 +90,6 @@ export default function VisitorFavoritesPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/75">Saved</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Favorites</h1>
               <p className="mt-2 text-sm text-muted">Expos and exhibitors you want to revisit.</p>
-            </div>
-            <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
-              <p className="text-xs font-medium text-muted">Items</p>
-              <p className="mt-1 text-xl font-semibold text-primary">{data.length.toLocaleString()}</p>
             </div>
           </div>
         </Card>

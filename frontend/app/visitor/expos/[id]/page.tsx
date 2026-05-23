@@ -286,11 +286,11 @@ export default function VisitorExpoDetailPage() {
                       </button>
                       <Link href={`/visitor/expos/${expoId}/exhibitors/${booth.id}`} className="block">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-elevated ring-1 ring-border/70">
                             {booth.exhibitorLogo ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={booth.exhibitorLogo} alt={booth.exhibitorName} className="h-full w-full object-contain p-1.5" />
-                            ) : booth.exhibitorName.charAt(0)}
+                              <img src={booth.exhibitorLogo} alt={booth.exhibitorName} className="h-full w-full object-contain p-2" />
+                            ) : <span className="text-lg font-semibold text-primary">{booth.exhibitorName.charAt(0)}</span>}
                           </div>
                           <div className="min-w-0 pr-10">
                             <h3 className="truncate font-semibold text-foreground group-hover:text-primary">{booth.exhibitorName}</h3>
