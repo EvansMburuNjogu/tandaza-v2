@@ -45,7 +45,7 @@ export function ProfileDropdown() {
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative z-[60]" ref={ref}>
       {/* Trigger */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -84,7 +84,7 @@ export function ProfileDropdown() {
 
       {/* Dropdown panel */}
       {open && (
-        <div className="animate-dropdown-in absolute right-0 top-[calc(100%+8px)] z-50 w-64 overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-float backdrop-blur-xl">
+        <div className="animate-dropdown-in absolute right-0 top-[calc(100%+8px)] z-[70] w-64 overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-float backdrop-blur-xl">
 
           {/* User header */}
           <div className="flex items-center gap-3 border-b border-border/60 bg-elevated/80 px-4 py-4">

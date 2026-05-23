@@ -132,7 +132,7 @@ export function AdminTopbar({
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 flex h-[64px] shrink-0 items-center border-b border-border/60 bg-background/90 shadow-[0_2px_0_hsl(var(--primary)/0.06),0_1px_0_hsl(var(--border)/0.6)] backdrop-blur-xl lg:sticky lg:inset-x-auto lg:bg-background/78">
+    <header className="fixed inset-x-0 top-0 z-[45] flex h-[64px] shrink-0 items-center border-b border-border/60 bg-background/90 shadow-[0_2px_0_hsl(var(--primary)/0.06),0_1px_0_hsl(var(--border)/0.6)] backdrop-blur-xl lg:sticky lg:inset-x-auto lg:bg-background/78">
 
       <div className="mx-auto flex w-full max-w-[1800px] items-center gap-3 px-4 lg:px-6">
 
@@ -231,7 +231,7 @@ export function AdminTopbar({
             ) : null}
             {notificationsOpen ? (
               <div
-                className="fixed left-3 right-3 top-16 z-50 max-h-[min(72vh,520px)] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[360px] sm:max-h-none sm:rounded-3xl"
+                className="fixed left-3 right-3 top-16 z-[60] max-h-[min(72vh,520px)] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[360px] sm:max-h-none sm:rounded-3xl"
                 onMouseLeave={() => setNotificationsOpen(false)}
               >
                 <div className="flex items-center justify-between gap-3 border-b border-border/70 px-3 py-2.5 sm:px-4 sm:py-3">

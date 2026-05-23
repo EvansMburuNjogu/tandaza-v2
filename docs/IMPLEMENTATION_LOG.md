@@ -855,3 +855,8 @@
 - Added a live chat enablement flag to exhibitor livestream settings.
 - Exposed enabled livestream details on visitor exhibitor booth payloads.
 - Upgraded the visitor live stream page to show the live video beside a visitor chat panel when chat is enabled.
+
+### Mobile Topbar Layering
+
+- Raised the shared topbar, notification popover, and profile dropdown above sticky workspace content on mobile.
+- Kept the side drawer above the topbar so mobile navigation still opens cleanly.
