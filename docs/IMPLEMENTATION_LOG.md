@@ -817,3 +817,9 @@
 - Restored exhibitor website saving from company settings and preserved it in memory mode.
 - Added website and social links to visitor-facing exhibitor company details when exhibitors have provided them.
 - Extended visitor booth API contracts so frontend pages receive exhibitor website and social link data from the backend.
+
+### Visitor Expo Day Timeline
+
+- Changed the visitor expo detail timeline from a flat activity feed into expo-day sections built from the expo start and end dates.
+- Visitor activity is now grouped under Day 1, Day 2, and following expo days, with empty-day states when no activity has been recorded yet.
+- Removed timeline pagination from the expo detail page so visitors can scan their full per-day expo activity in one place.

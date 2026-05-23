@@ -17,7 +17,6 @@ import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
 
 const EXHIBITOR_PAGE_SIZE = 9
-const TIMELINE_PAGE_SIZE = 8
 
 function activityLabel(type: VisitorActivityItem["type"]) {
   const labels: Record<string, string> = {
@@ -47,6 +46,30 @@ function activityText(activity: VisitorActivityItem, expoName: string) {
 
 function normalizeMatch(value?: string) {
   return (value || "").trim().toLowerCase()
+}
+
+function dateKey(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (!Number.isFinite(date.getTime())) return ""
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
+
+function expoDayLabel(date: Date) {
+  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })
+}
+
+function expoTimelineDays(startDate: string, endDate: string) {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return []
+  const current = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+  const days: Array<{ dayNumber: number; key: string; label: string }> = []
+  while (current <= last && days.length < 31) {
+    days.push({ dayNumber: days.length + 1, key: dateKey(current), label: expoDayLabel(current) })
+    current.setDate(current.getDate() + 1)
+  }
+  return days
 }
 
 function adBoothHref(expoId: string, booths: VisitorBooth[], ad: SponsorAd) {
@@ -86,7 +109,6 @@ export default function VisitorExpoDetailPage() {
   const sessionReady = Boolean(token && user?.role === "visitor")
   const [exhibitorSearch, setExhibitorSearch] = useState("")
   const [exhibitorPage, setExhibitorPage] = useState(1)
-  const [timelinePage, setTimelinePage] = useState(1)
   const [randomizedAds, setRandomizedAds] = useState<SponsorAd[]>([])
 
   const { data, isLoading, error } = useQuery({
@@ -147,8 +169,15 @@ export default function VisitorExpoDetailPage() {
       .filter((activity) => activity.expoId === expoId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   }, [expoId, timelineQuery.data])
-  const timelineTotalPages = Math.max(1, Math.ceil(timeline.length / TIMELINE_PAGE_SIZE))
-  const pagedTimeline = timeline.slice((timelinePage - 1) * TIMELINE_PAGE_SIZE, timelinePage * TIMELINE_PAGE_SIZE)
+  const timelineByDate = useMemo(() => {
+    const grouped = new Map<string, VisitorActivityItem[]>()
+    for (const activity of timeline) {
+      const key = dateKey(activity.timestamp)
+      if (!key) continue
+      grouped.set(key, [...(grouped.get(key) || []), activity])
+    }
+    return grouped
+  }, [timeline])
 
   useEffect(() => {
     if (!sessionReady || !expoId || !token || !user || !booths.length) return
@@ -172,10 +201,6 @@ export default function VisitorExpoDetailPage() {
   useEffect(() => {
     setExhibitorPage(1)
   }, [exhibitorSearch, booths.length])
-
-  useEffect(() => {
-    setTimelinePage(1)
-  }, [expoId, timeline.length])
 
   useEffect(() => {
     if (!sessionReady || !ads.length) return
@@ -208,6 +233,7 @@ export default function VisitorExpoDetailPage() {
   }
 
   if (error || !data) return <ErrorState title="Failed to load expo details" />
+  const expoDays = expoTimelineDays(data.startDate, data.endDate)
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
@@ -365,54 +391,53 @@ export default function VisitorExpoDetailPage() {
         <section id="timeline" className="scroll-mt-24 space-y-3">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Timeline</h2>
-            <p className="text-sm text-muted">Your latest activity in this expo.</p>
+            <p className="text-sm text-muted">Your activity grouped by each expo day.</p>
           </div>
           {timelineQuery.isLoading ? (
             <Card className="border-dashed p-8 text-center text-sm text-muted">Loading timeline...</Card>
+          ) : expoDays.length === 0 ? (
+            <Card className="border-dashed p-8 text-center text-sm text-muted">Expo day timeline will appear when the expo dates are available.</Card>
           ) : timeline.length === 0 ? (
             <Card className="border-dashed p-8 text-center text-sm text-muted">Your activity will appear here after you open exhibitors, share interest, request meetings, or send feedback.</Card>
           ) : (
-            <Card className="overflow-hidden">
-              <div className="divide-y divide-border/70">
-                {pagedTimeline.map((activity) => (
-                  <div key={activity.id} className="flex gap-3 p-4">
-                    <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">{activityText(activity, data.name)}</p>
-                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
-                          {activityLabel(activity.type)}
-                        </span>
+            <div className="space-y-4">
+              {expoDays.map((day) => {
+                const dayActivities = timelineByDate.get(day.key) || []
+                return (
+                  <Card key={day.key} className="overflow-hidden">
+                    <div className="flex items-center justify-between gap-3 border-b border-border/70 bg-elevated/60 px-4 py-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Day {day.dayNumber}</p>
+                        <h3 className="mt-1 text-sm font-semibold text-foreground">{day.label}</h3>
                       </div>
-                      <p className="mt-1 text-xs font-medium text-muted">{formatDate(activity.timestamp)}</p>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        {dayActivities.length.toLocaleString()} {dayActivities.length === 1 ? "activity" : "activities"}
+                      </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-              {timelineTotalPages > 1 ? (
-                <div className="flex flex-col gap-3 border-t border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-muted">Page {timelinePage} of {timelineTotalPages}</p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setTimelinePage((page) => Math.max(1, page - 1))}
-                      disabled={timelinePage === 1}
-                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTimelinePage((page) => Math.min(timelineTotalPages, page + 1))}
-                      disabled={timelinePage === timelineTotalPages}
-                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </Card>
+                    {dayActivities.length ? (
+                      <div className="divide-y divide-border/70">
+                        {dayActivities.map((activity) => (
+                          <div key={activity.id} className="flex gap-3 p-4">
+                            <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground">{activityText(activity, data.name)}</p>
+                                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+                                  {activityLabel(activity.type)}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs font-medium text-muted">{formatDate(activity.timestamp)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-sm text-muted">No activity recorded for this expo day yet.</div>
+                    )}
+                  </Card>
+                )
+              })}
+            </div>
           )}
         </section>
 
