@@ -231,17 +231,17 @@ export function AdminTopbar({
             ) : null}
             {notificationsOpen ? (
               <div
-                className="absolute right-0 top-12 z-50 w-[min(360px,calc(100vw-24px))] overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+                className="fixed left-3 right-3 top-16 z-50 max-h-[min(72vh,520px)] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[360px] sm:max-h-none sm:rounded-3xl"
                 onMouseLeave={() => setNotificationsOpen(false)}
               >
-                <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 border-b border-border/70 px-3 py-2.5 sm:px-4 sm:py-3">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Notifications</p>
                     <p className="text-xs text-slate-500">{unreadCount} unread</p>
                   </div>
                   <button
                     type="button"
-                    className="rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                    className="shrink-0 rounded-full px-2.5 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-primary/10 sm:px-3 sm:text-xs"
                     onClick={() => readAllMutation.mutate()}
                     disabled={readAllMutation.isPending || unreadCount === 0}
                   >
@@ -251,14 +251,14 @@ export function AdminTopbar({
                 {!browserNotificationsEnabled ? (
                   <button
                     type="button"
-                    className="mx-3 mt-3 flex w-[calc(100%-24px)] items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-3 py-2 text-left text-xs font-semibold text-primary transition hover:bg-primary/10"
+                    className="mx-2 mt-2 flex w-[calc(100%-16px)] items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-left text-xs font-semibold text-primary transition hover:bg-primary/10 sm:mx-3 sm:mt-3 sm:w-[calc(100%-24px)] sm:rounded-2xl"
                     onClick={enableBrowserNotifications}
                   >
                     Enable browser reminders
                     <span aria-hidden>→</span>
                   </button>
                 ) : null}
-                <div className="max-h-[360px] overflow-y-auto p-2">
+                <div className="max-h-[calc(min(72vh,520px)-104px)] overflow-y-auto p-1.5 sm:max-h-[360px] sm:p-2">
                   {notificationsQuery.isLoading ? (
                     <p className="px-3 py-8 text-center text-sm text-slate-500">Loading notifications...</p>
                   ) : notifications.length === 0 ? (
@@ -266,21 +266,21 @@ export function AdminTopbar({
                   ) : notifications.slice(0, 8).map((notification) => (
                     <div
                       key={notification.id}
-                      className="group flex gap-3 rounded-2xl px-3 py-3 transition hover:bg-elevated"
+                      className="group flex gap-2 rounded-xl px-2.5 py-2.5 transition hover:bg-elevated sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-3"
                     >
                       <button type="button" className="min-w-0 flex-1 text-left" onClick={() => openNotification(notification)}>
                         <div className="flex items-start gap-2">
                           {notification.unread ? <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" /> : <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border" />}
                           <div className="min-w-0">
-                            <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">{notification.subject}</p>
-                            <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{notification.message}</p>
-                            <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{formatNotificationTime(notification.sentAt)}</p>
+                            <p className="line-clamp-2 text-[13px] font-semibold leading-4 text-foreground sm:text-sm sm:leading-5">{notification.subject}</p>
+                            <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 sm:text-xs sm:leading-5">{notification.message}</p>
+                            <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 sm:mt-2 sm:text-[11px] sm:tracking-[0.16em]">{formatNotificationTime(notification.sentAt)}</p>
                           </div>
                         </div>
                       </button>
                       <button
                         type="button"
-                        className="h-7 shrink-0 rounded-full px-2 text-xs font-semibold text-slate-400 opacity-100 transition hover:bg-red-50 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="h-7 shrink-0 rounded-full px-2 text-[11px] font-semibold text-slate-400 opacity-100 transition hover:bg-red-50 hover:text-red-600 sm:text-xs sm:opacity-0 sm:group-hover:opacity-100"
                         onClick={() => clearMutation.mutate(notification.id)}
                         disabled={clearMutation.isPending}
                       >
