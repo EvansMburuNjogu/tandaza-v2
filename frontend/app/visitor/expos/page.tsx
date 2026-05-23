@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { SessionGuard } from "@/components/auth/session-guard"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Button, buttonClasses } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
@@ -61,8 +61,8 @@ function ExpoCard({ expo }: { expo: VisitorExpo }) {
         </div>
         
         <div className="mt-4">
-          <Link href={`/visitor/expos/${expo.id}`}>
-            <Button className="w-full">Open Expo</Button>
+          <Link href={`/visitor/expos/${expo.id}`} className={buttonClasses({ className: "w-full" })}>
+            Open Expo
           </Link>
         </div>
       </div>
@@ -82,30 +82,33 @@ export default function VisitorExposPage() {
     enabled: Boolean(token)
   })
 
-  if (isLoading || !data) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-32">
-        <Spinner className="h-8 w-8 text-primary" />
-        <p className="text-sm font-medium text-slate-500">Loading expos...</p>
-      </div>
-    )
-  }
-
-  if (error) return <ErrorState title="Failed to load expos" />
-
-  const categories = useMemo(() => ["All", ...Array.from(new Set(data.map((expo) => expo.category).filter(Boolean)))], [data])
-  const expos = useMemo(() => data.filter((expo) => {
+  const expoData = data || []
+  const categories = useMemo(() => ["All", ...Array.from(new Set(expoData.map((expo) => expo.category).filter(Boolean)))], [expoData])
+  const expos = useMemo(() => expoData.filter((expo) => {
     const query = searchQuery.trim().toLowerCase()
     const matchesCategory = selectedCategory === "All" || expo.category === selectedCategory
     const matchesSearch = !query || [expo.name, expo.description, expo.venue, expo.organizerName, expo.category].some((value) => (value || "").toLowerCase().includes(query))
     return matchesCategory && matchesSearch
-  }), [data, searchQuery, selectedCategory])
+  }), [expoData, searchQuery, selectedCategory])
   const totalPages = Math.max(1, Math.ceil(expos.length / PAGE_SIZE))
   const pageItems = expos.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   useEffect(() => {
     setPage(1)
   }, [searchQuery, selectedCategory])
+
+  if (isLoading || !data) {
+    return (
+      <SessionGuard allowedRoles={["visitor"]}>
+        <div className="flex flex-col items-center justify-center gap-3 py-32">
+          <Spinner className="h-8 w-8 text-primary" />
+          <p className="text-sm font-medium text-slate-500">Loading expos...</p>
+        </div>
+      </SessionGuard>
+    )
+  }
+
+  if (error) return <ErrorState title="Failed to load expos" />
 
   return (
     <SessionGuard allowedRoles={["visitor"]}>
@@ -119,7 +122,7 @@ export default function VisitorExposPage() {
               </div>
               <div className="grid grid-cols-2 gap-2 sm:min-w-72">
                 <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm ring-1 ring-white/70">
-                  <p className="text-lg font-semibold text-foreground">{data.length.toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-foreground">{expoData.length.toLocaleString()}</p>
                   <p className="text-xs font-medium text-muted">available</p>
                 </div>
                 <div className="rounded-2xl bg-primary/10 px-4 py-3 shadow-sm ring-1 ring-primary/15">

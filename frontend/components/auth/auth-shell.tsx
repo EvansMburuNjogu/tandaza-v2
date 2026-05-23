@@ -248,7 +248,17 @@ function DecorativeRings() {
           const y1 = 300 + 275 * Math.sin(angle)
           const x2 = 300 + 265 * Math.cos(angle)
           const y2 = 300 + 265 * Math.sin(angle)
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth="0.8" />
+          return (
+            <line
+              key={i}
+              x1={x1.toFixed(3)}
+              y1={y1.toFixed(3)}
+              x2={x2.toFixed(3)}
+              y2={y2.toFixed(3)}
+              stroke="white"
+              strokeWidth="0.8"
+            />
+          )
         })}
       </svg>
 
