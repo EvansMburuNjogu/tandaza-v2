@@ -28,10 +28,10 @@ function FavoriteItem({ favorite }: { favorite: VisitorFavorite }) {
         aria-label={`Open ${favorite.name}`}
         className="grid gap-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 sm:grid-cols-[9rem_minmax(0,1fr)]"
       >
-        <div className="aspect-[16/10] bg-elevated sm:aspect-auto">
+        <div className="flex aspect-[16/10] min-h-32 items-center justify-center bg-elevated p-3 sm:aspect-auto sm:min-h-36">
           {favorite.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={favorite.image} alt={favorite.name} className="h-full w-full object-cover" />
+            <img src={favorite.image} alt={favorite.name} className="max-h-full max-w-full object-contain" />
           ) : (
             <div className="flex h-full min-h-32 items-center justify-center bg-[linear-gradient(135deg,rgba(124,58,237,0.14),rgba(255,255,255,0.6))] text-sm font-semibold text-primary">
               {favorite.type === "expo" ? "Expo" : "Exhibitor"}
