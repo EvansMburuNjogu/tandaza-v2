@@ -151,7 +151,8 @@ export default function VisitorExpoDetailPage() {
                 <span className="rounded-full bg-white/75 px-3 py-1">{formatDate(data.startDate)} - {formatDate(data.endDate)}</span>
                 <span className="rounded-full bg-white/75 px-3 py-1">{data.venue}</span>
               </div>
-              <p className="mt-4 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground lg:text-[2rem]">{data.name}</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{data.description}</p>
               <div className="mt-5 grid gap-2 sm:max-w-[12rem]">
                 <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/80">
                   <p className="text-xs font-medium text-muted">Exhibitors</p>
@@ -183,12 +184,12 @@ export default function VisitorExpoDetailPage() {
                     href={href}
                     onClick={() => void api.trackSponsorAd(ad.id, "click")}
                     aria-label={`Open exhibitor for ${ad.name}`}
-                    className="group block min-w-[82%] snap-center overflow-hidden rounded-3xl border border-primary/10 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card sm:min-w-[28rem] lg:min-w-[36rem]"
+                    className="group block w-[min(92vw,728px)] flex-none snap-center overflow-hidden rounded-2xl border border-primary/10 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card"
                   >
-                    <div className="aspect-[16/7] bg-elevated sm:aspect-[16/6]">
+                    <div className="aspect-[728/90] bg-elevated">
                       {ad.mediaUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={ad.mediaUrl} alt={ad.name} className="h-full w-full object-cover" />
+                        <img src={ad.mediaUrl} alt={ad.name} className="h-full w-full object-contain" />
                       ) : null}
                     </div>
                   </Link>
