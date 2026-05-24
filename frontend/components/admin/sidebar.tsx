@@ -41,6 +41,7 @@ export function AdminSidebar({
       />
 
       <aside
+        data-tour="sidebar"
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden",
           "border-r border-white/[0.08] bg-sidebar text-sidebarForeground shadow-[18px_0_60px_hsl(var(--foreground)/0.10)]",

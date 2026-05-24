@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function ExhibitorLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionGuard allowedRoles={["exhibitor"]}>
-      <OrganizerShell navItems={exhibitorNavItems}>{children}</OrganizerShell>
+      <OrganizerShell navItems={exhibitorNavItems} tourRole="exhibitor">{children}</OrganizerShell>
     </SessionGuard>
   )
 }

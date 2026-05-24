@@ -54,6 +54,47 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
+.tandaza-intro-tooltip {
+  min-width: min(360px, calc(100vw - 32px));
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  box-shadow: 0 24px 80px hsl(var(--foreground) / 0.18);
+}
+
+.tandaza-intro-tooltip .introjs-tooltip-title {
+  color: hsl(var(--foreground));
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.tandaza-intro-tooltip .introjs-tooltiptext {
+  color: hsl(var(--muted));
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.tandaza-intro-tooltip .introjs-button {
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.tandaza-intro-tooltip .introjs-nextbutton,
+.tandaza-intro-tooltip .introjs-donebutton {
+  border-color: transparent;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  color: #fff;
+}
+
+.tandaza-intro-highlight {
+  border-radius: 18px;
+  box-shadow: 0 0 0 9999px hsl(222 47% 11% / 0.58), 0 0 0 4px hsl(var(--primary) / 0.24);
+}
+
 /* ── Dot grid — light sections ────────────────────── */
 .bg-dot-pattern {
   background-image: radial-gradient(circle, rgba(99,102,241,0.18) 1.5px, transparent 1.5px);

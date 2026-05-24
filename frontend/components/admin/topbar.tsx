@@ -132,7 +132,10 @@ export function AdminTopbar({
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[45] flex h-[64px] shrink-0 items-center border-b border-border/60 bg-background/90 shadow-[0_2px_0_hsl(var(--primary)/0.06),0_1px_0_hsl(var(--border)/0.6)] backdrop-blur-xl lg:sticky lg:inset-x-auto lg:bg-background/78">
+    <header
+      data-tour="topbar"
+      className="fixed inset-x-0 top-0 z-[45] flex h-[64px] shrink-0 items-center border-b border-border/60 bg-background/90 shadow-[0_2px_0_hsl(var(--primary)/0.06),0_1px_0_hsl(var(--border)/0.6)] backdrop-blur-xl lg:sticky lg:inset-x-auto lg:bg-background/78"
+    >
 
       <div className="mx-auto flex w-full max-w-[1800px] items-center gap-3 px-4 lg:px-6">
 
@@ -214,7 +217,7 @@ export function AdminTopbar({
           ) : null}
 
           {/* Notification bell */}
-          <div className="relative" onMouseEnter={() => setNotificationsOpen(true)}>
+          <div className="relative" data-tour="notifications" onMouseEnter={() => setNotificationsOpen(true)}>
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border/70 bg-card/80 text-slate-500 shadow-sm backdrop-blur transition hover:border-primary/25 hover:bg-card hover:text-foreground hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] focus:outline-none focus:ring-4 focus:ring-primary/10"
@@ -293,7 +296,9 @@ export function AdminTopbar({
             ) : null}
           </div>
 
-          <ProfileDropdown />
+          <div data-tour="profile-menu">
+            <ProfileDropdown />
+          </div>
         </div>
       </div>
     </header>

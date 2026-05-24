@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react"
 import { AdminSidebar } from "@/components/admin/sidebar"
 import { AdminTopbar } from "@/components/admin/topbar"
 import { MobileBottomNav } from "@/components/admin/mobile-bottom-nav"
+import { TandazaIntroTour } from "@/components/onboarding/tandaza-intro-tour"
 import { visitorNavItems, AdminNavItem } from "@/lib/config/routes"
 
 export function VisitorShell({ 
@@ -56,12 +57,13 @@ export function VisitorShell({
             onToggleMenu={() => setMobileOpen((v) => !v)}
             onToggleSidebar={toggleCollapsed}
           />
-          <main className="relative z-10 min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-36 pt-[88px] sm:px-6 sm:pb-40 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-16">
+          <main data-tour="workspace" className="relative z-10 min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-36 pt-[88px] sm:px-6 sm:pb-40 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-16">
             <div className="mx-auto w-full min-w-0 max-w-[1600px]">
               {children}
             </div>
           </main>
           <MobileBottomNav items={activeNavItems} onMore={() => setMobileOpen(true)} />
+          <TandazaIntroTour role="visitor" />
         </div>
       </div>
     </div>

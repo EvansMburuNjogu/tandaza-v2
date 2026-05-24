@@ -4,14 +4,17 @@ import { ReactNode, useEffect, useState } from "react"
 import { AdminSidebar } from "@/components/admin/sidebar"
 import { AdminTopbar } from "@/components/admin/topbar"
 import { MobileBottomNav } from "@/components/admin/mobile-bottom-nav"
+import { TandazaIntroTour } from "@/components/onboarding/tandaza-intro-tour"
 import { organizerNavItems, AdminNavItem } from "@/lib/config/routes"
 
 export function OrganizerShell({ 
   children,
-  navItems 
+  navItems,
+  tourRole = "organizer"
 }: { 
   children: ReactNode
   navItems?: AdminNavItem[]
+  tourRole?: "organizer" | "exhibitor"
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -54,12 +57,13 @@ export function OrganizerShell({
             onToggleMenu={() => setMobileOpen((v) => !v)}
             onToggleSidebar={toggleCollapsed}
           />
-          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-28 pt-[88px] sm:px-6 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-8">
+          <main data-tour="workspace" className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-28 pt-[88px] sm:px-6 sm:pt-[92px] lg:px-8 lg:py-8 lg:pb-8">
             <div className="mx-auto w-full min-w-0 max-w-[1600px]">
               {children}
             </div>
           </main>
           <MobileBottomNav items={activeNavItems} onMore={() => setMobileOpen(true)} />
+          <TandazaIntroTour role={tourRole} />
         </div>
       </div>
     </div>
