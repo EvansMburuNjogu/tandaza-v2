@@ -64,7 +64,7 @@ docker compose ps
 HOOK
 chmod +x $app_root/repo.git/hooks/post-receive"
   expect "*password:*" { send "$password\r"; exp_continue } eof
-' "$SERVER" "$TANDAZA_PROD_SSH_PASSWORD" "$PUB_KEY" "$APP_ROOT" "$BRANCH"
+' -- "$SERVER" "$TANDAZA_PROD_SSH_PASSWORD" "$PUB_KEY" "$APP_ROOT" "$BRANCH"
 
 ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "cat > ${APP_ROOT}/env/postgres.env <<'EOF'
 POSTGRES_DB=tandaza
