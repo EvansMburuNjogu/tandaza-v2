@@ -57,13 +57,23 @@ export function AdminSidebar({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[hsl(var(--foreground)/0.18)] to-transparent" />
 
         {/* ── Brand header ─────────────────────────── */}
-        <div className="relative flex h-[64px] shrink-0 items-center gap-3 border-b border-white/[0.08] px-4">
-          <Image src="/tandaza-logo-white-v2.png" alt="Tandaza" width={128} height={56} className="h-14 w-32 shrink-0 object-contain" priority />
+        <div className={cn(
+          "relative flex shrink-0 flex-col justify-center border-b border-white/[0.08] px-4 py-3",
+          collapsed ? "lg:h-[72px] lg:items-center" : "h-[96px] items-start"
+        )}>
+          <Image
+            src="/tandaza-logo-white-v2.png"
+            alt="Tandaza"
+            width={128}
+            height={56}
+            className={cn("shrink-0 object-contain", collapsed ? "lg:h-10 lg:w-12" : "h-14 w-32")}
+            priority
+          />
 
           <div
             className={cn(
-              "flex flex-col overflow-hidden transition-[width,opacity] duration-300",
-              collapsed ? "lg:w-0 lg:opacity-0" : "w-[200px] opacity-100"
+              "mt-1 flex flex-col overflow-hidden transition-[height,opacity] duration-300",
+              collapsed ? "lg:h-0 lg:opacity-0" : "h-4 opacity-100"
             )}
           >
             <span className={cn(
