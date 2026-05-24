@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { useEffect, useRef, useState } from "react"
@@ -93,7 +92,7 @@ export function RegisterForm() {
       />
 
       <div className="px-7 pb-8 pt-7 sm:px-9 sm:pb-9 sm:pt-8">
-        <div className="flex items-start justify-between">
+        <div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary/80">Create account</p>
             <h2 className="mt-2 text-[1.65rem] font-bold leading-tight tracking-tight text-foreground">
@@ -103,7 +102,6 @@ export function RegisterForm() {
               Create a visitor account to discover expos, meet exhibitors, and keep your expo activity in one place.
             </p>
           </div>
-          <Image src="/tandaza-logo-v2.png" alt="Tandaza" width={128} height={72} className="h-[72px] w-[128px] flex-shrink-0 object-contain" priority />
         </div>
 
         <div className="my-6 h-px w-full bg-border/50" />

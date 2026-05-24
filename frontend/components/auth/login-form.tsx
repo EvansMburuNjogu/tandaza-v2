@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -88,7 +87,7 @@ export function LoginForm() {
 
       <div className="px-7 pb-8 pt-7 sm:px-9 sm:pb-9 sm:pt-8">
         {/* Card header — brand + heading */}
-        <div className="flex items-start justify-between">
+        <div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary/80">Sign in</p>
             <h2 className="mt-2 text-[1.65rem] font-bold leading-tight tracking-tight text-foreground">
@@ -98,8 +97,6 @@ export function LoginForm() {
               Sign in to continue to your Tandaza account.
             </p>
           </div>
-
-          <Image src="/tandaza-logo-v2.png" alt="Tandaza" width={128} height={72} className="h-[72px] w-[128px] flex-shrink-0 object-contain" priority />
         </div>
 
         {/* Divider */}

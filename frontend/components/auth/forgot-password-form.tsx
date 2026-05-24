@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -55,7 +54,7 @@ export function ForgotPasswordForm() {
 
       <div className="px-7 pb-8 pt-7 sm:px-9 sm:pb-9 sm:pt-8">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary/80">Password recovery</p>
             <h2 className="mt-2 text-[1.65rem] font-bold leading-tight tracking-tight text-foreground">
@@ -65,7 +64,6 @@ export function ForgotPasswordForm() {
               We&apos;ll send a secure link to your email.
             </p>
           </div>
-          <Image src="/tandaza-logo-v2.png" alt="Tandaza" width={128} height={72} className="h-[72px] w-[128px] flex-shrink-0 object-contain" priority />
         </div>
 
         <div className="my-7 h-px w-full bg-border/50" />

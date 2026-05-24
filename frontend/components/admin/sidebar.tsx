@@ -64,9 +64,9 @@ export function AdminSidebar({
           <Image
             src="/tandaza-logo-white-v2.png"
             alt="Tandaza"
-            width={128}
-            height={56}
-            className={cn("h-14 w-32 shrink-0 object-contain", collapsed && "lg:hidden")}
+            width={184}
+            height={72}
+            className={cn("h-16 w-44 shrink-0 object-contain", collapsed && "lg:hidden")}
             priority
           />
           <Image

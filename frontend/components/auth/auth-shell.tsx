@@ -135,7 +135,7 @@ function BrandPanel({ title, kicker }: { title: string; kicker: string }) {
           href="/login"
           className="flex w-fit items-center rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30"
         >
-          <Image src="/tandaza-logo-white-v2.png" alt="Tandaza" width={176} height={96} className="h-[96px] w-[176px] object-contain" priority />
+          <Image src="/tandaza-logo-white-v2.png" alt="Tandaza" width={220} height={104} className="h-[104px] w-[220px] object-contain" priority />
         </Link>
 
         {/* Centred headline */}
@@ -299,7 +299,7 @@ function MobileBrand() {
       href="/login"
       className="mb-7 flex w-fit items-center rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/30 lg:hidden"
     >
-      <Image src="/tandaza-logo-v2.png" alt="Tandaza" width={152} height={72} className="h-[72px] w-[152px] object-contain" priority />
+      <Image src="/tandaza-logo-v2.png" alt="Tandaza" width={192} height={84} className="h-[84px] w-[192px] object-contain" priority />
     </Link>
   )
 }
