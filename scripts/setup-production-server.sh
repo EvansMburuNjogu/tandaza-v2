@@ -33,7 +33,7 @@ FRONTEND_URL="${TANDAZA_PROD_FRONTEND_URL:-https://tandaza.africa}"
 API_URL="${TANDAZA_PROD_API_URL:-https://api.tandaza.africa}"
 MEDIA_URL="${TANDAZA_PROD_MEDIA_URL:-}"
 ADMIN_EMAIL="${TANDAZA_PROD_ADMIN_EMAIL:-admin@tandaza.africa}"
-ADMIN_PASSWORD="${TANDAZA_PROD_ADMIN_PASSWORD:-ChangeMeNow123!}"
+ADMIN_PASSWORD="${TANDAZA_PROD_ADMIN_PASSWORD:-$(openssl rand -base64 24 | tr -d '=+/')}"
 
 expect -c '
   set timeout 60
@@ -117,3 +117,5 @@ echo "Production server prepared."
 echo "Bare repo: ${SERVER}:${APP_ROOT}/repo.git"
 echo "Deploy branch: ${BRANCH}"
 echo "Deploy key: ${DEPLOY_KEY}"
+echo "Bootstrap admin: ${ADMIN_EMAIL}"
+echo "Bootstrap admin password is stored in ${APP_ROOT}/env/backend.env on the server."
