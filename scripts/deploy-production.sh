@@ -30,6 +30,6 @@ GIT_SSH_COMMAND="ssh -i ${DEPLOY_KEY} -o ConnectTimeout=10 -o StrictHostKeyCheck
   git push "ssh://$SERVER$BARE_REPO" "HEAD:refs/heads/$BRANCH"
 
 echo "Waiting for containers..."
-ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "cd '$APP_ROOT' && docker compose ps && curl -sS -i --max-time 10 http://127.0.0.1:8095/health | head -20 && curl -sS -I --max-time 10 http://127.0.0.1:3210/login | head -20"
+ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "bash -lc 'set -euo pipefail; cd \"$APP_ROOT/app\"; docker compose -f deploy/production/docker-compose.yml ps; curl -sS -i --max-time 10 http://127.0.0.1:8095/health | head -20; curl -sS -I --max-time 10 http://127.0.0.1:3210/login | head -20'"
 
 echo "Tandaza production deploy finished."

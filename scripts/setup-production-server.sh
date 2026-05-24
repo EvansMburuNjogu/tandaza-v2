@@ -66,29 +66,30 @@ fi
 
 mkdir -p "\$APP_ROOT/app"
 git --work-tree="\$APP_ROOT/app" --git-dir="\$APP_ROOT/repo.git" checkout -f "\$BRANCH"
-cp "\$APP_ROOT/app/deploy/production/docker-compose.yml" "\$APP_ROOT/docker-compose.yml"
-cd "\$APP_ROOT"
-docker compose build
-docker compose up -d --remove-orphans
-docker compose ps
+cd "\$APP_ROOT/app"
+docker compose -f deploy/production/docker-compose.yml build
+docker compose -f deploy/production/docker-compose.yml up -d --remove-orphans
+docker compose -f deploy/production/docker-compose.yml ps
 HOOK
 
 scp -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$HOOK_FILE" "${SERVER}:${APP_ROOT}/repo.git/hooks/post-receive"
 rm -f "$HOOK_FILE"
 ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "chmod +x '${APP_ROOT}/repo.git/hooks/post-receive'"
 
-ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "cat > ${APP_ROOT}/env/postgres.env <<'EOF'
+ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "if [ ! -f ${APP_ROOT}/env/postgres.env ]; then cat > ${APP_ROOT}/env/postgres.env <<'EOF'
 POSTGRES_DB=tandaza
 POSTGRES_USER=tandaza
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 EOF
-cat > ${APP_ROOT}/env/minio.env <<'EOF'
+fi
+if [ ! -f ${APP_ROOT}/env/minio.env ]; then cat > ${APP_ROOT}/env/minio.env <<'EOF'
 MINIO_ROOT_USER=${MINIO_USER}
 MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
 MINIO_REGION_NAME=us-east-1
 MINIO_UPDATE=off
 EOF
-cat > ${APP_ROOT}/env/backend.env <<'EOF'
+fi
+if [ ! -f ${APP_ROOT}/env/backend.env ]; then cat > ${APP_ROOT}/env/backend.env <<'EOF'
 APP_ENV=production
 PORT=8080
 FRONTEND_URL=${FRONTEND_URL}
@@ -113,7 +114,8 @@ BOOTSTRAP_ADMIN_PASSWORD=${ADMIN_PASSWORD}
 BOOTSTRAP_ADMIN_NAME=Platform Administrator
 BOOTSTRAP_ADMIN_COMPANY=Tandaza
 EOF
-cat > ${APP_ROOT}/env/frontend.env <<'EOF'
+fi
+if [ ! -f ${APP_ROOT}/env/frontend.env ]; then cat > ${APP_ROOT}/env/frontend.env <<'EOF'
 NODE_ENV=production
 PORT=3000
 HOSTNAME=0.0.0.0
@@ -122,6 +124,7 @@ API_BASE_URL=http://backend:8080
 FRONTEND_URL=${FRONTEND_URL}
 NEXT_PUBLIC_FRONTEND_URL=${FRONTEND_URL}
 EOF
+fi
 chmod 600 ${APP_ROOT}/env/*.env"
 
 echo "Production server prepared."
