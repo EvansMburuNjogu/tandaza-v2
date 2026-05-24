@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo } from "react"
+import { usePathname } from "next/navigation"
 
 type TourRole = "visitor" | "organizer" | "exhibitor"
 
@@ -40,9 +41,50 @@ const roleSteps: Record<TourRole, TourStep[]> = {
   ]
 }
 
+function visitorPageKey(pathname: string) {
+  if (pathname === "/visitor") return "home"
+  if (pathname === "/visitor/expos") return "expos"
+  if (/^\/visitor\/expos\/[^/]+\/exhibitors\/[^/]+/.test(pathname)) return "exhibitor"
+  if (/^\/visitor\/expos\/[^/]+/.test(pathname)) return "expo-detail"
+  if (pathname === "/visitor/favorites") return "favorites"
+  if (pathname === "/visitor/calendar") return "calendar"
+  if (pathname === "/visitor/settings") return "settings"
+  if (pathname === "/visitor/timeline") return "activity"
+  return "workspace"
+}
+
+function visitorPageSteps(pathname: string): TourStep[] {
+  const baseSteps = [
+    { element: "[data-tour='sidebar']", title: "Your navigation", intro: "Move between expos, favorites, calendar, activity, and profile settings from here." },
+    { element: "[data-tour='topbar']", title: "Current page", intro: "The top bar keeps notifications and your profile close while you explore." }
+  ]
+
+  const pageKey = visitorPageKey(pathname)
+  const pageSteps: Record<string, TourStep> = {
+    home: { element: "[data-tour='workspace']", title: "Visitor home", intro: "Start with live expos, upcoming expos, meetings, and your most recent activity." },
+    expos: { element: "[data-tour='workspace']", title: "Find expos", intro: "Search expos, open an expo, then browse exhibitors and the day-by-day timeline." },
+    "expo-detail": { element: "[data-tour='workspace']", title: "Expo view", intro: "Review expo details, see exhibitors, open their profiles, and follow the timeline for this expo." },
+    exhibitor: { element: "[data-tour='workspace']", title: "Exhibitor profile", intro: "View company details, chat, request a meeting, explore products, download files, and leave feedback." },
+    favorites: { element: "[data-tour='workspace']", title: "Favorites", intro: "Your saved exhibitors live here so you can return to them quickly." },
+    calendar: { element: "[data-tour='workspace']", title: "Calendar", intro: "Track upcoming meetings and open a meeting to view details or join from the link." },
+    settings: { element: "[data-tour='workspace']", title: "Profile settings", intro: "Keep your name, contact details, country code, and industry up to date." },
+    activity: { element: "[data-tour='workspace']", title: "Activity", intro: "Review your expo activity from latest to oldest." },
+    workspace: { element: "[data-tour='workspace']", title: "Workspace", intro: "Use this page to continue your expo journey." }
+  }
+
+  return [
+    ...baseSteps,
+    pageSteps[pageKey] || pageSteps.workspace,
+    { element: "[data-tour='notifications']", title: "Reminders", intro: "Meeting updates, replies, and reminders appear here. Enable browser reminders when prompted." },
+    { element: "[data-tour='profile-menu']", title: "Profile", intro: "Update your account or sign out from your profile menu." }
+  ]
+}
+
 export function TandazaIntroTour({ role }: { role: TourRole }) {
-  const storageKey = `tandaza:intro:${role}:seen`
-  const steps = useMemo(() => roleSteps[role], [role])
+  const pathname = usePathname()
+  const pageKey = role === "visitor" ? visitorPageKey(pathname) : "workspace"
+  const storageKey = `tandaza:intro:${role}:${pageKey}:seen`
+  const steps = useMemo(() => role === "visitor" ? visitorPageSteps(pathname) : roleSteps[role], [pathname, role])
 
   useEffect(() => {
     let cancelled = false
