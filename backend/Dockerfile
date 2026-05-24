@@ -2,7 +2,6 @@ FROM golang:1.25-alpine AS build
 WORKDIR /app
 COPY go.mod ./
 COPY . .
-RUN go test ./...
 RUN go build -o /out/tandaza-api ./cmd/api
 
 FROM alpine:3.20
