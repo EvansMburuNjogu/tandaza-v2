@@ -6,8 +6,8 @@ import { SiteFooter } from "@/components/marketing/site-footer"
 
 export const metadata: Metadata = {
   title: "About — Tandaza",
-  description: "Tandaza is an early-stage startup building the management platform for Africa's expo economy, founded in 2026 by Evans Mburu.",
-  alternates: { canonical: "https://tandaza.com/about" },
+  description: "Tandaza is building the operating platform for Africa's expo economy, connecting visitors, exhibitors, organizers, and sponsors.",
+  alternates: { canonical: "https://tandaza.africa/about" },
 }
 
 const VALUES = [
@@ -94,7 +94,7 @@ export default function AboutPage() {
                 { n: "2026", l: "Founded", sub: "Nairobi, Kenya" },
                 { n: "12", l: "Countries", sub: "Target markets" },
                 { n: "Early", l: "Stage", sub: "Growing fast" },
-                { n: "1", l: "Founder", sub: "Evans Mburu" },
+                { n: "4", l: "User groups", sub: "Visitors to sponsors" },
               ].map(({ n, l, sub }) => (
                 <div key={l} className="rounded-2xl border border-white/[0.07] bg-white/[0.04] p-5 backdrop-blur-sm">
                   <p className="text-[2rem] font-bold leading-none"
@@ -114,16 +114,16 @@ export default function AboutPage() {
       <div className="bg-white px-6 py-20 lg:px-8">
         <div className="mx-auto max-w-[800px]">
           <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.28em] text-indigo-500">Our story</p>
-          <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Started in 2026 by Evans Mburu</h2>
+          <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Built for the way African expos actually work</h2>
           <div className="mt-6 space-y-5 text-[15px] leading-[1.85] text-slate-500">
             <p>
-              Tandaza was founded in 2026 by Evans Mburu after seeing first-hand how difficult it was to manage trade expos in Africa using tools built for other markets. Organizers were stuck between WhatsApp groups, spreadsheets, and generic event software that did not understand on-the-ground realities.
+              Tandaza exists because expos across Africa create real business opportunity, but too much value is lost when teams rely on disconnected tools, manual follow-ups, and systems built for different markets.
             </p>
             <p>
-              The vision was clear: build a single platform that handles every part of the expo lifecycle, from exhibitor applications and floor plans through to payment collection and post-event analytics, and make it work reliably across Africa's 12 largest exhibition markets.
+              The vision is clear: build a single platform that handles the expo lifecycle, from discovery and remote access to digital booths, visitor engagement, payments, notifications, analytics, and post-expo follow-up.
             </p>
             <p>
-              We are an early-stage startup. We move fast, we listen closely to organizers, and we are building in public. If you are running an expo in Africa, we would love to talk.
+              We build with organizers, exhibitors, sponsors, and visitors in mind, so every QR scan, meeting request, product view, pre-order, ad click, and lead can keep creating value after the expo floor closes.
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-4">
@@ -147,7 +147,6 @@ export default function AboutPage() {
           <blockquote className="text-[1.8rem] font-bold leading-[1.25] tracking-[-0.025em] text-slate-900 sm:text-[2.2rem]">
             To build the infrastructure that powers Africa's expo economy, so that every organizer can run a world-class event and every exhibitor can find their next buyer.
           </blockquote>
-          <p className="mt-5 text-[14px] text-slate-400">Evans Mburu, Founder</p>
         </div>
       </div>
 
@@ -169,29 +168,6 @@ export default function AboutPage() {
                 <p className="mt-2 text-[13.5px] leading-[1.7] text-slate-500">{v.body}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Founder */}
-      <div className="bg-slate-50 px-6 py-20 lg:px-8">
-        <div className="mx-auto max-w-[700px]">
-          <div className="mb-12 text-center">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-indigo-500">Founder</p>
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900">The person building it</h2>
-          </div>
-          <div className="flex items-start gap-5 rounded-3xl border border-slate-100 bg-white p-7 shadow-sm">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-[15px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg, hsl(234,79%,61%) 0%, hsl(262,79%,64%) 100%)" }}>
-              EM
-            </span>
-            <div>
-              <p className="text-[16px] font-bold text-slate-900">Evans Mburu</p>
-              <p className="text-[13px] font-medium text-indigo-600">Founder</p>
-              <p className="mt-3 text-[13.5px] leading-[1.7] text-slate-500">
-                Building Tandaza to solve the real challenges facing expo organisers across Africa. Previously worked across product, technology, and operations in the East African tech ecosystem.
-              </p>
-            </div>
           </div>
         </div>
       </div>

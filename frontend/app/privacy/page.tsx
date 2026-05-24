@@ -1,15 +1,14 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { LandingNav } from "@/components/marketing/landing-nav"
 import { SiteFooter } from "@/components/marketing/site-footer"
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Tandaza",
-  description: "How Tandaza collects, uses, and protects your personal data.",
-  alternates: { canonical: "https://tandaza.com/privacy" },
+  description: "How Tandaza collects, uses, protects, and shares personal data across expo experiences in Africa.",
+  alternates: { canonical: "https://tandaza.africa/privacy" },
 }
 
-const LAST_UPDATED = "1 June 2026"
+const LAST_UPDATED = "24 May 2026"
 
 export default function PrivacyPage() {
   return (
@@ -32,8 +31,8 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">1. Who we are</h2>
-            <p>Tandaza is an expo management platform developed and operated by Maalim Group Limited, a company registered in Kenya. When this policy refers to "Tandaza", "we", "us", or "our", it means Maalim Group Limited and the Tandaza platform.</p>
-            <p className="mt-3">Contact: <a href="mailto:privacy@tandaza.com" className="font-medium text-indigo-600 hover:underline">privacy@tandaza.com</a></p>
+            <p>Tandaza is an expo operating platform developed for visitors, exhibitors, organizers, sponsors, and administrators across African expo markets. When this policy refers to "Tandaza", "we", "us", or "our", it means the Tandaza platform and the team responsible for operating it.</p>
+            <p className="mt-3">Contact: <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a></p>
           </section>
 
           <section>
@@ -46,7 +45,7 @@ export default function PrivacyPage() {
                 "Payment information: when you pay or receive payments through the platform, we collect the necessary details. Full card numbers are handled by our payment processors and are not stored on our servers.",
                 "Usage data: pages visited, features used, actions taken, device and browser information, and IP address.",
                 "Communications: messages you send through the platform or to our support team.",
-                "Event data: expo listings, floor plans, exhibitor applications, visitor registrations, and analytics generated from events run on the platform.",
+                "Expo data: expo listings, timelines, exhibitor profiles, visitor activity, meetings, pre-orders, feedback, documents, ads, and analytics generated through the platform.",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
@@ -62,7 +61,7 @@ export default function PrivacyPage() {
               {[
                 "To provide, operate, and improve the Tandaza platform.",
                 "To process payments and manage financial settlements.",
-                "To send transactional emails such as registration confirmations, application updates, and payment receipts.",
+                "To send transactional messages such as registration confirmations, verification links, reminders, meeting updates, payment receipts, and important account notices.",
                 "To send product updates and announcements where you have opted in.",
                 "To respond to support requests.",
                 "To detect and prevent fraud and abuse.",
@@ -99,9 +98,9 @@ export default function PrivacyPage() {
             <p>We do not sell your personal data. We share data only in the following circumstances:</p>
             <ul className="mt-3 space-y-2 pl-5">
               {[
-                "With payment processors (such as Paystack, Flutterwave, and M-Pesa) to handle transactions.",
+                "With payment processors, messaging providers, email providers, and hosting providers needed to operate the platform.",
                 "With cloud infrastructure providers that host our platform, under data processing agreements.",
-                "With other platform users where required by the service, for example, sharing exhibitor information with the organiser of an expo you have applied to.",
+                "With other platform users where required by the service, for example sharing a visitor meeting request with an exhibitor or exhibitor performance data with the relevant organizer.",
                 "With law enforcement or regulators where we are legally required to do so.",
                 "With a successor entity in the event of a merger, acquisition, or sale of assets.",
               ].map((item) => (
@@ -115,12 +114,12 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">6. Data retention</h2>
-            <p>We retain your data for as long as your account is active or as needed to provide services. If you delete your account, we will delete or anonymise your personal data within 90 days, except where we are required to retain it for legal or regulatory reasons.</p>
+            <p>We retain your data for as long as your account is active or as needed to provide services, support audits, handle payments, comply with legal duties, resolve disputes, and protect the platform. If you request account deletion, we will delete or anonymise personal data within a reasonable period, except where retention is required for legal, security, tax, accounting, settlement, or fraud-prevention reasons.</p>
           </section>
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">7. Security</h2>
-            <p>We use industry-standard security measures including TLS encryption in transit, AES-256 encryption at rest, regular security assessments, and access controls. No system is perfectly secure, and we cannot guarantee the absolute security of your data.</p>
+            <p>We use security measures including TLS encryption in transit, access controls, audit logs, secure sessions, and encryption for sensitive personal data where configured. No system is perfectly secure, and we cannot guarantee absolute security, but we work to reduce risk and respond responsibly to security issues.</p>
           </section>
 
           <section>
@@ -141,12 +140,12 @@ export default function PrivacyPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3">To exercise any of these rights, contact us at <a href="mailto:privacy@tandaza.com" className="font-medium text-indigo-600 hover:underline">privacy@tandaza.com</a>.</p>
+            <p className="mt-3">To exercise any of these rights, contact us at <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a>.</p>
           </section>
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">9. Cookies</h2>
-            <p>We use strictly necessary cookies to keep you logged in and maintain session state. We also use analytics cookies to understand how the platform is used. You can control cookie settings in your browser, though disabling certain cookies may affect platform functionality.</p>
+            <p>We use strictly necessary cookies to keep you logged in, protect sessions, and maintain platform security. We may also use analytics technologies to understand usage and improve expo experiences. You can control cookie settings in your browser, though disabling necessary cookies may affect platform functionality.</p>
           </section>
 
           <section>
@@ -156,7 +155,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">11. Contact us</h2>
-            <p>For privacy-related queries, contact us at <a href="mailto:privacy@tandaza.com" className="font-medium text-indigo-600 hover:underline">privacy@tandaza.com</a> or through the <Link href="/register" className="font-medium text-indigo-600 hover:underline">contact form</Link> on our website.</p>
+            <p>For privacy-related queries, contact us at <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a> or call <a href="tel:+254799010210" className="font-medium text-indigo-600 hover:underline">+254 799 010 210</a>.</p>
           </section>
 
         </div>

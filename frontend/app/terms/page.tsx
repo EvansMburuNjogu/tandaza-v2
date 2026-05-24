@@ -1,15 +1,14 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { LandingNav } from "@/components/marketing/landing-nav"
 import { SiteFooter } from "@/components/marketing/site-footer"
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Tandaza",
-  description: "The terms governing your use of the Tandaza expo management platform.",
-  alternates: { canonical: "https://tandaza.com/terms" },
+  title: "Terms and Conditions — Tandaza",
+  description: "The terms and conditions governing your use of Tandaza for expo discovery, management, engagement, payments, and analytics.",
+  alternates: { canonical: "https://tandaza.africa/terms" },
 }
 
-const LAST_UPDATED = "1 June 2026"
+const LAST_UPDATED = "24 May 2026"
 
 export default function TermsPage() {
   return (
@@ -21,7 +20,7 @@ export default function TermsPage() {
         <div className="pointer-events-none absolute inset-0 bg-grid-dark" />
         <div className="relative mx-auto max-w-[1200px] px-6 py-16 lg:px-8 lg:py-20">
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-indigo-400">Legal</p>
-          <h1 className="text-[2.4rem] font-bold tracking-[-0.03em] text-white">Terms of Service</h1>
+          <h1 className="text-[2.4rem] font-bold tracking-[-0.03em] text-white">Terms and Conditions</h1>
           <p className="mt-3 text-[14px] text-slate-400">Last updated: {LAST_UPDATED}</p>
         </div>
       </div>
@@ -32,7 +31,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">1. About these terms</h2>
-            <p>These Terms of Service govern your access to and use of the Tandaza platform, operated by Maalim Group Limited ("Tandaza", "we", "us", "our"). By creating an account or using any part of the platform, you agree to be bound by these terms.</p>
+            <p>These Terms and Conditions govern your access to and use of the Tandaza platform, including expo discovery, exhibitor workspaces, visitor engagement, digital booth activation, sponsorship tools, payments, notifications, analytics, and related services. By creating an account or using any part of the platform, you agree to be bound by these terms.</p>
             <p className="mt-3">If you are using Tandaza on behalf of an organisation, you represent that you have the authority to bind that organisation to these terms.</p>
           </section>
 
@@ -76,15 +75,15 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">4. Organiser responsibilities</h2>
-            <p>If you use Tandaza as an expo organiser, you are responsible for:</p>
+            <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">4. Organizer, exhibitor, sponsor, and visitor responsibilities</h2>
+            <p>Each user is responsible for using Tandaza honestly and for keeping the information they provide accurate. In particular:</p>
             <ul className="mt-3 space-y-2 pl-5">
               {[
-                "Ensuring that your expo complies with all applicable laws, venue regulations, and licensing requirements in the country where it takes place.",
-                "Providing accurate and truthful information about your expo, including dates, location, and exhibitor terms.",
-                "Honouring the terms you publish to exhibitors and visitors, including refund and cancellation policies.",
-                "Ensuring that payments collected through the platform are used for their stated purpose.",
-                "Obtaining any necessary consent from exhibitors and visitors to process their data.",
+                "Organizers must ensure their expos comply with applicable laws, venue rules, and published terms.",
+                "Exhibitors must provide accurate company, product, pricing, document, livestream, meeting, and advertising information.",
+                "Sponsors must ensure campaigns, ads, and brand materials are lawful and do not mislead visitors.",
+                "Visitors must use expo engagement tools respectfully and must not submit false meeting, feedback, chat, or pre-order information.",
+                "All users must obtain any permissions needed before uploading files, images, videos, logos, or personal data.",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
@@ -96,14 +95,14 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">5. Payments and fees</h2>
-            <p>Pricing for Tandaza services is set out on our <Link href="/pricing" className="font-medium text-indigo-600 hover:underline">Pricing page</Link>. By publishing an expo on a paid tier, you agree to pay the applicable per-expo fee.</p>
-            <p className="mt-3">When payments are processed through the platform on your behalf, Tandaza deducts the applicable platform fee before settlement. Fees are non-refundable except where required by law or as stated in our refund policy.</p>
-            <p className="mt-3">We reserve the right to update our pricing. We will notify you of changes at least 30 days before they take effect.</p>
+            <p>Tandaza pricing may vary by country, currency, expo, user role, digital booth activation, sponsor plan, add-on, ad placement, and agreed commercial arrangement. By using a paid feature, you agree to pay the applicable amount shown or agreed before purchase.</p>
+            <p className="mt-3">Payments may be processed by third-party payment providers. Tandaza may record payment attempts, provider responses, receipts, commissions, processing fees, and settlements for audit and reconciliation. Fees are non-refundable except where required by law or expressly approved by Tandaza.</p>
+            <p className="mt-3">We may update pricing, payment methods, and settlement rules as the platform evolves. Where changes materially affect an active paid arrangement, we will provide reasonable notice.</p>
           </section>
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">6. Intellectual property</h2>
-            <p>Tandaza and its original content, features, and functionality are owned by Maalim Group Limited and are protected by applicable intellectual property laws. You may not copy, modify, distribute, or reverse-engineer any part of the platform without our express written consent.</p>
+            <p>Tandaza and its original content, features, designs, workflows, and functionality are protected by applicable intellectual property laws. You may not copy, modify, distribute, or reverse-engineer any part of the platform without our express written consent.</p>
             <p className="mt-3">You retain ownership of any content you upload to the platform, such as expo descriptions, floor plans, and product catalogues. By uploading content, you grant Tandaza a limited, non-exclusive licence to use, display, and process that content as necessary to provide the services.</p>
           </section>
 
@@ -130,7 +129,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">11. Governing law</h2>
-            <p>These terms are governed by the laws of Kenya. Any disputes shall be resolved in the courts of Nairobi, Kenya, unless otherwise required by applicable law in your country.</p>
+            <p>These terms are governed by the laws of Kenya, unless mandatory laws in another country apply. Any disputes shall be resolved in the courts of Nairobi, Kenya, unless otherwise required by applicable law.</p>
           </section>
 
           <section>
@@ -140,7 +139,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">13. Contact</h2>
-            <p>For any questions about these terms, contact us at <a href="mailto:legal@tandaza.com" className="font-medium text-indigo-600 hover:underline">legal@tandaza.com</a>.</p>
+            <p>For any questions about these terms, contact us at <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a> or call <a href="tel:+254799010210" className="font-medium text-indigo-600 hover:underline">+254 799 010 210</a>.</p>
           </section>
 
         </div>
