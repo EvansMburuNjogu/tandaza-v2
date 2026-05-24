@@ -7,5 +7,6 @@ RUN go build -o /out/tandaza-api ./cmd/api
 FROM alpine:3.20
 WORKDIR /app
 COPY --from=build /out/tandaza-api /app/tandaza-api
+COPY --from=build /app/database /app/database
 EXPOSE 8080
 CMD ["/app/tandaza-api"]
