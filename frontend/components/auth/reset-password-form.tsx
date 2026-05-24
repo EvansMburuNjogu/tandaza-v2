@@ -69,7 +69,7 @@ export function ResetPasswordForm() {
               Pick something strong — at least 8 characters.
             </p>
           </div>
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={60} height={60} className="h-[60px] w-[60px] flex-shrink-0 object-contain" priority />
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={128} height={72} className="h-[72px] w-[128px] flex-shrink-0 object-contain" priority />
         </div>
 
         <div className="my-7 h-px w-full bg-border/50" />

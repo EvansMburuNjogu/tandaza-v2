@@ -93,7 +93,7 @@ export function ChangePasswordForm() {
               Replace your temporary password before proceeding.
             </p>
           </div>
-          <Image src="/tandaza-logo.png" alt="Tandaza" width={60} height={60} className="h-[60px] w-[60px] flex-shrink-0 object-contain" priority />
+          <Image src="/tandaza-logo.png" alt="Tandaza" width={128} height={72} className="h-[72px] w-[128px] flex-shrink-0 object-contain" priority />
         </div>
 
         {/* Warning banner */}
