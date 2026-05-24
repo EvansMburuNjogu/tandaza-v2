@@ -56,7 +56,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ../../backend
     container_name: tandaza-prod-backend
     restart: unless-stopped
     env_file:
@@ -79,7 +79,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ../../frontend
     container_name: tandaza-prod-frontend
     restart: unless-stopped
     env_file:
