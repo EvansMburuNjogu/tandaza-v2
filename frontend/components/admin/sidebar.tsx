@@ -66,7 +66,15 @@ export function AdminSidebar({
             alt="Tandaza"
             width={128}
             height={56}
-            className={cn("shrink-0 object-contain", collapsed ? "lg:h-10 lg:w-12" : "h-14 w-32")}
+            className={cn("h-14 w-32 shrink-0 object-contain", collapsed && "lg:hidden")}
+            priority
+          />
+          <Image
+            src="/favicon.png"
+            alt="Tandaza"
+            width={48}
+            height={48}
+            className={cn("hidden h-11 w-11 shrink-0 object-contain", collapsed && "lg:block")}
             priority
           />
         </div>
