@@ -51,12 +51,9 @@ export function LandingNav() {
         ? "border-b border-slate-200/70 bg-white/95 shadow-sm backdrop-blur-xl"
         : "bg-transparent"
     )}>
-      <div className={cn(
-        "flex h-[68px] items-center justify-between",
-        isDark ? "mx-0 max-w-none px-3 sm:px-4 lg:px-5" : "mx-auto max-w-[1200px] px-6 lg:px-8"
-      )}>
+      <div className="mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6 lg:px-8">
 
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="-ml-3 flex items-center lg:-ml-5">
           <Image src={logoSrc} alt="Tandaza" width={192} height={76} className="h-[68px] w-[192px] object-contain" priority />
         </Link>
 
