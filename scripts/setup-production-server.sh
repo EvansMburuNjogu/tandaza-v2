@@ -35,13 +35,18 @@ MEDIA_URL="${TANDAZA_PROD_MEDIA_URL:-}"
 ADMIN_EMAIL="${TANDAZA_PROD_ADMIN_EMAIL:-admin@tandaza.africa}"
 ADMIN_PASSWORD="${TANDAZA_PROD_ADMIN_PASSWORD:-$(openssl rand -base64 24 | tr -d '=+/')}"
 
+EXPECT_SERVER="$SERVER" \
+EXPECT_PASSWORD="$TANDAZA_PROD_SSH_PASSWORD" \
+EXPECT_PUB_KEY="$PUB_KEY" \
+EXPECT_APP_ROOT="$APP_ROOT" \
+EXPECT_BRANCH="$BRANCH" \
 expect -c '
   set timeout 60
-  set server [lindex $argv 0]
-  set password [lindex $argv 1]
-  set pubkey [lindex $argv 2]
-  set app_root [lindex $argv 3]
-  set branch [lindex $argv 4]
+  set server $env(EXPECT_SERVER)
+  set password $env(EXPECT_PASSWORD)
+  set pubkey $env(EXPECT_PUB_KEY)
+  set app_root $env(EXPECT_APP_ROOT)
+  set branch $env(EXPECT_BRANCH)
   spawn ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new $server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && grep -qxF \"$pubkey\" ~/.ssh/authorized_keys || echo \"$pubkey\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && mkdir -p $app_root/env $app_root/app $app_root/repo.git && if [ ! -d $app_root/repo.git/objects ]; then git init --bare $app_root/repo.git; fi && git --git-dir=$app_root/repo.git symbolic-ref HEAD refs/heads/$branch && cat > $app_root/repo.git/hooks/post-receive <<'\''HOOK'\''
 #!/usr/bin/env bash
 set -euo pipefail
@@ -64,7 +69,7 @@ docker compose ps
 HOOK
 chmod +x $app_root/repo.git/hooks/post-receive"
   expect "*password:*" { send "$password\r"; exp_continue } eof
-' -- "$SERVER" "$TANDAZA_PROD_SSH_PASSWORD" "$PUB_KEY" "$APP_ROOT" "$BRANCH"
+'
 
 ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "cat > ${APP_ROOT}/env/postgres.env <<'EOF'
 POSTGRES_DB=tandaza
