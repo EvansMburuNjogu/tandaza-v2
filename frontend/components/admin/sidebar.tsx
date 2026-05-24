@@ -58,8 +58,8 @@ export function AdminSidebar({
 
         {/* ── Brand header ─────────────────────────── */}
         <div className={cn(
-          "relative flex shrink-0 flex-col justify-center border-b border-white/[0.08] px-4 py-3",
-          collapsed ? "lg:h-[72px] lg:items-center" : "h-[96px] items-start"
+          "relative flex shrink-0 items-center border-b border-white/[0.08] px-4",
+          collapsed ? "h-[72px] justify-center" : "h-[84px] justify-start"
         )}>
           <Image
             src="/tandaza-logo-white-v2.png"
@@ -69,20 +69,6 @@ export function AdminSidebar({
             className={cn("shrink-0 object-contain", collapsed ? "lg:h-10 lg:w-12" : "h-14 w-32")}
             priority
           />
-
-          <div
-            className={cn(
-              "mt-1 flex flex-col overflow-hidden transition-[height,opacity] duration-300",
-              collapsed ? "lg:h-0 lg:opacity-0" : "h-4 opacity-100"
-            )}
-          >
-            <span className={cn(
-              "whitespace-nowrap text-[10px] font-semibold uppercase leading-tight tracking-[0.22em] text-slate-400/75",
-              collapsed && "lg:hidden"
-            )}>
-              {user?.role === "visitor" ? "Visitor Account" : user?.role === "organizer" ? "Organizer Workspace" : user?.role === "administrator" || user?.role === "super_administrator" ? "Admin Console" : user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) + " Workspace" : "Admin Console"}
-            </span>
-          </div>
         </div>
 
         {/* ── Navigation ───────────────────────────── */}
