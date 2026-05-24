@@ -47,29 +47,35 @@ expect -c '
   set pubkey $env(EXPECT_PUB_KEY)
   set app_root $env(EXPECT_APP_ROOT)
   set branch $env(EXPECT_BRANCH)
-  spawn ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new $server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && grep -qxF \"$pubkey\" ~/.ssh/authorized_keys || echo \"$pubkey\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && mkdir -p $app_root/env $app_root/app $app_root/repo.git && if [ ! -d $app_root/repo.git/objects ]; then git init --bare $app_root/repo.git; fi && git --git-dir=$app_root/repo.git symbolic-ref HEAD refs/heads/$branch && cat > $app_root/repo.git/hooks/post-receive <<'\''HOOK'\''
+  spawn ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new $server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && grep -qxF \"$pubkey\" ~/.ssh/authorized_keys || echo \"$pubkey\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && mkdir -p $app_root/env $app_root/app $app_root/repo.git && if test ! -d $app_root/repo.git/objects; then git init --bare $app_root/repo.git; fi && git --git-dir=$app_root/repo.git symbolic-ref HEAD refs/heads/$branch"
+  expect "*password:*" { send "$password\r"; exp_continue } eof
+'
+
+HOOK_FILE="$(mktemp)"
+cat > "$HOOK_FILE" <<HOOK
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_ROOT=\"/opt/tandaza-production\"
-BRANCH=\"production\"
+APP_ROOT="${APP_ROOT}"
+BRANCH="${BRANCH}"
 read oldrev newrev refname
-if [ \"$refname\" != \"refs/heads/$BRANCH\" ]; then
-  echo \"Ignoring $refname; deploy branch is $BRANCH\"
+if [ "\$refname" != "refs/heads/\$BRANCH" ]; then
+  echo "Ignoring \$refname; deploy branch is \$BRANCH"
   exit 0
 fi
 
-mkdir -p \"$APP_ROOT/app\"
-git --work-tree=\"$APP_ROOT/app\" --git-dir=\"$APP_ROOT/repo.git\" checkout -f \"$BRANCH\"
-cp \"$APP_ROOT/app/deploy/production/docker-compose.yml\" \"$APP_ROOT/docker-compose.yml\"
-cd \"$APP_ROOT\"
+mkdir -p "\$APP_ROOT/app"
+git --work-tree="\$APP_ROOT/app" --git-dir="\$APP_ROOT/repo.git" checkout -f "\$BRANCH"
+cp "\$APP_ROOT/app/deploy/production/docker-compose.yml" "\$APP_ROOT/docker-compose.yml"
+cd "\$APP_ROOT"
 docker compose build
 docker compose up -d --remove-orphans
 docker compose ps
 HOOK
-chmod +x $app_root/repo.git/hooks/post-receive"
-  expect "*password:*" { send "$password\r"; exp_continue } eof
-'
+
+scp -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$HOOK_FILE" "${SERVER}:${APP_ROOT}/repo.git/hooks/post-receive"
+rm -f "$HOOK_FILE"
+ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "chmod +x '${APP_ROOT}/repo.git/hooks/post-receive'"
 
 ssh -i "$DEPLOY_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$SERVER" "cat > ${APP_ROOT}/env/postgres.env <<'EOF'
 POSTGRES_DB=tandaza
