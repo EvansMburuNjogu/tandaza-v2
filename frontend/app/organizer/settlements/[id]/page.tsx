@@ -53,7 +53,7 @@ export default function SettlementInvoicePage() {
             <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.34),transparent_45%)]" />
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
-                <img src="/tandaza-logo-white.png" alt="Tandaza" className="h-16 w-32 object-contain" />
+                <img src="/tandaza-logo-white-v2.png" alt="Tandaza" className="h-16 w-32 object-contain" />
                 <div>
                   <h1 className="text-3xl font-semibold tracking-tight">Settlement Invoice</h1>
                 </div>
@@ -207,7 +207,7 @@ export default function SettlementInvoicePage() {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-8 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <img src="/tandaza-logo.png" alt="Tandaza" className="h-8 w-20 object-contain" />
+            <img src="/tandaza-logo-v2.png" alt="Tandaza" className="h-8 w-20 object-contain" />
             <p>hello@tandaza.africa · +254 799 010 210</p>
           </div>
         </div>

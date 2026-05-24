@@ -42,7 +42,7 @@ export function LandingNav() {
   }, [forOpen])
 
   const frosted = scrolled || !isDark
-  const logoSrc = frosted ? "/tandaza-logo.png" : "/tandaza-logo-white.png"
+  const logoSrc = frosted ? "/tandaza-logo-v2.png" : "/tandaza-logo-white-v2.png"
 
   return (
     <header className={cn(
