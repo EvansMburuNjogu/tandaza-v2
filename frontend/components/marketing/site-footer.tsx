@@ -78,7 +78,6 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="text-[12px] text-slate-500 transition-colors hover:text-white">Privacy Policy</Link>
             <Link href="/terms" className="text-[12px] text-slate-500 transition-colors hover:text-white">Terms and Conditions</Link>
-            <a href="mailto:info@tandaza.africa" className="text-[12px] text-slate-500 transition-colors hover:text-white">info@tandaza.africa</a>
             <a href="https://maalimgroup.co.ke" target="_blank" rel="noopener noreferrer"
               className="text-[12px] text-slate-500 transition-colors hover:text-white">
               Developed and Maintained by Maalim Group Limited
