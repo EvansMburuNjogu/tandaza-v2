@@ -32,7 +32,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">1. Who we are</h2>
             <p>Tandaza is an expo operating platform developed for visitors, exhibitors, organizers, sponsors, and administrators across African expo markets. When this policy refers to "Tandaza", "we", "us", or "our", it means the Tandaza platform and the team responsible for operating it.</p>
-            <p className="mt-3">Contact: <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a></p>
+            <p className="mt-3">Contact: <a href="mailto:info@tandaza.africa" className="font-medium text-indigo-600 hover:underline">info@tandaza.africa</a></p>
           </section>
 
           <section>
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3">To exercise any of these rights, contact us at <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a>.</p>
+            <p className="mt-3">To exercise any of these rights, contact us at <a href="mailto:info@tandaza.africa" className="font-medium text-indigo-600 hover:underline">info@tandaza.africa</a>.</p>
           </section>
 
           <section>
@@ -155,7 +155,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">11. Contact us</h2>
-            <p>For privacy-related queries, contact us at <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a> or call <a href="tel:+254799010210" className="font-medium text-indigo-600 hover:underline">+254 799 010 210</a>.</p>
+            <p>For privacy-related queries, contact us at <a href="mailto:info@tandaza.africa" className="font-medium text-indigo-600 hover:underline">info@tandaza.africa</a> or call <a href="tel:+254799010210" className="font-medium text-indigo-600 hover:underline">+254 799 010 210</a>.</p>
           </section>
 
         </div>

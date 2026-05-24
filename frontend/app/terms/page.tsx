@@ -139,7 +139,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-[1.1rem] font-bold text-slate-900">13. Contact</h2>
-            <p>For any questions about these terms, contact us at <a href="mailto:hello@tandaza.africa" className="font-medium text-indigo-600 hover:underline">hello@tandaza.africa</a> or call <a href="tel:+254799010210" className="font-medium text-indigo-600 hover:underline">+254 799 010 210</a>.</p>
+            <p>For any questions about these terms, contact us at <a href="mailto:info@tandaza.africa" className="font-medium text-indigo-600 hover:underline">info@tandaza.africa</a> or call <a href="tel:+254799010210" className="font-medium text-indigo-600 hover:underline">+254 799 010 210</a>.</p>
           </section>
 
         </div>
