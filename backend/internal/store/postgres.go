@@ -192,6 +192,17 @@ func (s *PostgresStore) AuthWithGoogle(ctx context.Context, input domain.GoogleA
 	return user, token, err
 }
 
+func (s *PostgresStore) UserHasNotification(ctx context.Context, userID string, templateKey string) (bool, error) {
+	userID = strings.TrimSpace(userID)
+	templateKey = strings.TrimSpace(templateKey)
+	if userID == "" || templateKey == "" {
+		return false, nil
+	}
+	var exists bool
+	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM notifications WHERE user_id=$1 AND template_key=$2)`, userID, templateKey).Scan(&exists)
+	return exists, err
+}
+
 func (s *PostgresStore) CreateEmailVerification(ctx context.Context, userID string) (string, error) {
 	if strings.TrimSpace(userID) == "" {
 		return "", ErrInvalidCredentials

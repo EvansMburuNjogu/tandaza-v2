@@ -710,6 +710,7 @@ func (s *Server) googleAuth(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "google_auth_failed", "Google account could not be registered or logged in.")
 		return
 	}
+	s.queueVisitorWelcomeEmailsOnce(r.Context(), user)
 	s.recordAudit(r, domain.AuditLog{
 		ActorID: user.ID, Actor: user.Name, ActorRole: user.Role,
 		Action: "google_login_success", EntityType: "user", EntityID: user.ID,
@@ -2057,6 +2058,25 @@ func (s *Server) queueVerifiedWelcomeEmails(ctx context.Context, user domain.Use
 	if user.Role != domain.RoleVisitor && user.Role != domain.RoleSponsor {
 		return
 	}
+	s.queueWelcomeEmails(ctx, user)
+}
+
+func (s *Server) queueVisitorWelcomeEmailsOnce(ctx context.Context, user domain.User) {
+	if user.Role != domain.RoleVisitor {
+		return
+	}
+	hasWelcome, err := s.store.UserHasNotification(ctx, user.ID, "account_welcome")
+	if err != nil {
+		s.logger.Warn("welcome notification lookup failed", "error", err, "userId", user.ID)
+		return
+	}
+	if hasWelcome {
+		return
+	}
+	s.queueWelcomeEmails(ctx, user)
+}
+
+func (s *Server) queueWelcomeEmails(ctx context.Context, user domain.User) {
 	name := strings.TrimSpace(user.Name)
 	if name == "" {
 		name = "there"

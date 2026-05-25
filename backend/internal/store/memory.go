@@ -319,6 +319,22 @@ func (s *MemoryStore) AuthWithGoogle(ctx context.Context, input domain.GoogleAut
 	return user, token, err
 }
 
+func (s *MemoryStore) UserHasNotification(ctx context.Context, userID string, templateKey string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	userID = strings.TrimSpace(userID)
+	templateKey = strings.TrimSpace(templateKey)
+	if userID == "" || templateKey == "" {
+		return false, nil
+	}
+	for _, item := range s.notifications {
+		if strings.TrimSpace(item.UserID) == userID && strings.TrimSpace(item.TemplateKey) == templateKey {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (s *MemoryStore) CreateEmailVerification(ctx context.Context, userID string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

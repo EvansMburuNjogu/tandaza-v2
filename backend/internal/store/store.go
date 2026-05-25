@@ -11,6 +11,7 @@ type Store interface {
 	Login(ctx context.Context, email string, password string) (domain.User, string, error)
 	Register(ctx context.Context, email string, password string, input domain.RegisterInput) (domain.User, string, error)
 	AuthWithGoogle(ctx context.Context, input domain.GoogleAuthInput) (domain.User, string, error)
+	UserHasNotification(ctx context.Context, userID string, templateKey string) (bool, error)
 	CreateEmailVerification(ctx context.Context, userID string) (string, error)
 	VerifyEmail(ctx context.Context, token string) (domain.User, string, error)
 	ForgotPassword(ctx context.Context, email string) (domain.ForgotPasswordResult, error)
