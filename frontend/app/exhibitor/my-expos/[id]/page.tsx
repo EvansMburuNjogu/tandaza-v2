@@ -15,6 +15,7 @@ import { AIPerformanceSummaryCard } from "@/components/analytics/ai-performance-
 import { api } from "@/lib/api"
 import { AdCampaign, CalendarInvite, ExpoDocument, ExpoVisitor, Lead, PreOrder, Product, ROIEstimate } from "@/lib/api/contracts"
 import { callingCodeOptions } from "@/lib/calling-codes"
+import { latestIncomingConversationMessages, notifyIncomingConversationMessage } from "@/lib/conversation-notifications"
 import { useSessionStore } from "@/store/session-store"
 import { ErrorState } from "@/components/ui/error-state"
 import { ChatIcon, ChevronDownIcon, DownloadIcon, MenuIcon, PlusIcon, SearchIcon, TrashIcon } from "@/components/ui/icons"
@@ -97,6 +98,8 @@ export default function MyExpoPage() {
   const router = useRouter()
   const client = useQueryClient()
   const workspaceContentRef = useRef<HTMLElement | null>(null)
+  const seenConversationMessageIds = useRef<Set<string>>(new Set())
+  const conversationNotificationsReady = useRef(false)
   const [activeTab, setActiveTab] = useState<TabType>("overview")
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [coverImageFailed, setCoverImageFailed] = useState(false)
@@ -327,6 +330,21 @@ export default function MyExpoPage() {
     enabled: Boolean(token && params.id),
     refetchInterval: activeTab === "conversations" || activeTab === "livestream" ? 12000 : false
   })
+
+  useEffect(() => {
+    const incoming = latestIncomingConversationMessages(conversationsQuery.data || [], "visitor")
+    if (!incoming.length) return
+    if (!conversationNotificationsReady.current) {
+      incoming.forEach(({ messageId }) => seenConversationMessageIds.current.add(messageId))
+      conversationNotificationsReady.current = true
+      return
+    }
+    incoming.forEach(({ thread, messageId }) => {
+      if (seenConversationMessageIds.current.has(messageId)) return
+      seenConversationMessageIds.current.add(messageId)
+      notifyIncomingConversationMessage(thread)
+    })
+  }, [conversationsQuery.data])
 
   const liveStreamQuery = useQuery({
     queryKey: ["expo-live-stream", params.id],

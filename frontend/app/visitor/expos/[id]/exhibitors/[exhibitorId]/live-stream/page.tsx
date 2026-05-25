@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
@@ -11,6 +11,7 @@ import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
+import { latestIncomingConversationMessages, notifyIncomingConversationMessage } from "@/lib/conversation-notifications"
 import { useSessionStore } from "@/store/session-store"
 import { findVisitorBooth } from "@/lib/visitor-expo"
 import { formatDate } from "@/lib/utils"
@@ -23,6 +24,8 @@ export default function VisitorLiveStreamPage() {
   const user = useSessionStore((s) => s.user)
   const queryClient = useQueryClient()
   const [message, setMessage] = useState("")
+  const seenConversationMessageIds = useRef<Set<string>>(new Set())
+  const conversationNotificationsReady = useRef(false)
   const sessionReady = Boolean(token && user?.role === "visitor")
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-expo-details", expoId],
@@ -40,6 +43,21 @@ export default function VisitorLiveStreamPage() {
   })
   const thread = useMemo(() => conversationsQuery.data?.find((item) => item.exhibitorId === booth?.exhibitorId), [booth?.exhibitorId, conversationsQuery.data])
   const messages = thread?.messages || []
+
+  useEffect(() => {
+    const incoming = latestIncomingConversationMessages(thread ? [thread] : [], "exhibitor")
+    if (!incoming.length) return
+    if (!conversationNotificationsReady.current) {
+      incoming.forEach(({ messageId }) => seenConversationMessageIds.current.add(messageId))
+      conversationNotificationsReady.current = true
+      return
+    }
+    incoming.forEach(({ thread: incomingThread, messageId }) => {
+      if (seenConversationMessageIds.current.has(messageId)) return
+      seenConversationMessageIds.current.add(messageId)
+      notifyIncomingConversationMessage(incomingThread)
+    })
+  }, [thread])
 
   const chatMutation = useMutation({
     mutationFn: () => {
