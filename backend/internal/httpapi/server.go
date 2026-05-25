@@ -2058,25 +2058,32 @@ func (s *Server) queueVerifiedWelcomeEmails(ctx context.Context, user domain.Use
 	if user.Role != domain.RoleVisitor && user.Role != domain.RoleSponsor {
 		return
 	}
-	s.queueWelcomeEmails(ctx, user)
+	s.queueAccountWelcomeEmail(ctx, user)
+	s.queueFounderWelcomeEmail(ctx, user)
 }
 
 func (s *Server) queueVisitorWelcomeEmailsOnce(ctx context.Context, user domain.User) {
 	if user.Role != domain.RoleVisitor {
 		return
 	}
-	hasWelcome, err := s.store.UserHasNotification(ctx, user.ID, "account_welcome")
-	if err != nil {
-		s.logger.Warn("welcome notification lookup failed", "error", err, "userId", user.ID)
-		return
+	if !s.userHasNotification(ctx, user, "account_welcome") {
+		s.queueAccountWelcomeEmail(ctx, user)
 	}
-	if hasWelcome {
-		return
+	if !s.userHasNotification(ctx, user, "founder_welcome") {
+		s.queueFounderWelcomeEmail(ctx, user)
 	}
-	s.queueWelcomeEmails(ctx, user)
 }
 
-func (s *Server) queueWelcomeEmails(ctx context.Context, user domain.User) {
+func (s *Server) userHasNotification(ctx context.Context, user domain.User, templateKey string) bool {
+	hasNotification, err := s.store.UserHasNotification(ctx, user.ID, templateKey)
+	if err != nil {
+		s.logger.Warn("welcome notification lookup failed", "error", err, "userId", user.ID, "template", templateKey)
+		return true
+	}
+	return hasNotification
+}
+
+func (s *Server) queueAccountWelcomeEmail(ctx context.Context, user domain.User) {
 	name := strings.TrimSpace(user.Name)
 	if name == "" {
 		name = "there"
@@ -2098,6 +2105,10 @@ func (s *Server) queueWelcomeEmails(ctx context.Context, user domain.User) {
 			"footerText": "You are receiving this because you verified your Tandaza account.",
 		},
 	})
+}
+
+func (s *Server) queueFounderWelcomeEmail(ctx context.Context, user domain.User) {
+	dashboardURL := frontendLink(s.cfg.FrontendURL, redirectForRole(user.Role))
 	s.queueAndSendAuthEmail(ctx, domain.NotificationInput{
 		UserID:      user.ID,
 		Role:        user.Role,
