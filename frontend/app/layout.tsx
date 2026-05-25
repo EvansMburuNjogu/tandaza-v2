@@ -5,6 +5,7 @@ import "intro.js/introjs.css"
 import { Providers } from "./providers"
 
 const googleAnalyticsId = "G-3VXHJX0W4B"
+const vexoScriptUrl = "https://www.vexo.co/analytics.js"
 
 export const metadata: Metadata = {
   title: {
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`} strategy="afterInteractive" />
+        <Script src={vexoScriptUrl} strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];

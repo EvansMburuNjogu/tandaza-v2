@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Toaster } from "sonner"
 import { ConfirmProvider } from "@/components/ui/confirm-provider"
 import { SessionBootstrap } from "@/components/auth/session-bootstrap"
+import { VexoAnalytics } from "@/components/analytics/vexo-analytics"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
@@ -13,6 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ConfirmProvider>
         <SessionBootstrap />
+        <VexoAnalytics />
         {children}
         <Toaster richColors closeButton position="top-right" />
       </ConfirmProvider>
