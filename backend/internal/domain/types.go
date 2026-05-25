@@ -22,6 +22,7 @@ type User struct {
 	CompanyName        string `json:"companyName"`
 	CountryCode        string `json:"countryCode"`
 	Status             string `json:"status"`
+	EmailVerified      bool   `json:"emailVerified"`
 	MustChangePassword bool   `json:"mustChangePassword"`
 }
 

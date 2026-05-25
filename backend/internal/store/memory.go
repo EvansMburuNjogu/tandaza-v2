@@ -16,6 +16,7 @@ import (
 )
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrEmailNotVerified = errors.New("email not verified")
 var ErrNotFound = errors.New("not found")
 
 type DemoUser struct {
@@ -88,11 +89,11 @@ func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
 	return &MemoryStore{
 		tokenService: tokenService,
 		users: []DemoUser{
-			{User: domain.User{ID: "usr_visitor_001", Name: "Demo Visitor", Email: "visitor@tandaza.demo", Role: domain.RoleVisitor, AvatarURL: "/avatars/visitor.svg", CompanyName: "", CountryCode: "KE", Status: "active"}, Password: "demo:visitor123"},
-			{User: domain.User{ID: "usr_exhibitor_001", Name: "Demo Exhibitor", Email: "exhibitor@tandaza.demo", Role: domain.RoleExhibitor, AvatarURL: "/avatars/exhibitor.svg", CompanyName: "TechCorp Africa", CountryCode: "KE", Status: "active"}, Password: "demo:exhibitor123"},
-			{User: domain.User{ID: "usr_organizer_001", Name: "Demo Organizer", Email: "organizer@tandaza.demo", Role: domain.RoleOrganizer, AvatarURL: "/avatars/organizer.svg", CompanyName: "Expo Group Africa", CountryCode: "KE", Status: "active"}, Password: "demo:organizer123"},
-			{User: domain.User{ID: "usr_sponsorship_001", Name: "Demo Sponsor", Email: "sponsorship@tandaza.demo", Role: domain.RoleSponsor, AvatarURL: "/avatars/sponsor.svg", CompanyName: "BrandLift Media", CountryCode: "KE", Status: "active"}, Password: "demo:sponsorship123"},
-			{User: domain.User{ID: "usr_admin_001", Name: "Platform Administrator", Email: "admin@tandaza.demo", Role: domain.RoleSuperAdmin, AvatarURL: "/avatars/admin.svg", CompanyName: "Tandaza", CountryCode: "KE", Status: "active"}, Password: "demo:admin123"},
+			{User: domain.User{ID: "usr_visitor_001", Name: "Demo Visitor", Email: "visitor@tandaza.demo", Role: domain.RoleVisitor, AvatarURL: "/avatars/visitor.svg", CompanyName: "", CountryCode: "KE", Status: "active", EmailVerified: true}, Password: "demo:visitor123"},
+			{User: domain.User{ID: "usr_exhibitor_001", Name: "Demo Exhibitor", Email: "exhibitor@tandaza.demo", Role: domain.RoleExhibitor, AvatarURL: "/avatars/exhibitor.svg", CompanyName: "TechCorp Africa", CountryCode: "KE", Status: "active", EmailVerified: true}, Password: "demo:exhibitor123"},
+			{User: domain.User{ID: "usr_organizer_001", Name: "Demo Organizer", Email: "organizer@tandaza.demo", Role: domain.RoleOrganizer, AvatarURL: "/avatars/organizer.svg", CompanyName: "Expo Group Africa", CountryCode: "KE", Status: "active", EmailVerified: true}, Password: "demo:organizer123"},
+			{User: domain.User{ID: "usr_sponsorship_001", Name: "Demo Sponsor", Email: "sponsorship@tandaza.demo", Role: domain.RoleSponsor, AvatarURL: "/avatars/sponsor.svg", CompanyName: "BrandLift Media", CountryCode: "KE", Status: "active", EmailVerified: true}, Password: "demo:sponsorship123"},
+			{User: domain.User{ID: "usr_admin_001", Name: "Platform Administrator", Email: "admin@tandaza.demo", Role: domain.RoleSuperAdmin, AvatarURL: "/avatars/admin.svg", CompanyName: "Tandaza", CountryCode: "KE", Status: "active", EmailVerified: true}, Password: "demo:admin123"},
 		},
 		countries: []domain.Country{
 			{Code: "KE", Name: "Kenya", DefaultCurrency: "KES", DefaultTimezone: "Africa/Nairobi", PaymentMethods: []string{"paystack", "mpesa", "manual"}, Active: true},
@@ -224,6 +225,9 @@ func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
 func (s *MemoryStore) Login(ctx context.Context, email string, password string) (domain.User, string, error) {
 	for _, demo := range s.users {
 		if strings.EqualFold(demo.User.Email, strings.TrimSpace(email)) && demo.User.Status == "active" && security.VerifyPassword(password, demo.Password) {
+			if !demo.User.EmailVerified {
+				return domain.User{}, "", ErrEmailNotVerified
+			}
 			token, err := s.tokenService.Sign(demo.User)
 			return demo.User, token, err
 		}
@@ -269,14 +273,15 @@ func (s *MemoryStore) Register(ctx context.Context, email string, password strin
 		}
 	}
 	user := domain.User{
-		ID:          fmt.Sprintf("usr_%d", time.Now().UnixNano()),
-		Name:        strings.TrimSpace(input.Name),
-		Email:       strings.TrimSpace(strings.ToLower(email)),
-		Role:        input.Role,
-		AvatarURL:   "/avatars/visitor.svg",
-		CompanyName: strings.TrimSpace(input.CompanyName),
-		CountryCode: defaultString(strings.ToUpper(strings.TrimSpace(input.CountryCode)), "KE"),
-		Status:      "active",
+		ID:            fmt.Sprintf("usr_%d", time.Now().UnixNano()),
+		Name:          strings.TrimSpace(input.Name),
+		Email:         strings.TrimSpace(strings.ToLower(email)),
+		Role:          input.Role,
+		AvatarURL:     "/avatars/visitor.svg",
+		CompanyName:   strings.TrimSpace(input.CompanyName),
+		CountryCode:   defaultString(strings.ToUpper(strings.TrimSpace(input.CountryCode)), "KE"),
+		Status:        "active",
+		EmailVerified: false,
 	}
 	hash, err := security.HashPassword(password)
 	if err != nil {
@@ -306,13 +311,14 @@ func (s *MemoryStore) AuthWithGoogle(ctx context.Context, input domain.GoogleAut
 		return domain.User{}, "", err
 	}
 	user := domain.User{
-		ID:          fmt.Sprintf("usr_%d", time.Now().UnixNano()),
-		Name:        name,
-		Email:       email,
-		Role:        domain.RoleVisitor,
-		AvatarURL:   "/avatars/visitor.svg",
-		CountryCode: "KE",
-		Status:      "active",
+		ID:            fmt.Sprintf("usr_%d", time.Now().UnixNano()),
+		Name:          name,
+		Email:         email,
+		Role:          domain.RoleVisitor,
+		AvatarURL:     "/avatars/visitor.svg",
+		CountryCode:   "KE",
+		Status:        "active",
+		EmailVerified: true,
 	}
 	s.users = append(s.users, DemoUser{User: user, Password: hash})
 	token, err := s.tokenService.Sign(user)
@@ -356,6 +362,13 @@ func (s *MemoryStore) VerifyEmail(ctx context.Context, token string) (domain.Use
 	user, ok := s.userByIDLocked(userID)
 	if !ok {
 		return domain.User{}, "", ErrNotFound
+	}
+	for i := range s.users {
+		if s.users[i].User.ID == userID {
+			s.users[i].User.EmailVerified = true
+			user = s.users[i].User
+			break
+		}
 	}
 	delete(s.emailVerifyTokens, strings.TrimSpace(token))
 	signedToken, err := s.tokenService.Sign(user)
@@ -529,6 +542,7 @@ func (s *MemoryStore) CreateAdminManagedUser(ctx context.Context, input domain.A
 		CompanyName:        strings.TrimSpace(input.CompanyName),
 		CountryCode:        defaultString(strings.ToUpper(strings.TrimSpace(input.CountryCode)), "KE"),
 		Status:             status,
+		EmailVerified:      true,
 		MustChangePassword: true,
 	}
 	s.users = append([]DemoUser{{User: user, Password: hash}}, s.users...)
@@ -3009,6 +3023,7 @@ func (s *MemoryStore) CreateExhibitorTeamMemberAccount(ctx context.Context, exhi
 		s.users[index].User.CompanyName = exhibitor.CompanyName
 		s.users[index].User.CountryCode = defaultString(exhibitor.CountryCode, "KE")
 		s.users[index].User.Status = "active"
+		s.users[index].User.EmailVerified = true
 		s.users[index].User.MustChangePassword = true
 		s.users[index].Password = hash
 		reusedUser = true
@@ -3023,6 +3038,7 @@ func (s *MemoryStore) CreateExhibitorTeamMemberAccount(ctx context.Context, exhi
 		CompanyName:        exhibitor.CompanyName,
 		CountryCode:        defaultString(exhibitor.CountryCode, "KE"),
 		Status:             "active",
+		EmailVerified:      true,
 		MustChangePassword: true,
 	}
 	if !reusedUser {
@@ -3174,6 +3190,7 @@ func (s *MemoryStore) CreateOrganizerTeamMemberAccount(ctx context.Context, orga
 		s.users[index].User.CompanyName = organizer.CompanyName
 		s.users[index].User.CountryCode = defaultString(organizer.CountryCode, "KE")
 		s.users[index].User.Status = "active"
+		s.users[index].User.EmailVerified = true
 		s.users[index].User.MustChangePassword = true
 		s.users[index].Password = hash
 		reusedUser = true
@@ -3189,6 +3206,7 @@ func (s *MemoryStore) CreateOrganizerTeamMemberAccount(ctx context.Context, orga
 			CompanyName:        organizer.CompanyName,
 			CountryCode:        defaultString(organizer.CountryCode, "KE"),
 			Status:             "active",
+			EmailVerified:      true,
 			MustChangePassword: true,
 		}, Password: hash}}, s.users...)
 	}

@@ -97,13 +97,16 @@ func (s *PostgresStore) Login(ctx context.Context, email string, password string
 	var companyCipher string
 	emailLookup := strings.TrimSpace(strings.ToLower(email))
 	emailHash := s.pii.Hash(emailLookup)
-	err := s.pool.QueryRow(ctx, `SELECT id, name, email, role, COALESCE(avatar_url,''), COALESCE(company_name,''), COALESCE(country_code,''), COALESCE(status,'active'), COALESCE(must_change_password,FALSE), COALESCE(password_hash,''), COALESCE(email_cipher,''), COALESCE(name_cipher,''), COALESCE(company_name_cipher,'') FROM users WHERE (lower(email)=lower($1) OR ($2 <> '' AND email_hash=$2)) AND status='active'`, emailLookup, emailHash).
-		Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.AvatarURL, &user.CompanyName, &user.CountryCode, &user.Status, &user.MustChangePassword, &passwordHash, &emailCipher, &nameCipher, &companyCipher)
+	err := s.pool.QueryRow(ctx, `SELECT id, name, email, role, COALESCE(avatar_url,''), COALESCE(company_name,''), COALESCE(country_code,''), COALESCE(status,'active'), COALESCE(email_verified,FALSE), COALESCE(must_change_password,FALSE), COALESCE(password_hash,''), COALESCE(email_cipher,''), COALESCE(name_cipher,''), COALESCE(company_name_cipher,'') FROM users WHERE (lower(email)=lower($1) OR ($2 <> '' AND email_hash=$2)) AND status='active'`, emailLookup, emailHash).
+		Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.AvatarURL, &user.CompanyName, &user.CountryCode, &user.Status, &user.EmailVerified, &user.MustChangePassword, &passwordHash, &emailCipher, &nameCipher, &companyCipher)
 	if err != nil {
 		return domain.User{}, "", ErrInvalidCredentials
 	}
 	if !security.VerifyPassword(password, passwordHash) {
 		return domain.User{}, "", ErrInvalidCredentials
+	}
+	if !user.EmailVerified {
+		return domain.User{}, "", ErrEmailNotVerified
 	}
 	user = s.decryptUser(user, emailCipher, nameCipher, companyCipher)
 	token, err := s.tokenService.Sign(user)
@@ -180,13 +183,14 @@ func (s *PostgresStore) AuthWithGoogle(ctx context.Context, input domain.GoogleA
 		return domain.User{}, "", err
 	}
 	user := domain.User{
-		ID:          id,
-		Name:        name,
-		Email:       email,
-		Role:        domain.RoleVisitor,
-		AvatarURL:   "/avatars/visitor.svg",
-		CountryCode: "KE",
-		Status:      "active",
+		ID:            id,
+		Name:          name,
+		Email:         email,
+		Role:          domain.RoleVisitor,
+		AvatarURL:     "/avatars/visitor.svg",
+		CountryCode:   "KE",
+		Status:        "active",
+		EmailVerified: true,
 	}
 	token, err := s.tokenService.Sign(user)
 	return user, token, err
@@ -305,8 +309,8 @@ func (s *PostgresStore) UserByID(ctx context.Context, id string) (domain.User, e
 	var emailCipher string
 	var nameCipher string
 	var companyCipher string
-	err := s.pool.QueryRow(ctx, `SELECT id, name, email, role, COALESCE(avatar_url,''), COALESCE(company_name,''), COALESCE(country_code,''), COALESCE(status,'active'), COALESCE(must_change_password,FALSE), COALESCE(email_cipher,''), COALESCE(name_cipher,''), COALESCE(company_name_cipher,'') FROM users WHERE id=$1`, id).
-		Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.AvatarURL, &user.CompanyName, &user.CountryCode, &user.Status, &user.MustChangePassword, &emailCipher, &nameCipher, &companyCipher)
+	err := s.pool.QueryRow(ctx, `SELECT id, name, email, role, COALESCE(avatar_url,''), COALESCE(company_name,''), COALESCE(country_code,''), COALESCE(status,'active'), COALESCE(email_verified,FALSE), COALESCE(must_change_password,FALSE), COALESCE(email_cipher,''), COALESCE(name_cipher,''), COALESCE(company_name_cipher,'') FROM users WHERE id=$1`, id).
+		Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.AvatarURL, &user.CompanyName, &user.CountryCode, &user.Status, &user.EmailVerified, &user.MustChangePassword, &emailCipher, &nameCipher, &companyCipher)
 	if err != nil {
 		return domain.User{}, ErrNotFound
 	}
@@ -314,7 +318,7 @@ func (s *PostgresStore) UserByID(ctx context.Context, id string) (domain.User, e
 }
 
 func (s *PostgresStore) Users(ctx context.Context) ([]domain.User, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, name, email, role, COALESCE(avatar_url,''), COALESCE(company_name,''), COALESCE(country_code,''), COALESCE(status,'active'), COALESCE(must_change_password,FALSE), COALESCE(email_cipher,''), COALESCE(name_cipher,''), COALESCE(company_name_cipher,'') FROM users ORDER BY created_at DESC`)
+	rows, err := s.pool.Query(ctx, `SELECT id, name, email, role, COALESCE(avatar_url,''), COALESCE(company_name,''), COALESCE(country_code,''), COALESCE(status,'active'), COALESCE(email_verified,FALSE), COALESCE(must_change_password,FALSE), COALESCE(email_cipher,''), COALESCE(name_cipher,''), COALESCE(company_name_cipher,'') FROM users ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +329,7 @@ func (s *PostgresStore) Users(ctx context.Context) ([]domain.User, error) {
 		var emailCipher string
 		var nameCipher string
 		var companyCipher string
-		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.AvatarURL, &user.CompanyName, &user.CountryCode, &user.Status, &user.MustChangePassword, &emailCipher, &nameCipher, &companyCipher); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.AvatarURL, &user.CompanyName, &user.CountryCode, &user.Status, &user.EmailVerified, &user.MustChangePassword, &emailCipher, &nameCipher, &companyCipher); err != nil {
 			return nil, err
 		}
 		users = append(users, s.decryptUser(user, emailCipher, nameCipher, companyCipher))
@@ -415,7 +419,7 @@ func (s *PostgresStore) CreateAdminManagedUser(ctx context.Context, input domain
 	}
 	mustChangePassword := true
 	_, err = s.pool.Exec(ctx, `INSERT INTO users (id, email, password_hash, name, role, avatar_url, company_name, country_code, email_verified, status, must_change_password, email_hash, email_cipher, name_cipher, company_name_cipher)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,FALSE,$9,$10,$11,$12,$13,$14)`,
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,TRUE,$9,$10,$11,$12,$13,$14)`,
 		id, storagePIIValue(s.pii, emailValue), passwordHash, storagePIIValue(s.pii, nameValue), input.Role, "/avatars/visitor.svg",
 		storagePIIValue(s.pii, companyValue), countryCode, status, mustChangePassword, s.pii.Hash(emailValue), s.pii.MustEncrypt(emailValue), s.pii.MustEncrypt(nameValue), s.pii.MustEncrypt(companyValue))
 	if err != nil {

@@ -115,6 +115,13 @@ func TestRegisterAcceptsBasicAuth(t *testing.T) {
 	if countTemplate(notifications, "email_verification") != 1 || countTemplate(notifications, "account_welcome") != 0 || countTemplate(notifications, "founder_welcome") != 0 {
 		t.Fatalf("expected only verification email before verification, notifications=%+v", notifications)
 	}
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
+	loginReq.SetBasicAuth("remote.visitor@tandaza.demo", "visitor456")
+	loginRec := httptest.NewRecorder()
+	handler.ServeHTTP(loginRec, loginReq)
+	if loginRec.Code != http.StatusForbidden || !bytes.Contains(loginRec.Body.Bytes(), []byte("verify your email")) || bytes.Contains(loginRec.Body.Bytes(), []byte(`"token"`)) {
+		t.Fatalf("expected email verification gate before login, status=%d body=%s", loginRec.Code, loginRec.Body.String())
+	}
 	verificationURL, err := url.Parse(registered.VerificationLink)
 	if err != nil {
 		t.Fatalf("parse verification link: %v", err)
@@ -135,6 +142,10 @@ func TestRegisterAcceptsBasicAuth(t *testing.T) {
 	}
 	if countTemplate(notifications, "email_verification") != 1 || countTemplate(notifications, "account_welcome") != 1 || countTemplate(notifications, "founder_welcome") != 1 {
 		t.Fatalf("expected verification plus two welcome emails after verification, notifications=%+v", notifications)
+	}
+	token := loginForTest(t, handler, "remote.visitor@tandaza.demo", "visitor456")
+	if token == "" {
+		t.Fatal("expected verified visitor to login")
 	}
 }
 

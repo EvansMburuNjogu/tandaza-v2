@@ -21,6 +21,7 @@ export interface User {
   role: Role
   avatarUrl: string
   companyName: string
+  emailVerified?: boolean
   mustChangePassword?: boolean
 }
 

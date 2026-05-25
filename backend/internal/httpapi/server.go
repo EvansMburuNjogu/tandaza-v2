@@ -490,6 +490,14 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	user, token, err := s.store.Login(r.Context(), email, password)
 	if err != nil {
+		if errors.Is(err, store.ErrEmailNotVerified) {
+			s.recordAudit(r, domain.AuditLog{
+				Action: "login_failed", EntityType: "auth", EntityID: strings.ToLower(strings.TrimSpace(email)),
+				IPAddress: clientIP(r), Metadata: map[string]any{"reason": "email_not_verified"},
+			})
+			writeError(w, http.StatusForbidden, "email_not_verified", "Please verify your email before signing in. Check your inbox for the verification link.")
+			return
+		}
 		s.recordAudit(r, domain.AuditLog{
 			Action: "login_failed", EntityType: "auth", EntityID: strings.ToLower(strings.TrimSpace(email)),
 			IPAddress: clientIP(r), Metadata: map[string]any{"reason": "invalid_credentials"},
