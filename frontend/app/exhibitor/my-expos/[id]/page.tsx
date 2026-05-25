@@ -722,12 +722,30 @@ export default function MyExpoPage() {
 
   const preOrderStatusMutation = useMutation({
     mutationFn: ({ orderId, status }: { orderId: string; status: PreOrder["status"] }) => api.updateExpoPreOrderStatus(token || "", params.id, orderId, status),
-    onSuccess: () => {
+    onMutate: async ({ orderId, status }) => {
+      const queryKey = ["expo-preorders", params.id]
+      await client.cancelQueries({ queryKey })
+      const previous = client.getQueryData<PreOrder[]>(queryKey)
+      client.setQueryData<PreOrder[]>(queryKey, (current = []) =>
+        current.map((order) => (order.id === orderId ? { ...order, status } : order))
+      )
+      return { previous }
+    },
+    onSuccess: (updatedOrder) => {
       toast.success("Pre-order status updated.")
+      client.setQueryData<PreOrder[]>(["expo-preorders", params.id], (current = []) => {
+        const found = current.some((order) => order.id === updatedOrder.id)
+        return found ? current.map((order) => (order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order)) : [updatedOrder, ...current]
+      })
       client.invalidateQueries({ queryKey: ["expo-preorders", params.id] })
       client.invalidateQueries({ queryKey: ["expo-ai", params.id] })
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update pre-order")
+    onError: (error, _variables, context) => {
+      if (context?.previous) {
+        client.setQueryData(["expo-preorders", params.id], context.previous)
+      }
+      toast.error(error instanceof Error ? error.message : "Could not update pre-order")
+    }
   })
 
   const showcaseProductsMutation = useMutation({
