@@ -5228,10 +5228,54 @@ func (s *Server) visitorSubmitFeedback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) visitorOrders(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requireRole(w, r, domain.RoleVisitor); !ok {
+	actor, ok := s.requireUser(w, r, domain.RoleVisitor)
+	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, []map[string]any{})
+	leads, err := s.store.ListLeads(r.Context(), store.LeadFilter{})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "orders_failed", "Could not load pre-orders.")
+		return
+	}
+	visitorEmail := strings.TrimSpace(actor.Email)
+	items := []map[string]any{}
+	for _, lead := range leads {
+		if !isPreOrderLead(lead) {
+			continue
+		}
+		if visitorEmail == "" || !strings.EqualFold(strings.TrimSpace(lead.VisitorEmail), visitorEmail) {
+			continue
+		}
+		productName := "Product interest"
+		if strings.TrimSpace(lead.ProductName) != "" {
+			productName = strings.TrimSpace(lead.ProductName)
+		}
+		if productName == "Product interest" && len(lead.InterestedProductIds) > 0 {
+			productName = strings.Join(lead.InterestedProductIds, ", ")
+		}
+		quantity := lead.Quantity
+		if quantity <= 0 {
+			quantity = 1
+		}
+		unitPrice := lead.ProductPrice
+		currency := strings.ToUpper(strings.TrimSpace(lead.ProductCurrency))
+		amount := unitPrice * int64(quantity)
+		productID := ""
+		if len(lead.InterestedProductIds) > 0 {
+			productID = lead.InterestedProductIds[0]
+		}
+		exhibitorName := "Exhibitor"
+		if exhibitor, err := s.store.UserByID(r.Context(), lead.ExhibitorID); err == nil {
+			exhibitorName = nonEmpty(notificationDisplayName(exhibitor), exhibitorName)
+		}
+		items = append(items, map[string]any{
+			"id": "po_" + lead.ID, "expoId": lead.ExpoID, "expoName": lead.ExpoName, "exhibitorId": lead.ExhibitorID, "exhibitorName": exhibitorName,
+			"productId": productID, "productName": productName, "visitorName": lead.VisitorName, "visitorEmail": lead.VisitorEmail,
+			"visitorPhone": lead.VisitorPhone, "quantity": quantity, "unitPrice": unitPrice, "price": amount, "amount": amount, "currency": currency,
+			"status": preOrderStatusFromNotes(lead.FollowUpNotes), "createdAt": lead.CapturedAt, "orderedAt": lead.CapturedAt,
+		})
+	}
+	writeJSON(w, http.StatusOK, items)
 }
 
 func (s *Server) visitorSettings(w http.ResponseWriter, r *http.Request) {

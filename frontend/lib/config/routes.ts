@@ -70,6 +70,7 @@ export const visitorNavItems: AdminNavItem[] = [
   { label: "Expos", href: "/visitor/expos", section: "Discover", icon: "explore" },
   { label: "Favorites", href: "/visitor/favorites", section: "Discover", icon: "favorite" },
   { label: "Calendar", href: "/visitor/calendar", section: "Activity", icon: "calendar" },
+  { label: "Pre-orders", href: "/visitor/orders", section: "Activity", icon: "orders" },
   { label: "Settings", href: "/visitor/settings", section: "Configuration", icon: "settings" }
 ]
 

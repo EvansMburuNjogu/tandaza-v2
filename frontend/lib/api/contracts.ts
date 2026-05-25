@@ -1637,12 +1637,19 @@ export interface VisitorFeedback {
 
 export interface VisitorPreOrder {
   id: string
+  expoId?: string
+  expoName?: string
   exhibitorId: string
   exhibitorName: string
+  productId?: string
   productName: string
   quantity: number
-  price: number
-  status: "pending" | "confirmed" | "completed"
+  unitPrice?: number
+  price?: number
+  amount?: number
+  currency?: string
+  status: "pending" | "confirmed" | "processing" | "ready_for_delivery" | "delivered" | "cancelled" | "completed"
+  createdAt?: string
   orderedAt: string
 }
 
