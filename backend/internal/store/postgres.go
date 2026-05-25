@@ -538,7 +538,7 @@ func (s *PostgresStore) UpdateAdminManagedUser(ctx context.Context, id string, i
 		if err != nil {
 			return domain.User{}, err
 		}
-		if _, err := s.pool.Exec(ctx, `UPDATE users SET password_hash=$1, must_change_password=$2, updated_at=NOW() WHERE id=$3`, passwordHash, isAdminRole(roleValue), id); err != nil {
+		if _, err := s.pool.Exec(ctx, `UPDATE users SET password_hash=$1, must_change_password=TRUE, updated_at=NOW() WHERE id=$2`, passwordHash, id); err != nil {
 			return domain.User{}, err
 		}
 	}

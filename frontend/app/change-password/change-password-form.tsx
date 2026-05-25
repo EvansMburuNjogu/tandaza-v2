@@ -44,7 +44,7 @@ export function ChangePasswordForm() {
       if (response.user) {
         setSession({ token: httpOnlySessionToken, user: response.user })
       }
-      toast.success("Password changed", { description: "Your admin account is now ready." })
+      toast.success("Password changed", { description: "Your account is ready." })
       const fallback = response.user
         ? getRedirectForRole(response.user.role)
         : user
@@ -64,7 +64,7 @@ export function ChangePasswordForm() {
   return (
     <AuthShell
       compact
-      panelTitle="Secure your admin account before going live."
+      panelTitle="Secure your account before continuing."
       panelKicker="Africa's expo digital platform"
       cardClassName="p-0 overflow-hidden"
     >
@@ -100,7 +100,7 @@ export function ChangePasswordForm() {
         <div className="mt-5 flex items-start gap-3 rounded-xl border border-warning/20 bg-warning/5 px-4 py-3">
           <ShieldAlertIcon />
           <p className="text-[12px] leading-5 text-slate-600">
-            Your account was created with a temporary password. Set a private one to secure the administrator console.
+            Your account was created with a temporary password. Set a private one before continuing to your workspace.
           </p>
         </div>
 

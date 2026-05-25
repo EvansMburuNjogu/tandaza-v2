@@ -23,7 +23,7 @@ export function SessionGuard({ children, allowedRoles }: { children: ReactNode; 
       return
     }
 
-    if (user.mustChangePassword && (user.role === "administrator" || user.role === "super_administrator") && pathname !== "/change-password") {
+    if (user.mustChangePassword && pathname !== "/change-password") {
       router.replace(`/change-password?next=${encodeURIComponent(getRedirectForRole(user.role))}`)
       return
     }
@@ -33,13 +33,16 @@ export function SessionGuard({ children, allowedRoles }: { children: ReactNode; 
     }
   }, [allowedRoles, hydrated, loginHref, pathname, router, user])
 
-  if (!hydrated || !user || (allowedRoles && !allowedRoles.includes(user.role))) {
+  if (!hydrated || !user || (user.mustChangePassword && pathname !== "/change-password") || (allowedRoles && !allowedRoles.includes(user.role))) {
     const stateLabel = !hydrated
       ? "Checking your secure session..."
       : !user
         ? "Redirecting to login..."
+        : user.mustChangePassword && pathname !== "/change-password"
+        ? "Opening password setup..."
         : "Opening the right account..."
-    const actionLabel = user ? "Open account" : "Go to login"
+    const actionLabel = user?.mustChangePassword && pathname !== "/change-password" ? "Set password" : user ? "Open account" : "Go to login"
+    const actionHref = user?.mustChangePassword && pathname !== "/change-password" ? `/change-password?next=${encodeURIComponent(getRedirectForRole(user.role))}` : fallbackHref
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
@@ -47,7 +50,7 @@ export function SessionGuard({ children, allowedRoles }: { children: ReactNode; 
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">{stateLabel}</p>
           {hydrated ? (
-            <Link className="text-sm font-semibold text-primary underline-offset-4 hover:underline" href={fallbackHref}>
+            <Link className="text-sm font-semibold text-primary underline-offset-4 hover:underline" href={actionHref}>
               {actionLabel}
             </Link>
           ) : null}

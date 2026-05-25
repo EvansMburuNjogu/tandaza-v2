@@ -29,13 +29,13 @@ export function LoginForm() {
     return nextPath?.startsWith(roleHome) ? nextPath : fallback
   }
 
-  function mustChangeAdminPassword(role: Role, mustChangePassword?: boolean) {
-    return Boolean(mustChangePassword && (role === "administrator" || role === "super_administrator"))
+  function mustChangeTemporaryPassword(mustChangePassword?: boolean) {
+    return Boolean(mustChangePassword)
   }
 
   useEffect(() => {
     if (!hydrated || !user) return
-    if (mustChangeAdminPassword(user.role, user.mustChangePassword)) {
+    if (mustChangeTemporaryPassword(user.mustChangePassword)) {
       router.replace(`/change-password?next=${encodeURIComponent(getRedirectForRole(user.role))}`)
       return
     }
@@ -62,7 +62,7 @@ export function LoginForm() {
       const response = await login({ email: trimmedEmail, password })
       setSession({ token: httpOnlySessionToken, user: response.user })
       toast.success("Signed in", { description: "Welcome back to Tandaza." })
-      if (mustChangeAdminPassword(response.user.role, response.user.mustChangePassword)) {
+      if (mustChangeTemporaryPassword(response.user.mustChangePassword)) {
         router.replace(`/change-password?next=${encodeURIComponent(getRedirectForRole(response.user.role))}`)
         return
       }

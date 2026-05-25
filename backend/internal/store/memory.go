@@ -594,7 +594,7 @@ func (s *MemoryStore) UpdateAdminManagedUser(ctx context.Context, id string, inp
 				return domain.User{}, err
 			}
 			s.users[i].Password = hash
-			s.users[i].User.MustChangePassword = isAdminRole(s.users[i].User.Role)
+			s.users[i].User.MustChangePassword = true
 		}
 		return s.users[i].User, nil
 	}
