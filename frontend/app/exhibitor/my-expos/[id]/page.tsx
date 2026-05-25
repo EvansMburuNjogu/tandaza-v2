@@ -178,6 +178,10 @@ export default function MyExpoPage() {
     if (tab && ["overview", "leads", "visitors", "products", "orders", "meetings", "conversations", "livestream", "feedback", "documents", "ads", "analytics", "qrcode"].includes(tab)) {
       setActiveTab(tab)
     }
+    const thread = searchParams.get("thread")
+    if (thread) {
+      setSelectedConversationId(thread)
+    }
   }, [searchParams])
 
   useEffect(() => {

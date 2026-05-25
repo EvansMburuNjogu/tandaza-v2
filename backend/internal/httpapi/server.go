@@ -2029,7 +2029,7 @@ func (s *Server) queueConversationMessageNotifications(ctx context.Context, thre
 			if strings.TrimSpace(target.userID) == strings.TrimSpace(message.SenderID) {
 				continue
 			}
-			payload := map[string]any{"email": target.email, "to": target.email, "recipient": target.name, "subject": subject, "title": title, "message": body, "ctaLabel": "Open conversation", "ctaUrl": ctaURL, "expoName": expo.Name, "exhibitorName": exhibitorName, "visitorName": visitorName, "threadId": thread.ID}
+			payload := map[string]any{"email": target.email, "to": target.email, "recipient": target.name, "subject": subject, "title": title, "message": body, "ctaLabel": "Open conversation", "ctaUrl": ctaURL, "expoName": expo.Name, "exhibitorName": exhibitorName, "visitorName": visitorName, "threadId": thread.ID, "exhibitorId": thread.ExhibitorID}
 			if strings.TrimSpace(target.email) != "" {
 				s.queueAndSendAuthEmail(ctx, domain.NotificationInput{UserID: target.userID, Role: target.role, ExpoID: thread.ExpoID, Channel: "email", TemplateKey: "conversation_message", Payload: payload})
 			}
@@ -2042,8 +2042,8 @@ func (s *Server) queueConversationMessageNotifications(ctx context.Context, thre
 		subject := "New message from " + exhibitorName
 		title := "New exhibitor message"
 		body := fmt.Sprintf("%s sent you a new message during %s: %s", exhibitorName, nonEmpty(expo.Name, "the expo"), preview)
-		ctaURL := frontendLink(s.cfg.FrontendURL, "/visitor/expos/"+thread.ExpoID+"?tab=conversations&exhibitor="+thread.ExhibitorID)
-		payload := map[string]any{"email": visitorEmail, "to": visitorEmail, "recipient": visitorName, "subject": subject, "title": title, "message": body, "ctaLabel": "Open conversation", "ctaUrl": ctaURL, "expoName": expo.Name, "exhibitorName": exhibitorName, "visitorName": visitorName, "threadId": thread.ID}
+		ctaURL := frontendLink(s.cfg.FrontendURL, "/visitor/expos/"+thread.ExpoID+"/exhibitors/"+thread.ExhibitorID+"/chat")
+		payload := map[string]any{"email": visitorEmail, "to": visitorEmail, "recipient": visitorName, "subject": subject, "title": title, "message": body, "ctaLabel": "Open conversation", "ctaUrl": ctaURL, "expoName": expo.Name, "exhibitorName": exhibitorName, "visitorName": visitorName, "threadId": thread.ID, "exhibitorId": thread.ExhibitorID}
 		if strings.TrimSpace(visitorEmail) != "" {
 			s.queueAndSendAuthEmail(ctx, domain.NotificationInput{UserID: thread.VisitorID, Role: domain.RoleVisitor, ExpoID: thread.ExpoID, Channel: "email", TemplateKey: "conversation_message", Payload: payload})
 		}
@@ -6923,8 +6923,12 @@ func notificationActionURL(item domain.Notification) string {
 	case "conversation_message":
 		threadID := notificationPayloadText(item.Payload, "threadId")
 		if item.Role == domain.RoleVisitor {
+			exhibitorID := notificationPayloadText(item.Payload, "exhibitorId")
+			if strings.TrimSpace(item.ExpoID) != "" && strings.TrimSpace(exhibitorID) != "" {
+				return "/visitor/expos/" + item.ExpoID + "/exhibitors/" + exhibitorID + "/chat"
+			}
 			if strings.TrimSpace(item.ExpoID) != "" {
-				return "/visitor/expos/" + item.ExpoID + "?tab=conversations"
+				return "/visitor/expos/" + item.ExpoID
 			}
 		}
 		if strings.TrimSpace(item.ExpoID) != "" {
