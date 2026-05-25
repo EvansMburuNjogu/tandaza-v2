@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_HOST="${TANDAZA_PROD_HOST:-89.117.48.31}"
 SERVER_USER="${TANDAZA_PROD_USER:-root}"
 SERVER="${SERVER_USER}@${SERVER_HOST}"
-DEPLOY_KEY="${TANDAZA_PROD_SSH_KEY:-.dev/tandaza_production_deploy_key}"
+DEPLOY_KEY="${TANDAZA_PROD_SSH_KEY:-${ROOT_DIR}/.dev/tandaza_production_deploy_key}"
 CERT_NAME="${TANDAZA_PROD_CERT_NAME:-tandaza.africa}"
 CERT_EMAIL="${TANDAZA_PROD_CERT_EMAIL:-info@tandaza.africa}"
 
@@ -34,7 +35,7 @@ Options:
 Environment overrides:
   TANDAZA_PROD_HOST       Default: 89.117.48.31
   TANDAZA_PROD_USER       Default: root
-  TANDAZA_PROD_SSH_KEY    Default: .dev/tandaza_production_deploy_key
+  TANDAZA_PROD_SSH_KEY    Default: <repo>/.dev/tandaza_production_deploy_key
   TANDAZA_PROD_CERT_NAME  Default: tandaza.africa
   TANDAZA_PROD_CERT_EMAIL Default: info@tandaza.africa
 EOF
