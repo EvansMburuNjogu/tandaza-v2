@@ -2809,7 +2809,12 @@ func (s *Server) organizerVisitors(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "visitors_failed", "Could not load organizer visitors.")
 		return
 	}
-	writeJSON(w, http.StatusOK, paginatedItems(r, organizerVisitorRecordsFromLeads(leads)))
+	activities, err := s.store.ListVisitorActivities(r.Context(), store.VisitorActivityFilter{OrganizerID: organizerID})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "visitors_failed", "Could not load organizer visitors.")
+		return
+	}
+	writeJSON(w, http.StatusOK, paginatedItems(r, organizerVisitorRecordsFromEngagement(leads, activities)))
 }
 
 func (s *Server) organizerFeedback(w http.ResponseWriter, r *http.Request) {
@@ -4295,7 +4300,12 @@ func (s *Server) exhibitorExpoVisitors(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "visitors_failed", "Could not load expo visitors.")
 		return
 	}
-	writeJSON(w, http.StatusOK, exhibitorVisitorsFromLeads(leads))
+	activities, err := s.store.ListVisitorActivities(r.Context(), store.VisitorActivityFilter{ExpoID: r.PathValue("id"), ExhibitorID: exhibitorID})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "visitors_failed", "Could not load expo visitors.")
+		return
+	}
+	writeJSON(w, http.StatusOK, exhibitorVisitorsFromEngagement(leads, activities))
 }
 
 func (s *Server) exhibitorExpoFeedback(w http.ResponseWriter, r *http.Request) {
@@ -7084,6 +7094,10 @@ func visitorRecord(user domain.User) map[string]any {
 }
 
 func organizerVisitorRecordsFromLeads(leads []domain.LeadRecord) []map[string]any {
+	return organizerVisitorRecordsFromEngagement(leads, nil)
+}
+
+func organizerVisitorRecordsFromEngagement(leads []domain.LeadRecord, activities []domain.VisitorActivityRecord) []map[string]any {
 	type expoVisit struct {
 		id           string
 		name         string
@@ -7126,6 +7140,44 @@ func organizerVisitorRecordsFromLeads(leads []domain.LeadRecord) []map[string]an
 		}
 		if lead.CapturedAt > item.lastActivity {
 			item.lastActivity = lead.CapturedAt
+		}
+	}
+	for _, activity := range activities {
+		key := strings.ToLower(strings.TrimSpace(activity.VisitorEmail))
+		if key == "" {
+			key = strings.TrimSpace(activity.VisitorID)
+		}
+		if key == "" {
+			key = strings.ToLower(strings.TrimSpace(activity.VisitorName))
+		}
+		if key == "" {
+			key = activity.ID
+		}
+		item, ok := grouped[key]
+		if !ok {
+			item = &aggregate{id: "visitor_" + slugifyForID(key), name: nonEmpty(activity.VisitorName, "Visitor"), email: activity.VisitorEmail, expos: map[string]*expoVisit{}}
+			grouped[key] = item
+		}
+		if strings.TrimSpace(item.name) == "" || item.name == "Visitor" {
+			item.name = nonEmpty(activity.VisitorName, "Visitor")
+		}
+		if strings.TrimSpace(item.email) == "" && strings.TrimSpace(activity.VisitorEmail) != "" {
+			item.email = activity.VisitorEmail
+		}
+		item.interactions++
+		if activity.ExpoID != "" {
+			visit, ok := item.expos[activity.ExpoID]
+			if !ok {
+				visit = &expoVisit{id: activity.ExpoID, name: activity.ExpoName}
+				item.expos[activity.ExpoID] = visit
+			}
+			visit.interactions++
+			if activity.OccurredAt > visit.lastActivity {
+				visit.lastActivity = activity.OccurredAt
+			}
+		}
+		if activity.OccurredAt > item.lastActivity {
+			item.lastActivity = activity.OccurredAt
 		}
 	}
 	records := []map[string]any{}
@@ -7171,6 +7223,10 @@ func organizerFeedbackRecordMap(item domain.OrganizerFeedbackRecord) map[string]
 }
 
 func exhibitorVisitorsFromLeads(leads []domain.LeadRecord) []map[string]any {
+	return exhibitorVisitorsFromEngagement(leads, nil)
+}
+
+func exhibitorVisitorsFromEngagement(leads []domain.LeadRecord, activities []domain.VisitorActivityRecord) []map[string]any {
 	type visitorAggregate struct {
 		id              string
 		name            string
@@ -7225,6 +7281,50 @@ func exhibitorVisitorsFromLeads(leads []domain.LeadRecord) []map[string]any {
 			visitor.sourceLabel = sourceLabel
 		}
 	}
+	for _, activity := range activities {
+		key := strings.ToLower(strings.TrimSpace(activity.VisitorEmail))
+		if key == "" {
+			key = strings.TrimSpace(activity.VisitorID)
+		}
+		if key == "" {
+			key = strings.ToLower(strings.TrimSpace(activity.VisitorName))
+		}
+		if key == "" {
+			key = activity.ID
+		}
+		source := visitorSourceCodeForActivity(activity)
+		sourceLabel := visitorSourceLabel(source)
+		visitor, ok := visitors[key]
+		if !ok {
+			visitor = &visitorAggregate{
+				id:           "visitor_" + slugifyForID(key),
+				name:         nonEmpty(activity.VisitorName, "Visitor"),
+				email:        activity.VisitorEmail,
+				phone:        activity.VisitorPhone,
+				source:       source,
+				sourceLabel:  sourceLabel,
+				registeredAt: activity.OccurredAt,
+				lastSeenAt:   activity.OccurredAt,
+			}
+			visitors[key] = visitor
+			order = append(order, key)
+		}
+		visitor.engagementCount++
+		if strings.TrimSpace(visitor.phone) == "" && strings.TrimSpace(activity.VisitorPhone) != "" {
+			visitor.phone = activity.VisitorPhone
+		}
+		if strings.TrimSpace(visitor.email) == "" && strings.TrimSpace(activity.VisitorEmail) != "" {
+			visitor.email = activity.VisitorEmail
+		}
+		if strings.TrimSpace(visitor.name) == "" || visitor.name == "Visitor" {
+			visitor.name = nonEmpty(activity.VisitorName, "Visitor")
+		}
+		if isAfterTime(activity.OccurredAt, visitor.lastSeenAt) {
+			visitor.lastSeenAt = activity.OccurredAt
+			visitor.source = source
+			visitor.sourceLabel = sourceLabel
+		}
+	}
 	sort.SliceStable(order, func(i, j int) bool {
 		return isAfterTime(visitors[order[i]].lastSeenAt, visitors[order[j]].lastSeenAt)
 	})
@@ -7245,6 +7345,24 @@ func exhibitorVisitorsFromLeads(leads []domain.LeadRecord) []map[string]any {
 		})
 	}
 	return records
+}
+
+func visitorSourceCodeForActivity(activity domain.VisitorActivityRecord) string {
+	switch strings.TrimSpace(activity.Type) {
+	case "profile_view":
+		if strings.TrimSpace(activity.ExpoExhibitorID) != "" || strings.TrimSpace(activity.ExhibitorID) != "" {
+			return "profile_view"
+		}
+		return "expo_view"
+	case "product_view":
+		return "product_view"
+	case "document_download":
+		return "document_download"
+	case "visited", "expo_view":
+		return "expo_view"
+	default:
+		return strings.TrimSpace(activity.Type)
+	}
 }
 
 func visitorSourceCode(lead domain.LeadRecord) string {
@@ -7280,6 +7398,12 @@ func visitorSourceLabel(source string) string {
 		return "Meeting request"
 	case "pre_order":
 		return "Pre-order intent"
+	case "profile_view":
+		return "Exhibitor profile visit"
+	case "product_view":
+		return "Product view"
+	case "document_download":
+		return "Document download"
 	case "remote_visit":
 		return "Remote visit"
 	default:

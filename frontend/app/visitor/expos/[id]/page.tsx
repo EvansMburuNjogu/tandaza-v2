@@ -180,8 +180,8 @@ export default function VisitorExpoDetailPage() {
   }, [timeline])
 
   useEffect(() => {
-    if (!sessionReady || !expoId || !token || !user || !booths.length) return
-    const booth = booths.find((item) => item.id === exhibitorFromQr || item.exhibitorId === exhibitorFromQr) || booths[0]
+    if (!sessionReady || !expoId || !token || !user || !booths.length || !exhibitorFromQr) return
+    const booth = booths.find((item) => item.id === exhibitorFromQr || item.exhibitorId === exhibitorFromQr)
     if (!booth) return
     const visitKey = `tandaza_visitor_exhibit_visit_${expoId}_${booth.id}_${user.id || user.email || "visitor"}`
     if (window.sessionStorage.getItem(visitKey)) return
@@ -189,7 +189,7 @@ export default function VisitorExpoDetailPage() {
     api.recordVisitorActivity(token, expoId, {
       boothId: booth.id,
       type: "profile_view",
-      description: exhibitorFromQr ? "Opened exhibitor profile from QR code." : "Opened expo profile remotely."
+      description: "Opened exhibitor profile from QR code."
     }).then(() => {
       queryClient.invalidateQueries({ queryKey: ["visitor-dashboard"] })
       queryClient.invalidateQueries({ queryKey: ["visitor-timeline"] })

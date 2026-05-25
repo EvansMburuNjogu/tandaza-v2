@@ -2181,10 +2181,80 @@ func (s *PostgresStore) CancelLeadFollowUpNotifications(ctx context.Context, lea
 }
 
 func (s *PostgresStore) RecordVisitorActivity(ctx context.Context, actor domain.User, expoID string, expoExhibitorID string, activityType string, description string) error {
-	_, err := s.pool.Exec(ctx, `INSERT INTO visitor_timeline_events (id, visitor_id, expo_id, expo_exhibitor_id, source, event_type, metadata)
+	tag, err := s.pool.Exec(ctx, `UPDATE visitor_timeline_events
+		SET metadata=$5, occurred_at=NOW()
+		WHERE visitor_id=NULLIF($1,'') AND expo_id=$2 AND COALESCE(expo_exhibitor_id,'')=COALESCE(NULLIF($3,''),'') AND event_type=$4 AND occurred_at::date=CURRENT_DATE`,
+		actor.ID, expoID, expoExhibitorID, activityType, map[string]string{"description": description})
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() > 0 {
+		return nil
+	}
+	_, err = s.pool.Exec(ctx, `INSERT INTO visitor_timeline_events (id, visitor_id, expo_id, expo_exhibitor_id, source, event_type, metadata)
 		VALUES ($1,NULLIF($2,''),$3,NULLIF($4,''),'remote',$5,$6)`,
 		fmt.Sprintf("vte_%d", time.Now().UnixNano()), actor.ID, expoID, expoExhibitorID, activityType, map[string]string{"description": description})
 	return err
+}
+
+func (s *PostgresStore) ListVisitorActivities(ctx context.Context, filter VisitorActivityFilter) ([]domain.VisitorActivityRecord, error) {
+	sql := `SELECT vte.id, COALESCE(vte.visitor_id,''), COALESCE(u.name,''), COALESCE(u.email,''), COALESCE(vp.phone,''),
+			COALESCE(u.name_cipher,''), COALESCE(u.email_cipher,''), COALESCE(vp.phone_cipher,''),
+			vte.expo_id, e.name, COALESCE(vte.expo_exhibitor_id,''), COALESCE(ee.exhibitor_id,''),
+			vte.event_type, COALESCE(vte.metadata->>'description', vte.event_type), vte.occurred_at
+		FROM visitor_timeline_events vte
+		JOIN expos e ON e.id=vte.expo_id
+		LEFT JOIN expo_exhibitors ee ON ee.id=vte.expo_exhibitor_id
+		LEFT JOIN users u ON u.id=vte.visitor_id
+		LEFT JOIN visitor_profiles vp ON vp.visitor_id=vte.visitor_id`
+	args := []any{}
+	conditions := []string{}
+	if filter.ExpoID != "" {
+		args = append(args, strings.TrimSpace(filter.ExpoID))
+		conditions = append(conditions, fmt.Sprintf("vte.expo_id=$%d", len(args)))
+	}
+	if filter.ExhibitorID != "" {
+		args = append(args, strings.TrimSpace(filter.ExhibitorID))
+		conditions = append(conditions, fmt.Sprintf("ee.exhibitor_id=$%d", len(args)))
+	}
+	if filter.OrganizerID != "" {
+		args = append(args, strings.TrimSpace(filter.OrganizerID))
+		conditions = append(conditions, fmt.Sprintf("e.organizer_id=$%d", len(args)))
+	}
+	if filter.VisitorID != "" {
+		args = append(args, strings.TrimSpace(filter.VisitorID))
+		conditions = append(conditions, fmt.Sprintf("vte.visitor_id=$%d", len(args)))
+	}
+	if len(conditions) > 0 {
+		sql += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	sql += " ORDER BY vte.occurred_at DESC LIMIT 1000"
+	rows, err := s.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []domain.VisitorActivityRecord{}
+	for rows.Next() {
+		var item domain.VisitorActivityRecord
+		var occurred time.Time
+		var nameCipher, emailCipher, phoneCipher string
+		if err := rows.Scan(&item.ID, &item.VisitorID, &item.VisitorName, &item.VisitorEmail, &item.VisitorPhone, &nameCipher, &emailCipher, &phoneCipher, &item.ExpoID, &item.ExpoName, &item.ExpoExhibitorID, &item.ExhibitorID, &item.Type, &item.Description, &occurred); err != nil {
+			return nil, err
+		}
+		if name := s.pii.Decrypt(nameCipher); strings.TrimSpace(name) != "" {
+			item.VisitorName = name
+		}
+		if email := s.pii.Decrypt(emailCipher); strings.TrimSpace(email) != "" {
+			item.VisitorEmail = email
+		}
+		if phone := s.pii.Decrypt(phoneCipher); strings.TrimSpace(phone) != "" {
+			item.VisitorPhone = phone
+		}
+		item.OccurredAt = occurred.Format(time.RFC3339)
+		items = append(items, item)
+	}
+	return items, rows.Err()
 }
 
 func (s *PostgresStore) VisitorTimeline(ctx context.Context, visitorID string) ([]domain.VisitorTimelineDay, error) {

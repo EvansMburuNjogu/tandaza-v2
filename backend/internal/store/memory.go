@@ -1888,11 +1888,80 @@ func (s *MemoryStore) CancelLeadFollowUpNotifications(ctx context.Context, leadI
 func (s *MemoryStore) RecordVisitorActivity(ctx context.Context, actor domain.User, expoID string, expoExhibitorID string, activityType string, description string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	now := time.Now().UTC()
+	today := now.Format("2006-01-02")
+	for i, activity := range s.activities {
+		if activity.VisitorID == actor.ID && activity.ExpoID == expoID && activity.ExhibitorID == expoExhibitorID && activity.Type == activityType && strings.HasPrefix(activity.Timestamp, today) {
+			s.activities[i].Description = description
+			s.activities[i].Title = description
+			s.activities[i].Timestamp = now.Format(time.RFC3339)
+			return nil
+		}
+	}
+	expoName := expoID
+	for _, expo := range s.expos {
+		if expo.ID == expoID {
+			expoName = expo.Name
+			break
+		}
+	}
 	s.activities = append([]domain.VisitorActivityItem{{
-		ID: fmt.Sprintf("act_visitor_%06d", len(s.activities)+1), Type: activityType, Title: description,
-		Description: description, Timestamp: time.Now().UTC().Format(time.RFC3339), ExpoID: expoID, ExhibitorID: expoExhibitorID,
+		ID: fmt.Sprintf("act_visitor_%06d", len(s.activities)+1), VisitorID: actor.ID, VisitorName: actor.Name, VisitorEmail: actor.Email, Type: activityType, Title: description,
+		Description: description, Timestamp: now.Format(time.RFC3339), ExpoID: expoID, ExpoName: expoName, ExhibitorID: expoExhibitorID,
 	}}, s.activities...)
 	return nil
+}
+
+func (s *MemoryStore) ListVisitorActivities(ctx context.Context, filter VisitorActivityFilter) ([]domain.VisitorActivityRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	items := []domain.VisitorActivityRecord{}
+	for _, activity := range s.activities {
+		if filter.ExpoID != "" && activity.ExpoID != filter.ExpoID {
+			continue
+		}
+		expo := domain.Expo{}
+		for _, candidate := range s.expos {
+			if candidate.ID == activity.ExpoID {
+				expo = candidate
+				break
+			}
+		}
+		if filter.OrganizerID != "" && expo.OrganizerID != filter.OrganizerID {
+			continue
+		}
+		expoExhibitorID := activity.ExhibitorID
+		exhibitorID := ""
+		for _, assignment := range s.exhibitors {
+			if assignment.ID == activity.ExhibitorID || assignment.ExhibitorID == activity.ExhibitorID {
+				expoExhibitorID = assignment.ID
+				exhibitorID = assignment.ExhibitorID
+				break
+			}
+		}
+		if filter.ExhibitorID != "" && exhibitorID != filter.ExhibitorID && activity.ExhibitorID != filter.ExhibitorID {
+			continue
+		}
+		if filter.VisitorID != "" && activity.VisitorID != filter.VisitorID {
+			continue
+		}
+		name := activity.VisitorName
+		email := activity.VisitorEmail
+		phone := ""
+		for _, user := range s.users {
+			if user.User.ID == activity.VisitorID {
+				name = firstNonEmptyString(name, user.User.Name, user.User.CompanyName)
+				email = firstNonEmptyString(email, user.User.Email)
+				break
+			}
+		}
+		items = append(items, domain.VisitorActivityRecord{
+			ID: activity.ID, VisitorID: activity.VisitorID, VisitorName: name, VisitorEmail: email, VisitorPhone: phone,
+			ExpoID: activity.ExpoID, ExpoName: firstNonEmptyString(activity.ExpoName, expo.Name), ExpoExhibitorID: expoExhibitorID, ExhibitorID: exhibitorID,
+			Type: activity.Type, Description: activity.Description, OccurredAt: activity.Timestamp,
+		})
+	}
+	return items, nil
 }
 
 func (s *MemoryStore) VisitorTimeline(ctx context.Context, visitorID string) ([]domain.VisitorTimelineDay, error) {

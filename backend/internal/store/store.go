@@ -75,6 +75,7 @@ type Store interface {
 	CancelMeetingNotifications(ctx context.Context, meetingID string) (int, error)
 	CancelLeadFollowUpNotifications(ctx context.Context, leadID string) (int, error)
 	RecordVisitorActivity(ctx context.Context, actor domain.User, expoID string, expoExhibitorID string, activityType string, description string) error
+	ListVisitorActivities(ctx context.Context, filter VisitorActivityFilter) ([]domain.VisitorActivityRecord, error)
 	VisitorTimeline(ctx context.Context, visitorID string) ([]domain.VisitorTimelineDay, error)
 	VisitorFavorites(ctx context.Context, visitorID string) ([]domain.VisitorFavoriteRecord, error)
 	AddVisitorFavorite(ctx context.Context, visitorID string, input domain.VisitorFavoriteInput) (domain.VisitorFavoriteRecord, error)
@@ -190,6 +191,13 @@ type LeadFilter struct {
 	ExhibitorID string
 	OrganizerID string
 	CountryCode string
+}
+
+type VisitorActivityFilter struct {
+	ExpoID      string
+	ExhibitorID string
+	OrganizerID string
+	VisitorID   string
 }
 
 type ChatThreadFilter struct {

@@ -1565,6 +1565,26 @@ func loginForTest(t *testing.T, handler http.Handler, email string, password str
 	return login.Token
 }
 
+func TestVisitorAggregatesIncludeProfileVisitsWithoutDuplicates(t *testing.T) {
+	leads := []domain.LeadRecord{{
+		ID: "lead_1", ExpoID: "expo_1", ExpoName: "Nairobi Build Expo", ExhibitorID: "exhibitor_1",
+		VisitorName: "Amina Visitor", VisitorEmail: "amina@example.com", Source: "inquiry", CapturedAt: "2026-05-25T10:00:00Z",
+	}}
+	activities := []domain.VisitorActivityRecord{
+		{ID: "act_1", VisitorID: "visitor_1", VisitorName: "Amina Visitor", VisitorEmail: "amina@example.com", ExpoID: "expo_1", ExpoName: "Nairobi Build Expo", ExpoExhibitorID: "assignment_1", ExhibitorID: "exhibitor_1", Type: "profile_view", OccurredAt: "2026-05-25T10:05:00Z"},
+		{ID: "act_2", VisitorID: "visitor_2", VisitorName: "Brian Visitor", VisitorEmail: "brian@example.com", ExpoID: "expo_1", ExpoName: "Nairobi Build Expo", ExpoExhibitorID: "assignment_1", ExhibitorID: "exhibitor_1", Type: "profile_view", OccurredAt: "2026-05-25T10:10:00Z"},
+	}
+
+	exhibitorVisitors := exhibitorVisitorsFromEngagement(leads, activities)
+	if len(exhibitorVisitors) != 2 {
+		t.Fatalf("exhibitor visitors = %d, expected deduped 2: %+v", len(exhibitorVisitors), exhibitorVisitors)
+	}
+	organizerVisitors := organizerVisitorRecordsFromEngagement(leads, activities)
+	if len(organizerVisitors) != 2 {
+		t.Fatalf("organizer visitors = %d, expected deduped 2: %+v", len(organizerVisitors), organizerVisitors)
+	}
+}
+
 func testPaystackSignature(body []byte, secret string) string {
 	mac := hmac.New(sha512.New, []byte(secret))
 	_, _ = mac.Write(body)

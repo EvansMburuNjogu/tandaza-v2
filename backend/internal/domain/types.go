@@ -928,13 +928,32 @@ type VisitorBookingRecord struct {
 }
 
 type VisitorActivityItem struct {
-	ID          string `json:"id"`
-	Type        string `json:"type"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Timestamp   string `json:"timestamp"`
-	ExpoID      string `json:"expoId,omitempty"`
-	ExhibitorID string `json:"exhibitorId,omitempty"`
+	ID           string `json:"id"`
+	VisitorID    string `json:"visitorId,omitempty"`
+	VisitorName  string `json:"visitorName,omitempty"`
+	VisitorEmail string `json:"visitorEmail,omitempty"`
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Timestamp    string `json:"timestamp"`
+	ExpoID       string `json:"expoId,omitempty"`
+	ExpoName     string `json:"expoName,omitempty"`
+	ExhibitorID  string `json:"exhibitorId,omitempty"`
+}
+
+type VisitorActivityRecord struct {
+	ID              string `json:"id"`
+	VisitorID       string `json:"visitorId"`
+	VisitorName     string `json:"visitorName"`
+	VisitorEmail    string `json:"visitorEmail"`
+	VisitorPhone    string `json:"visitorPhone"`
+	ExpoID          string `json:"expoId"`
+	ExpoName        string `json:"expoName"`
+	ExpoExhibitorID string `json:"expoExhibitorId"`
+	ExhibitorID     string `json:"exhibitorId"`
+	Type            string `json:"type"`
+	Description     string `json:"description"`
+	OccurredAt      string `json:"occurredAt"`
 }
 
 type VisitorTimelineDay struct {
