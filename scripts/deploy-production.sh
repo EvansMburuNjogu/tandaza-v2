@@ -169,9 +169,33 @@ ssh "${SSH_OPTS[@]}" "$SERVER" "bash -lc '
   cd \"$APP_ROOT/app\"
   docker compose -f deploy/production/docker-compose.yml ps
   echo
-  curl -fsS --max-time 15 http://127.0.0.1:8095/health >/dev/null
-  curl -fsSI --max-time 15 http://127.0.0.1:3210/login >/dev/null
-  curl -fsSI --max-time 15 http://127.0.0.1:9010/minio/health/live >/dev/null
+
+  wait_for_url() {
+    local label=\"\$1\"
+    local method=\"\$2\"
+    local url=\"\$3\"
+    local attempt
+    for attempt in \$(seq 1 36); do
+      if [[ \"\$method\" == \"HEAD\" ]]; then
+        if curl -fsSI --max-time 10 \"\$url\" >/dev/null; then
+          echo \"\$label is reachable\"
+          return 0
+        fi
+      else
+        if curl -fsS --max-time 10 \"\$url\" >/dev/null; then
+          echo \"\$label is reachable\"
+          return 0
+        fi
+      fi
+      sleep 5
+    done
+    echo \"\$label did not become reachable: \$url\" >&2
+    return 1
+  }
+
+  wait_for_url Backend GET http://127.0.0.1:8095/health
+  wait_for_url Frontend HEAD http://127.0.0.1:3210/login
+  wait_for_url Media HEAD http://127.0.0.1:9010/minio/health/live
 '"
 
 if [[ "$RUN_PUBLIC_CHECKS" == "1" ]]; then
