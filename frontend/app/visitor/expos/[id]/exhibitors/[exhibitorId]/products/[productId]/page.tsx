@@ -56,6 +56,35 @@ function removeDuplicateSpecTitle(html: string | undefined, duplicateTitles: Arr
   })
 }
 
+function hasHtml(value: string) {
+  return /<\/?[a-z][\s\S]*>/i.test(value)
+}
+
+function sanitizeRichText(value: string | undefined) {
+  return (value || "")
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+    .replace(/\son\w+="[^"]*"/gi, "")
+    .replace(/\son\w+='[^']*'/gi, "")
+    .replace(/\son\w+=\S+/gi, "")
+    .replace(/\s(href|src)=["']javascript:[^"']*["']/gi, "")
+    .trim()
+}
+
+function RichProductCopy({ value, className = "" }: { value?: string; className?: string }) {
+  const cleaned = sanitizeRichText(value)
+  if (!cleaned) return null
+  if (hasHtml(cleaned)) {
+    return (
+      <div
+        className={`prose prose-sm max-w-none text-muted prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-strong:text-foreground ${className}`}
+        dangerouslySetInnerHTML={{ __html: cleaned }}
+      />
+    )
+  }
+  return <p className={`whitespace-pre-line text-sm leading-6 text-muted ${className}`}>{cleaned}</p>
+}
+
 export default function VisitorProductPage() {
   const params = useParams()
   const expoId = params.id as string
@@ -85,7 +114,7 @@ export default function VisitorProductPage() {
   const hasDiscount = Boolean(product?.discountedPrice && product.discountedPrice < product.price)
   const total = displayPrice * quantity
   const specifications = useMemo(
-    () => removeDuplicateSpecTitle(product?.specifications, [data?.name, product?.name, booth?.exhibitorName]),
+    () => sanitizeRichText(removeDuplicateSpecTitle(product?.specifications, [data?.name, product?.name, booth?.exhibitorName])),
     [booth?.exhibitorName, data?.name, product?.name, product?.specifications]
   )
 
@@ -185,7 +214,7 @@ export default function VisitorProductPage() {
             <Card className="p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{booth.exhibitorName}</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{product.name}</h1>
-              <p className="mt-3 text-sm leading-6 text-muted">{product.description}</p>
+              <RichProductCopy value={product.description} className="mt-3" />
               <div className="mt-5 rounded-2xl bg-elevated p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Price</p>
                 <p className="mt-2 font-mono text-2xl font-semibold text-primary">{formatCurrency(displayPrice, product.currency)}</p>
@@ -208,7 +237,7 @@ export default function VisitorProductPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Product details</p>
                   <h2 className="mt-2 font-semibold text-foreground">Specifications and files</h2>
                 </div>
-                {specifications ? <div className="prose prose-sm max-w-none text-muted" dangerouslySetInnerHTML={{ __html: specifications }} /> : null}
+                <RichProductCopy value={specifications} />
                 {product.presentationUrl ? (
                   <a
                     href={product.presentationUrl}
