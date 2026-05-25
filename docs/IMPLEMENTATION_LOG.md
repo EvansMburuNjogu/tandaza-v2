@@ -892,3 +892,10 @@
 - Reworked the visitor homepage with a stronger hero, larger metric cards, richer expo cards, and clearer desktop content hierarchy.
 - Upgraded visitor expo discovery with a more premium header, stronger search treatment, larger expo imagery, and more polished desktop card spacing.
 - Converted visitor favorites from full-width stretched rows into bounded responsive cards with stable image ratios.
+
+### Production SSL Script
+
+- Confirmed `deploy-production.sh` does not generate or renew SSL certificates.
+- Added `scripts/setup-production-ssl.sh` as a separate one-time Certbot/Nginx SSL setup command for the production Tandaza hostnames.
+- Made SSL issuance idempotent: if `/etc/letsencrypt/live/tandaza.africa/fullchain.pem` already exists, the script reports the existing certificate and skips Certbot issuance.
+- Documented the SSL flow in `docs/PRODUCTION_DEPLOYMENT.md`, including the explicit `--force-renew` path for rare manual renewal cases.

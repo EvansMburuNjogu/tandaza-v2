@@ -85,6 +85,29 @@ Use `deploy/production/nginx.conf.example` as the starting point. Replace:
 
 Then run Certbot only after DNS points to the server.
 
+## SSL
+
+SSL is intentionally handled by a separate one-time setup script, not by the deploy script. Normal deployments must not reissue certificates.
+
+```bash
+./scripts/setup-production-ssl.sh
+```
+
+The script:
+
+- uses Certbot with the Nginx plugin;
+- covers `tandaza.africa`, `www.tandaza.africa`, `api.tandaza.africa`, `media.tandaza.africa`, and `console.media.tandaza.africa`;
+- exits without running Certbot if `/etc/letsencrypt/live/tandaza.africa/fullchain.pem` already exists;
+- reloads Nginx only after a successful issuance or renewal.
+
+Only force a renewal when it is truly needed:
+
+```bash
+./scripts/setup-production-ssl.sh --force-renew
+```
+
+The deploy script does not run Certbot. It only performs public HTTPS smoke checks after deployment.
+
 ## Safety Notes
 
 - The production stack uses its own Docker network, containers, and volumes.
