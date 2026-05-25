@@ -328,7 +328,7 @@ func (s *MemoryStore) UserHasNotification(ctx context.Context, userID string, te
 		return false, nil
 	}
 	for _, item := range s.notifications {
-		if strings.TrimSpace(item.UserID) == userID && strings.TrimSpace(item.TemplateKey) == templateKey {
+		if strings.TrimSpace(item.UserID) == userID && strings.TrimSpace(item.TemplateKey) == templateKey && item.Status == "sent" {
 			return true, nil
 		}
 	}

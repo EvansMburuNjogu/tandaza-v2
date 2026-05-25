@@ -199,7 +199,7 @@ func (s *PostgresStore) UserHasNotification(ctx context.Context, userID string, 
 		return false, nil
 	}
 	var exists bool
-	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM notifications WHERE user_id=$1 AND template_key=$2)`, userID, templateKey).Scan(&exists)
+	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM notifications WHERE user_id=$1 AND template_key=$2 AND status='sent')`, userID, templateKey).Scan(&exists)
 	return exists, err
 }
 
