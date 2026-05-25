@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next"
+import Script from "next/script"
 import "./globals.css"
 import "intro.js/introjs.css"
 import { Providers } from "./providers"
+
+const googleAnalyticsId = "G-3VXHJX0W4B"
 
 export const metadata: Metadata = {
   title: {
@@ -32,6 +35,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`} strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${googleAnalyticsId}');
+          `}
+        </Script>
         <Providers>{children}</Providers>
       </body>
     </html>
