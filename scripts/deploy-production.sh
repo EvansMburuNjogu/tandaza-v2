@@ -16,6 +16,7 @@ MEDIA_URL="${TANDAZA_PROD_MEDIA_URL:-https://media.tandaza.africa}"
 RUN_TESTS=1
 RUN_FRONTEND_BUILD=1
 RUN_PUBLIC_CHECKS=1
+ALLOW_SELF_SIGNED_PUBLIC_CHECKS="${TANDAZA_ALLOW_SELF_SIGNED_PUBLIC_CHECKS:-0}"
 ALLOW_DIRTY=0
 
 usage() {
@@ -28,6 +29,8 @@ Options:
   --skip-tests          Skip backend compile/test check
   --skip-build          Skip local frontend build
   --no-public-checks    Skip public HTTPS smoke checks
+  --allow-self-signed-public-checks
+                        Allow public smoke checks to ignore certificate validation
   --allow-dirty         Allow deploy with uncommitted local changes
   -h, --help            Show this help
 
@@ -37,6 +40,8 @@ Environment overrides:
   TANDAZA_PROD_ROOT       Default: /opt/tandaza-production
   TANDAZA_PROD_BRANCH     Default: production
   TANDAZA_PROD_SSH_KEY    Default: .dev/tandaza_production_deploy_key
+  TANDAZA_ALLOW_SELF_SIGNED_PUBLIC_CHECKS
+                          Set to 1 to pass -k to public smoke-check curl calls
 EOF
 }
 
@@ -50,6 +55,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-public-checks)
       RUN_PUBLIC_CHECKS=0
+      ;;
+    --allow-self-signed-public-checks)
+      ALLOW_SELF_SIGNED_PUBLIC_CHECKS=1
       ;;
     --allow-dirty)
       ALLOW_DIRTY=1
@@ -74,6 +82,30 @@ log() {
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "Missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+public_smoke_check() {
+  local method="$1"
+  local label="$2"
+  local url="$3"
+  local curl_args=(-fsS --max-time 20)
+
+  if [[ "$method" == "HEAD" ]]; then
+    curl_args=(-fsSI --max-time 20)
+  fi
+
+  if [[ "$ALLOW_SELF_SIGNED_PUBLIC_CHECKS" == "1" ]]; then
+    curl_args=(-k "${curl_args[@]}")
+  fi
+
+  printf 'Checking %-8s %s\n' "$label" "$url"
+  if ! curl "${curl_args[@]}" "$url" >/dev/null; then
+    echo "Public smoke check failed for $label: $url" >&2
+    echo "If this is a real certificate error, fix DNS/Cloudflare/SSL before launch." >&2
+    echo "If you are intentionally testing through a self-signed/intercepted certificate, rerun with:" >&2
+    echo "  ./scripts/deploy-production.sh --allow-self-signed-public-checks" >&2
     exit 1
   fi
 }
@@ -144,9 +176,12 @@ ssh "${SSH_OPTS[@]}" "$SERVER" "bash -lc '
 
 if [[ "$RUN_PUBLIC_CHECKS" == "1" ]]; then
   log "Running public HTTPS smoke checks"
-  curl -fsSI --max-time 20 "$FRONTEND_URL/login" >/dev/null
-  curl -fsS --max-time 20 "$API_URL/health" >/dev/null
-  curl -fsSI --max-time 20 "$MEDIA_URL/minio/health/live" >/dev/null
+  if [[ "$ALLOW_SELF_SIGNED_PUBLIC_CHECKS" == "1" ]]; then
+    echo "Certificate verification is disabled for public smoke checks only."
+  fi
+  public_smoke_check HEAD "Frontend" "$FRONTEND_URL/login"
+  public_smoke_check GET "API" "$API_URL/health"
+  public_smoke_check HEAD "Media" "$MEDIA_URL/minio/health/live"
 else
   log "Skipping public HTTPS checks"
 fi
