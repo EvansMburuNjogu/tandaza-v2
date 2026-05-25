@@ -90,10 +90,10 @@ if [[ ! -f "$DEPLOY_KEY" ]]; then
   exit 1
 fi
 
-if [[ "$ALLOW_DIRTY" != "1" && -n "$(git status --porcelain)" ]]; then
-  echo "Working tree has uncommitted changes." >&2
+if [[ "$ALLOW_DIRTY" != "1" && -n "$(git status --porcelain --untracked-files=no)" ]]; then
+  echo "Working tree has uncommitted tracked changes." >&2
   echo "Commit them first, or rerun with --allow-dirty if this is intentional." >&2
-  git status --short
+  git status --short --untracked-files=no
   exit 1
 fi
 
