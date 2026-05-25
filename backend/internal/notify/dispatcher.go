@@ -160,6 +160,7 @@ func Render(item domain.Notification) RenderedMessage {
 	message := payloadString(item.Payload, "message", bodyForTemplate(item.TemplateKey))
 	ctaLabel := payloadString(item.Payload, "ctaLabel", "Open Tandaza")
 	ctaURL := payloadString(item.Payload, "ctaUrl", "https://tandaza.africa")
+	logoURL := payloadString(item.Payload, "logoUrl", defaultEmailLogoURL)
 	expoName := payloadString(item.Payload, "expoName", "")
 	exhibitorName := payloadString(item.Payload, "exhibitorName", "")
 	temporaryPassword := payloadString(item.Payload, "temporaryPassword", "")
@@ -171,7 +172,7 @@ func Render(item domain.Notification) RenderedMessage {
 	var html bytes.Buffer
 	_ = emailTemplate.Execute(&html, map[string]any{
 		"Subject": subject, "Title": title, "Message": message, "MessageHTML": messageHTML, "CTALabel": ctaLabel,
-		"CTAURL": ctaURL, "ExpoName": expoName, "ExhibitorName": exhibitorName, "TemporaryPassword": temporaryPassword, "FooterText": footerText, "Year": time.Now().UTC().Format("2006"),
+		"CTAURL": ctaURL, "LogoURL": logoURL, "ExpoName": expoName, "ExhibitorName": exhibitorName, "TemporaryPassword": temporaryPassword, "FooterText": footerText, "Year": time.Now().UTC().Format("2006"),
 		"Meeting": meeting, "MeetingStatus": payloadString(item.Payload, "meetingStatus", ""), "MeetingTitle": payloadString(item.Payload, "meetingTitle", ""),
 		"MeetingType": payloadString(item.Payload, "meetingType", ""), "MeetingTime": payloadString(item.Payload, "meetingTime", ""), "MeetingLink": payloadString(item.Payload, "meetingLink", ""),
 		"VisitorName": payloadString(item.Payload, "visitorName", ""), "VisitorEmail": payloadString(item.Payload, "visitorEmail", ""), "ReminderMinutes": payloadString(item.Payload, "reminderMinutes", ""),
@@ -181,6 +182,8 @@ func Render(item domain.Notification) RenderedMessage {
 	})
 	return RenderedMessage{Subject: subject, Text: message, HTML: html.String()}
 }
+
+const defaultEmailLogoURL = "https://tandaza.africa/tandaza-logo-white-v2.png"
 
 func (d Dispatcher) sendEmail(item domain.Notification, rendered RenderedMessage, attempt *domain.NotificationAttempt) error {
 	to := emailRecipient(item)
@@ -527,6 +530,7 @@ var emailTemplate = template.Must(template.New("email").Parse(`<!doctype html>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border:1px solid #e5e9f2;border-radius:16px;overflow:hidden;">
           <tr>
             <td style="background:#2d1b69;padding:28px 32px;color:#ffffff;">
+              <img src="{{.LogoURL}}" width="156" alt="Tandaza" style="display:block;width:156px;max-width:70%;height:auto;margin:0 0 18px;border:0;outline:none;text-decoration:none;">
               <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#ddd6fe;">Tandaza</div>
               <h1 style="margin:10px 0 0;font-size:28px;line-height:1.2;font-weight:700;">{{.Title}}</h1>
             </td>

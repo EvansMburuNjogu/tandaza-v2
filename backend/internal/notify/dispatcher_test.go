@@ -31,6 +31,9 @@ func TestRenderEmailTemplate(t *testing.T) {
 	if rendered.HTML == "" || !strings.Contains(rendered.HTML, "Nairobi Tech Expo") || !strings.Contains(rendered.HTML, "Tandaza") {
 		t.Fatalf("expected branded HTML with expo name, html=%s", rendered.HTML)
 	}
+	if !strings.Contains(rendered.HTML, `alt="Tandaza"`) || !strings.Contains(rendered.HTML, defaultEmailLogoURL) {
+		t.Fatalf("expected Tandaza logo in email html, html=%s", rendered.HTML)
+	}
 }
 
 func TestRenderSystemUserWelcomeShowsTemporaryPassword(t *testing.T) {
