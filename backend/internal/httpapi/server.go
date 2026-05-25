@@ -2123,12 +2123,26 @@ func (s *Server) queueFounderWelcomeEmail(ctx context.Context, user domain.User)
 		Channel:     "email",
 		TemplateKey: "founder_welcome",
 		Payload: map[string]any{
-			"email":      user.Email,
-			"to":         user.Email,
-			"fromName":   "Evans Mburu, Founder of Tandaza",
-			"subject":    "A welcome note from Evans Mburu, Founder of Tandaza",
-			"title":      "A note from Evans Mburu",
-			"message":    "Welcome to Tandaza. We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes, when visitors cannot travel, or when exhibitors leave without a clear way to follow up. Our mission is to make every expo more accessible, measurable, and useful for visitors, exhibitors, organizers, and sponsors. For visitors, Tandaza should make it possible to discover expos, follow the day timeline, and engage exhibitors even from another city. For exhibitors, every expo conversation, QR scan, product interest, meeting request, and pre-order intent should become a trackable sales opportunity. For organizers, Tandaza should make it easier to run scalable expos across countries, currencies, exhibitors, sponsors, communications, payments, and reports. For sponsors, visibility should not be guesswork; it should be measurable attention tied to the right expo audience. We are building Tandaza for the physical energy of African expos and the digital access that helps that energy last longer. Thank you for joining us early. Your participation helps us shape a platform that can help more businesses meet, sell, learn, and grow across Africa. - Evans Mburu, Founder of Tandaza",
+			"email":    user.Email,
+			"to":       user.Email,
+			"fromName": "Evans Mburu, Founder of Tandaza",
+			"subject":  "A welcome note from Evans Mburu, Founder of Tandaza",
+			"title":    "A note from the Founder, Tandaza",
+			"message": `Welcome to Tandaza.
+
+We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes, when visitors cannot travel, or when exhibitors leave without a clear way to follow up.
+
+Our mission is to make every expo more accessible, measurable, and useful for visitors, exhibitors, organizers, and sponsors.
+
+For visitors, Tandaza should make it possible to discover expos, follow the day timeline, and engage exhibitors even from another city. For exhibitors, every expo conversation, QR scan, product interest, meeting request, and pre-order intent should become a trackable sales opportunity.
+
+For organizers, Tandaza should make it easier to run scalable expos across countries, currencies, exhibitors, sponsors, communications, payments, and reports. For sponsors, visibility should not be guesswork; it should be measurable attention tied to the right expo audience.
+
+We are building Tandaza for the physical energy of African expos and the digital access that helps that energy last longer.
+
+Thank you for joining us early. Your participation helps us shape a platform that can help more businesses meet, sell, learn, and grow across Africa.
+
+- Evans Mburu, Founder of Tandaza`,
 			"ctaLabel":   "Explore Tandaza",
 			"ctaUrl":     dashboardURL,
 			"footerText": "A founder welcome sent after verifying your Tandaza account.",
@@ -5731,8 +5745,20 @@ func (s *Server) sendSponsorOnboardingEmails(ctx context.Context, user domain.Us
 		WelcomeSubject:      "Welcome to Tandaza Sponsorship",
 		WelcomeMessage:      "Welcome to Tandaza Sponsorship. Your workspace helps you discover expo-specific visibility opportunities, review sponsor plans, manage ad placements, track campaign attention, and connect your brand to the right expo audience across countries.",
 		WelcomeCta:          "Open sponsor workspace",
-		FounderMessage:      "Welcome to Tandaza. We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes, when visitors cannot travel, or when exhibitors leave without a clear way to follow up. Our mission is to make every expo more accessible, measurable, and useful for visitors, exhibitors, organizers, and sponsors. For sponsors, this means your visibility should not be guesswork. You should understand where your brand appeared, who engaged, which expo audience responded, and how your spend connected to real attention. We are building Tandaza for the physical energy of African expos and the digital access that helps that energy last longer. Thank you for joining us early. Your participation helps us shape a platform that can help more businesses meet, sell, learn, sponsor, and grow across Africa. - Evans Mburu, Founder of Tandaza",
-		FounderFooter:       "A founder welcome sent to new Tandaza sponsor accounts.",
+		FounderMessage: `Welcome to Tandaza.
+
+We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes, when visitors cannot travel, or when exhibitors leave without a clear way to follow up.
+
+Our mission is to make every expo more accessible, measurable, and useful for visitors, exhibitors, organizers, and sponsors.
+
+For sponsors, this means your visibility should not be guesswork. You should understand where your brand appeared, who engaged, which expo audience responded, and how your spend connected to real attention.
+
+We are building Tandaza for the physical energy of African expos and the digital access that helps that energy last longer.
+
+Thank you for joining us early. Your participation helps us shape a platform that can help more businesses meet, sell, learn, sponsor, and grow across Africa.
+
+- Evans Mburu, Founder of Tandaza`,
+		FounderFooter: "A founder welcome sent to new Tandaza sponsor accounts.",
 	})
 }
 
@@ -5746,8 +5772,16 @@ func (s *Server) sendOrganizerOnboardingEmails(ctx context.Context, user domain.
 		WelcomeSubject:      "Welcome to Tandaza for Organizers",
 		WelcomeMessage:      "Welcome to Tandaza. Your organizer workspace helps you run scalable expos across countries, manage exhibitor and sponsor relationships, support remote expo access, communicate with participants, and track expo performance in one place.",
 		WelcomeCta:          "Open organizer workspace",
-		FounderMessage:      "Welcome to Tandaza. We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes or when people cannot attend physically. For organizers, Tandaza exists to make expo operations more accessible, measurable, and scalable across countries, currencies, exhibitors, sponsors, visitors, communications, payments, and reports. Thank you for helping shape a platform built for the physical energy of African expos and the digital access that helps that energy last longer. - Evans Mburu, Founder of Tandaza",
-		FounderFooter:       "A founder welcome sent to new Tandaza organizer accounts.",
+		FounderMessage: `Welcome to Tandaza.
+
+We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes or when people cannot attend physically.
+
+For organizers, Tandaza exists to make expo operations more accessible, measurable, and scalable across countries, currencies, exhibitors, sponsors, visitors, communications, payments, and reports.
+
+Thank you for helping shape a platform built for the physical energy of African expos and the digital access that helps that energy last longer.
+
+- Evans Mburu, Founder of Tandaza`,
+		FounderFooter: "A founder welcome sent to new Tandaza organizer accounts.",
 	})
 }
 
@@ -5769,8 +5803,14 @@ func (s *Server) sendOrganizerTeamMemberOnboardingEmails(ctx context.Context, or
 		WelcomeSubject:      "Welcome to Tandaza Organizer Team",
 		WelcomeMessage:      "Welcome to Tandaza. You have been invited to support an organizer workspace where expo operations, exhibitor activity, visitor access, sponsorships, and reporting come together.",
 		WelcomeCta:          "Open organizer workspace",
-		FounderMessage:      "Welcome to Tandaza. We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes or when people cannot attend physically. As part of an organizer team, you help make expo operations more accessible, measurable, and useful for everyone involved. - Evans Mburu, Founder of Tandaza",
-		FounderFooter:       "A founder welcome sent to new Tandaza organizer team members.",
+		FounderMessage: `Welcome to Tandaza.
+
+We started Tandaza because expos across Africa create real opportunity, but too much value disappears when the hall closes or when people cannot attend physically.
+
+As part of an organizer team, you help make expo operations more accessible, measurable, and useful for everyone involved.
+
+- Evans Mburu, Founder of Tandaza`,
+		FounderFooter: "A founder welcome sent to new Tandaza organizer team members.",
 	})
 }
 
@@ -5784,8 +5824,16 @@ func (s *Server) sendExhibitorOnboardingEmails(ctx context.Context, user domain.
 		WelcomeSubject:      "Welcome to Tandaza for Exhibitors",
 		WelcomeMessage:      "Welcome to Tandaza. Your exhibitor workspace is built around one promise: every visitor can become a trackable sales opportunity through QR engagement, product interest, meeting requests, pre-order intent, lead notes, follow-ups, and expo analytics.",
 		WelcomeCta:          "Open exhibitor workspace",
-		FounderMessage:      "Welcome to Tandaza. We started Tandaza because exhibitors invest heavily in expo presence, but too many conversations disappear when the hall closes. For exhibitors, Tandaza turns QR scans, product interest, remote visitors, meeting requests, and pre-order intent into trackable leads you can follow up after the expo. Thank you for joining us as we build a platform that helps African businesses meet, sell, learn, and grow through better expo access. - Evans Mburu, Founder of Tandaza",
-		FounderFooter:       "A founder welcome sent to new Tandaza exhibitor accounts.",
+		FounderMessage: `Welcome to Tandaza.
+
+We started Tandaza because exhibitors invest heavily in expo presence, but too many conversations disappear when the hall closes.
+
+For exhibitors, Tandaza turns QR scans, product interest, remote visitors, meeting requests, and pre-order intent into trackable leads you can follow up after the expo.
+
+Thank you for joining us as we build a platform that helps African businesses meet, sell, learn, and grow through better expo access.
+
+- Evans Mburu, Founder of Tandaza`,
+		FounderFooter: "A founder welcome sent to new Tandaza exhibitor accounts.",
 	})
 }
 
@@ -5815,8 +5863,16 @@ func (s *Server) sendExhibitorTeamMemberOnboardingEmails(ctx context.Context, ex
 		WelcomeSubject:      "Welcome to Tandaza Exhibitor Team",
 		WelcomeMessage:      "Welcome to Tandaza. You have been invited to support an exhibitor workspace where visitor traffic, product interest, meeting requests, and pre-order intent become follow-up opportunities.",
 		WelcomeCta:          "Open exhibitor workspace",
-		FounderMessage:      "Welcome to Tandaza. We started Tandaza because exhibitors invest heavily in expo presence, but too many conversations disappear when the hall closes. As part of an exhibitor team, you help turn QR scans, visitor interest, remote engagement, meetings, and pre-order intent into useful follow-up. Thank you for helping African businesses make expo opportunities last beyond the expo floor. - Evans Mburu, Founder of Tandaza",
-		FounderFooter:       "A founder welcome sent to new Tandaza exhibitor team members.",
+		FounderMessage: `Welcome to Tandaza.
+
+We started Tandaza because exhibitors invest heavily in expo presence, but too many conversations disappear when the hall closes.
+
+As part of an exhibitor team, you help turn QR scans, visitor interest, remote engagement, meetings, and pre-order intent into useful follow-up.
+
+Thank you for helping African businesses make expo opportunities last beyond the expo floor.
+
+- Evans Mburu, Founder of Tandaza`,
+		FounderFooter: "A founder welcome sent to new Tandaza exhibitor team members.",
 	})
 }
 
@@ -5885,7 +5941,7 @@ func (s *Server) sendManagedAccountOnboardingEmails(ctx context.Context, user do
 			"to":         user.Email,
 			"fromName":   "Evans Mburu, Founder of Tandaza",
 			"subject":    "A welcome note from Evans Mburu, Founder of Tandaza",
-			"title":      "A note from Evans Mburu",
+			"title":      "A note from the Founder, Tandaza",
 			"message":    copy.FounderMessage,
 			"ctaLabel":   "Explore Tandaza",
 			"ctaUrl":     dashboardURL,

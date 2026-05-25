@@ -55,13 +55,16 @@ func TestRenderFounderWelcomeUsesMissionCopyAndNoExpoFooter(t *testing.T) {
 		TemplateKey: "founder_welcome",
 		Payload: map[string]any{
 			"subject":    "A welcome note from Evans Mburu, Founder of Tandaza",
-			"title":      "A note from Evans Mburu",
-			"message":    "We started Tandaza because expos across Africa create real opportunity.",
+			"title":      "A note from the Founder, Tandaza",
+			"message":    "Welcome to Tandaza.\n\nWe started Tandaza because expos across Africa create real opportunity.",
 			"footerText": "A founder welcome sent after verifying your Tandaza account.",
 		},
 	})
-	if rendered.Subject != "A welcome note from Evans Mburu, Founder of Tandaza" || !strings.Contains(rendered.HTML, "A note from Evans Mburu") {
+	if rendered.Subject != "A welcome note from Evans Mburu, Founder of Tandaza" || !strings.Contains(rendered.HTML, "A note from the Founder, Tandaza") {
 		t.Fatalf("expected founder welcome rendering, rendered=%+v", rendered)
+	}
+	if !strings.Contains(rendered.HTML, "margin:0 0 18px") || strings.Contains(rendered.HTML, "Welcome to Tandaza.<br><br>We started") {
+		t.Fatalf("expected founder message to render as spaced paragraphs, html=%s", rendered.HTML)
 	}
 	if strings.Contains(rendered.HTML, "Expo:") || !strings.Contains(rendered.HTML, "founder welcome") {
 		t.Fatalf("expected non-expo founder footer, html=%s", rendered.HTML)

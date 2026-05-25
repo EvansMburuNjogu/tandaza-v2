@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	htmlstd "html"
 	"html/template"
 	"io"
 	"net"
@@ -165,7 +166,7 @@ func Render(item domain.Notification) RenderedMessage {
 	exhibitorName := payloadString(item.Payload, "exhibitorName", "")
 	temporaryPassword := payloadString(item.Payload, "temporaryPassword", "")
 	footerText := payloadString(item.Payload, "footerText", "You are receiving this because your Tandaza account is connected to this expo.")
-	messageHTML := template.HTML(strings.ReplaceAll(template.HTMLEscapeString(message), "\n", "<br>"))
+	messageHTML := htmlParagraphs(message)
 	preOrder := strings.EqualFold(payloadString(item.Payload, "preOrder", ""), "true")
 	meeting := strings.EqualFold(payloadString(item.Payload, "meeting", ""), "true")
 
@@ -181,6 +182,25 @@ func Render(item domain.Notification) RenderedMessage {
 		"CustomerEmail": payloadString(item.Payload, "customerEmail", ""), "CustomerPhone": payloadString(item.Payload, "customerPhone", ""), "NextStep": payloadString(item.Payload, "nextStep", ""),
 	})
 	return RenderedMessage{Subject: subject, Text: message, HTML: html.String()}
+}
+
+func htmlParagraphs(message string) template.HTML {
+	message = strings.TrimSpace(strings.ReplaceAll(message, "\r\n", "\n"))
+	if message == "" {
+		return ""
+	}
+	blocks := strings.Split(message, "\n\n")
+	paragraphs := make([]string, 0, len(blocks))
+	for _, block := range blocks {
+		block = strings.TrimSpace(block)
+		if block == "" {
+			continue
+		}
+		escaped := htmlstd.EscapeString(block)
+		escaped = strings.ReplaceAll(escaped, "\n", "<br>")
+		paragraphs = append(paragraphs, `<p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#334155;">`+escaped+`</p>`)
+	}
+	return template.HTML(strings.Join(paragraphs, ""))
 }
 
 const defaultEmailLogoURL = "https://tandaza.africa/tandaza-logo-white-v2.png"
@@ -493,7 +513,7 @@ func bodyForTemplate(key string) string {
 	case "account_welcome":
 		return "Your email is verified. Welcome to Tandaza."
 	case "founder_welcome":
-		return "A note from Evans Mburu about why Tandaza exists."
+		return "A note from the Founder, Tandaza."
 	case "sponsor_account_credentials":
 		return "Your Tandaza sponsor account has been created. Use the temporary password to sign in."
 	case "organizer_account_credentials":
@@ -537,7 +557,7 @@ var emailTemplate = template.Must(template.New("email").Parse(`<!doctype html>
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#334155;">{{.MessageHTML}}</p>
+              <div style="margin:0 0 20px;">{{.MessageHTML}}</div>
               {{if .Meeting}}
               <div style="margin:0 0 22px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
                 <div style="padding:16px 18px;background:#f8f5ff;border-bottom:1px solid #e5e7eb;">
