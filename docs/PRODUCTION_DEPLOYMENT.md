@@ -56,10 +56,23 @@ TANDAZA_PROD_ADMIN_PASSWORD='replace-me' \
 
 The deploy script runs:
 
-- `go test ./...`
-- `npm run build`
-- `git push HEAD:production`
-- container health checks
+- backend compile checks;
+- `npm run build`;
+- a push to the server bare repo branch;
+- server-side Docker Compose rebuild/restart through the `post-receive` hook;
+- container health checks;
+- public HTTPS smoke checks for frontend, API, and media.
+
+Useful deployment options:
+
+```bash
+./scripts/deploy-production.sh --help
+./scripts/deploy-production.sh --skip-tests
+./scripts/deploy-production.sh --skip-build
+./scripts/deploy-production.sh --no-public-checks
+```
+
+By default, the script refuses to deploy with uncommitted local changes. Use `--allow-dirty` only when you intentionally want to deploy the current working tree state.
 
 ## Nginx
 
