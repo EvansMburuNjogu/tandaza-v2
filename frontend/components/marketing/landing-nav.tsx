@@ -53,7 +53,7 @@ export function LandingNav() {
     )}>
       <div className="mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6 lg:px-8">
 
-        <Link href="/" className="flex items-center lg:-ml-5">
+        <Link href="/" className="-ml-6 flex items-center lg:-ml-8">
           <Image src={logoSrc} alt="Tandaza" width={224} height={84} className="h-[68px] w-[196px] object-contain sm:h-[76px] sm:w-[224px]" priority />
         </Link>
 
