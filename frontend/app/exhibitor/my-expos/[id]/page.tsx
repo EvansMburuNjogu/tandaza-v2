@@ -321,7 +321,7 @@ export default function MyExpoPage() {
     queryKey: ["expo-conversations", params.id],
     queryFn: () => api.getExpoConversations(token || "", params.id),
     enabled: Boolean(token && params.id),
-    refetchInterval: activeTab === "conversations" ? 12000 : false
+    refetchInterval: activeTab === "conversations" || activeTab === "livestream" ? 12000 : false
   })
 
   const liveStreamQuery = useQuery({
@@ -342,7 +342,7 @@ export default function MyExpoPage() {
 
   const activeConversationThreadId = selectedConversationId || conversationsQuery.data?.[0]?.id || ""
   useEffect(() => {
-    if (activeTab !== "conversations" || !activeConversationThreadId) return
+    if ((activeTab !== "conversations" && activeTab !== "livestream") || !activeConversationThreadId) return
     let socket: WebSocket | null = null
     let cancelled = false
     fetch("/api/auth/realtime-token", { cache: "no-store" })
@@ -3146,7 +3146,8 @@ export default function MyExpoPage() {
 
       {activeTab === "livestream" && (
         <div className="space-y-4">
-          <Card className="p-5 sm:p-6">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
+            <Card className="p-5 sm:p-6">
               <div>
                 <p className="text-sm font-semibold text-foreground">Live stream</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">Add a YouTube Live link for remote visitors. When enabled, it can be shown on the visitor-facing exhibitor profile.</p>
@@ -3211,7 +3212,121 @@ export default function MyExpoPage() {
               ) : (
                 <div className="mt-4 rounded-2xl border border-dashed border-border/80 p-4 text-sm text-slate-500">No active live stream is enabled for this workspace.</div>
               )}
-          </Card>
+            </Card>
+
+            <Card className="flex min-h-[36rem] flex-col overflow-hidden">
+              <div className="border-b border-border/70 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Live chat</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      See visitor messages from the livestream and reply without leaving this workspace.
+                    </p>
+                  </div>
+                  {liveStream?.liveChatEnabled ? (
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Enabled</span>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Disabled</span>
+                  )}
+                </div>
+              </div>
+
+              {!liveStream?.liveChatEnabled ? (
+                <div className="flex min-h-[28rem] flex-1 items-center justify-center p-6 text-center">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Live chat is off</p>
+                    <p className="mt-1 max-w-xs text-xs leading-5 text-slate-500">Enable live chat above to let remote visitors ask questions during the stream.</p>
+                  </div>
+                </div>
+              ) : conversationsQuery.isLoading ? (
+                <div className="flex min-h-[28rem] flex-1 items-center justify-center p-6 text-sm text-slate-500">Loading live chat...</div>
+              ) : selectedConversation ? (
+                <>
+                  <div className="border-b border-border/70 bg-elevated/40 p-3">
+                    <label className="relative block">
+                      <span className="sr-only">Search live chat visitors</span>
+                      <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                      <Input
+                        value={conversationSearch}
+                        onChange={(event) => setConversationSearch(event.target.value)}
+                        placeholder="Search visitors"
+                        className="h-10 pl-10"
+                      />
+                    </label>
+                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                      {filteredConversations.map((thread) => {
+                        const active = selectedConversation.id === thread.id
+                        return (
+                          <button
+                            key={thread.id}
+                            type="button"
+                            onClick={() => setSelectedConversationId(thread.id)}
+                            className={cn("min-w-[11rem] rounded-2xl border px-3 py-2 text-left transition", active ? "border-primary bg-primary text-white" : "border-border/70 bg-card hover:border-primary/40")}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className={cn("truncate text-xs font-semibold", active ? "text-white" : "text-foreground")}>{thread.visitorName || "Visitor"}</p>
+                              {thread.unreadCount > 0 && <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold", active ? "bg-white text-primary" : "bg-primary text-white")}>{thread.unreadCount}</span>}
+                            </div>
+                            <p className={cn("mt-1 truncate text-[11px]", active ? "text-white/75" : "text-slate-500")}>{thread.visitorEmail || "No email shared"}</p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-elevated/30 p-4">
+                    {selectedConversationMessages.length ? selectedConversationMessages.map((message) => (
+                      <div key={message.id} className={cn("max-w-[88%] rounded-2xl p-3", message.senderRole === "exhibitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground")}>
+                        <p className={cn("text-[11px] font-semibold uppercase tracking-[0.14em]", message.senderRole === "exhibitor" ? "text-white/65" : "text-slate-400")}>{message.senderName || message.senderRole}</p>
+                        <p className={cn("mt-2 break-words text-sm leading-6", message.senderRole === "exhibitor" ? "text-white/90" : "text-slate-600")}>{message.message || "Message recorded."}</p>
+                        <p className={cn("mt-2 text-[11px]", message.senderRole === "exhibitor" ? "text-white/60" : "text-slate-400")}>{formatDate(message.createdAt)}</p>
+                      </div>
+                    )) : (
+                      <div className="flex min-h-[18rem] items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card p-5 text-center text-sm text-slate-500">
+                        No live messages yet.
+                      </div>
+                    )}
+                  </div>
+
+                  <form
+                    className="border-t border-border/70 bg-card p-3"
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      conversationMessageMutation.mutate()
+                    }}
+                  >
+                    <div className="flex min-w-0 items-end gap-2 rounded-2xl border border-border/80 bg-elevated/50 p-2 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+                      <textarea
+                        value={conversationMessage}
+                        onChange={(event) => setConversationMessage(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault()
+                            conversationMessageMutation.mutate()
+                          }
+                        }}
+                        rows={1}
+                        placeholder="Reply to live chat..."
+                        aria-label="Live chat reply"
+                        className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-slate-400"
+                      />
+                      <Button type="submit" size="sm" className="h-10 shrink-0 rounded-xl px-4" disabled={conversationMessageMutation.isPending || conversationMessage.trim().length < 3}>
+                        <ChatIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">{conversationMessageMutation.isPending ? "Sending" : "Send"}</span>
+                      </Button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                <div className="flex min-h-[28rem] flex-1 items-center justify-center p-6 text-center">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">No live chat messages yet</p>
+                    <p className="mt-1 max-w-xs text-xs leading-5 text-slate-500">Visitor messages from the livestream will appear here as conversations.</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
       )}
 
