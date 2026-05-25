@@ -114,13 +114,6 @@ export default function ReportsPage() {
         <PulseCard label="Notifications" value={String(notificationCount)} detail="delivery workload" color={chartPalette[3]} />
       </div>
 
-      <AIPerformanceSummaryCard
-        summary={aiSummary.data}
-        fallbackSummary={computedSummary}
-        queryKey={aiQueryKey}
-        onGenerate={() => api.generateAdminReportsAISummary(token || "", selectedCountry)}
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {reportData.performance.map((metric) => (
           <StatCard
@@ -142,6 +135,13 @@ export default function ReportsPage() {
       </div>
 
       <ReportsCharts data={reportData} />
+
+      <AIPerformanceSummaryCard
+        summary={aiSummary.data}
+        fallbackSummary={computedSummary}
+        queryKey={aiQueryKey}
+        onGenerate={() => api.generateAdminReportsAISummary(token || "", selectedCountry)}
+      />
 
       <Card className="p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

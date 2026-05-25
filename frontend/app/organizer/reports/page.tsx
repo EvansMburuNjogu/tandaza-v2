@@ -139,13 +139,6 @@ export default function OrganizerReportsPage() {
         ))}
       </div>
 
-      <AIPerformanceSummaryCard
-        summary={aiSummary.data}
-        fallbackSummary={computedSummary}
-        queryKey={aiQueryKey}
-        onGenerate={() => api.generateOrganizerReportsAISummary(token || "")}
-      />
-
       {activeTab === "overview" && (
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -210,6 +203,13 @@ export default function OrganizerReportsPage() {
           <OrganizerReportsCharts data={query.data} view="visitor" />
         </div>
       )}
+
+      <AIPerformanceSummaryCard
+        summary={aiSummary.data}
+        fallbackSummary={computedSummary}
+        queryKey={aiQueryKey}
+        onGenerate={() => api.generateOrganizerReportsAISummary(token || "")}
+      />
 
       <Card className="p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

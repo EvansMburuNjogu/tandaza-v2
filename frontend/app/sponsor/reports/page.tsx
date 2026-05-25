@@ -92,12 +92,6 @@ export default function SponsorReportsPage() {
           <StatCard label="Total Spend" value={formatCurrency(reports.overview.spend)} color="amber" />
         </div>
 
-        <AIPerformanceSummaryCard
-          summary={aiSummary.data}
-          queryKey={aiQueryKey}
-          onGenerate={() => api.generateSponsorReportsAISummary(token || "")}
-        />
-
         <Card className="p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-accent/5 rounded-full -mr-16 -mt-16" />
           <div className="relative">
@@ -146,6 +140,12 @@ export default function SponsorReportsPage() {
             </div>
           </div>
         </Card>
+
+        <AIPerformanceSummaryCard
+          summary={aiSummary.data}
+          queryKey={aiQueryKey}
+          onGenerate={() => api.generateSponsorReportsAISummary(token || "")}
+        />
       </div>
     </SessionGuard>
   )

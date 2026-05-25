@@ -1090,7 +1090,6 @@ export default function MyExpoPage() {
   const visitorInsights = ai?.visitorInsights
   const leadQualityScore = clampPercent(Number(visitorInsights?.leadQualityScore) || 0)
   const peakHours = Array.isArray(visitorInsights?.peakHours) ? visitorInsights.peakHours : []
-  const aiRecommendations = Array.isArray(ai?.recommendations) ? ai.recommendations : []
   const roi = ai?.roi
   const roiPipelineByTemperature = Object.entries(roi?.pipelineByTemperature || {})
     .filter(([, value]) => Number(value) > 0)
@@ -2249,12 +2248,6 @@ export default function MyExpoPage() {
 
       {activeTab === "analytics" && ai && (
         <div className="space-y-6">
-          <AIPerformanceSummaryCard
-            summary={aiSummaryQuery.data}
-            queryKey={aiSummaryQueryKey}
-            onGenerate={() => api.generateExpoAIAnalyticsSummary(token || "", params.id)}
-          />
-
           {roi && (
             <Card className="overflow-hidden border-border/80 p-0 shadow-sm">
               <div className="flex flex-col gap-3 border-b border-border/70 bg-elevated/55 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -2432,16 +2425,11 @@ export default function MyExpoPage() {
             </Card>
           </div>
 
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold">Recommendations</h3>
-            <ul className="mt-4 grid gap-3 md:grid-cols-2">
-              {(aiRecommendations.length ? aiRecommendations : ["Keep collecting visitor activity, leads, meetings, and pre-orders to build stronger recommendations."]).map((rec, i) => (
-                <li key={i} className="rounded-2xl border border-border/80 bg-elevated/55 p-4 text-sm leading-6 text-slate-600">
-                  {rec}
-                </li>
-              ))}
-            </ul>
-          </Card>
+          <AIPerformanceSummaryCard
+            summary={aiSummaryQuery.data}
+            queryKey={aiSummaryQueryKey}
+            onGenerate={() => api.generateExpoAIAnalyticsSummary(token || "", params.id)}
+          />
         </div>
       )}
 

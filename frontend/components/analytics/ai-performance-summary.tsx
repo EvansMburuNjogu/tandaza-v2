@@ -36,22 +36,23 @@ export function AIPerformanceSummaryCard({
   const displaySummary = summary?.generatedAt ? summary : fallbackSummary || summary
   const hasGenerated = Boolean(summary?.generatedAt)
   const generatedAt = summary?.generatedAt ? new Date(summary.generatedAt) : null
+  const summaryText = shortenInsight(displaySummary?.summary || "Generate a focused summary from the current analytics.")
 
   return (
-    <Card className={cn("overflow-hidden border-primary/15 bg-[linear-gradient(135deg,rgba(99,102,241,0.12),transparent_44%),linear-gradient(220deg,rgba(20,184,166,0.08),transparent_42%),hsl(var(--card))] p-6", className)}>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-3xl">
+    <Card className={cn("overflow-hidden border-primary/15 bg-[linear-gradient(135deg,rgba(99,102,241,0.10),transparent_42%),hsl(var(--card))] p-5 shadow-sm", className)}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-4xl">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
               <ChartIcon className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">AI Performance Summary</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Recommendations from your analytics data</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">AI Summary</p>
+              <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">What to do next</h2>
             </div>
           </div>
-          <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">{displaySummary?.summary || "Your current analytics have been prepared for a focused performance summary."}</p>
-          <p className="mt-3 text-xs font-medium text-slate-500">
+          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{summaryText}</p>
+          <p className="mt-2 text-xs font-medium text-slate-500">
             {hasGenerated && generatedAt ? `Updated ${generatedAt.toLocaleString()}` : "Based on the current report data"}
           </p>
         </div>
@@ -61,24 +62,22 @@ export function AIPerformanceSummaryCard({
         </Button>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid gap-3 lg:grid-cols-3">
         <InsightList title="Opportunities" items={displaySummary?.opportunities} />
         <InsightList title="Recommendations" items={displaySummary?.recommendations} />
         <InsightList title="Next actions" items={displaySummary?.nextActions} />
       </div>
 
       {displaySummary?.risks?.length ? (
-        <div className="mt-5 rounded-2xl border border-border/80 bg-background/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Risks to watch</p>
-          <ul className="mt-3 space-y-2">
-            {displaySummary.risks.map((item) => (
-              <li key={item} className="text-sm leading-6 text-slate-600 dark:text-slate-300">{item}</li>
+        <div className="mt-3 rounded-2xl border border-border/80 bg-background/70 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Risks</p>
+          <ul className="mt-2 grid gap-2 md:grid-cols-2">
+            {displaySummary.risks.slice(0, 2).map((item) => (
+              <li key={item} className="text-sm leading-6 text-slate-600 dark:text-slate-300">{shortenInsight(item)}</li>
             ))}
           </ul>
         </div>
       ) : null}
-
-      {displaySummary?.confidenceNotes ? <p className="mt-4 text-xs leading-5 text-slate-500">{displaySummary.confidenceNotes}</p> : null}
     </Card>
   )
 }
@@ -87,12 +86,20 @@ function InsightList({ title, items }: { title: string; items?: string[] }) {
   const list = items?.length ? items : ["Generate a summary to see this section."]
   return (
     <div className="rounded-2xl border border-border/80 bg-card/80 p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{title}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">{title}</p>
       <ul className="mt-3 space-y-2">
-        {list.map((item) => (
-          <li key={item} className="text-sm leading-6 text-slate-600 dark:text-slate-300">{item}</li>
+        {list.slice(0, 2).map((item) => (
+          <li key={item} className="text-sm leading-6 text-slate-600 dark:text-slate-300">{shortenInsight(item)}</li>
         ))}
       </ul>
     </div>
   )
+}
+
+function shortenInsight(value: string, maxLength = 150) {
+  const cleaned = value.replace(/\s+/g, " ").trim()
+  if (cleaned.length <= maxLength) return cleaned
+  const sliced = cleaned.slice(0, maxLength)
+  const lastSpace = sliced.lastIndexOf(" ")
+  return `${sliced.slice(0, lastSpace > 80 ? lastSpace : maxLength).trim()}...`
 }
