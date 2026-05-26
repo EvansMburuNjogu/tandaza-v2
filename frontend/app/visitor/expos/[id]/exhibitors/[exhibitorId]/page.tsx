@@ -23,7 +23,7 @@ type ActionDialog = "interest" | "meeting" | null
 function ProductPrice({ price, discountedPrice, currency }: { price: number; discountedPrice?: number; currency: string }) {
   const hasDiscount = Boolean(discountedPrice && discountedPrice < price)
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-2">
+    <div className="mt-2 flex flex-wrap items-center gap-2">
       <span className="font-mono text-sm font-semibold text-primary">
         {formatCurrency(hasDiscount ? discountedPrice || price : price, currency)}
       </span>
@@ -277,19 +277,19 @@ export default function VisitorExhibitorPage() {
           {(booth.products || []).length === 0 ? (
             <Card className="border-dashed p-8 text-center text-sm text-muted">Products will appear here when the exhibitor publishes them.</Card>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {(booth.products || []).map((product) => (
-                <Link key={product.id} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/products/${product.id}`} className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
-                  <div className="aspect-[4/3] bg-elevated">
+                <Link key={product.id} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/products/${product.id}`} className="group overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
+                  <div className="aspect-[16/10] bg-elevated">
                     {firstProductImage(product) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={firstProductImage(product)} alt={product.name} className="h-full w-full object-contain p-2" />
                     ) : null}
                   </div>
-                  <div className="p-4">
-                    <h3 className="line-clamp-2 font-semibold text-foreground group-hover:text-primary">{product.name}</h3>
+                  <div className="p-3">
+                    <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground group-hover:text-primary">{product.name}</h3>
                     {plainTextFromRichText(product.description) ? (
-                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{plainTextFromRichText(product.description)}</p>
+                      <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted">{plainTextFromRichText(product.description)}</p>
                     ) : null}
                     <ProductPrice price={product.price} discountedPrice={product.discountedPrice} currency={product.currency} />
                   </div>
