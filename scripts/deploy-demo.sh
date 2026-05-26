@@ -41,9 +41,24 @@ need_command() {
   fi
 }
 
+need_node_20_9() {
+  local label="$1"
+  local version
+  version="$(node -p "process.versions.node" 2>/dev/null || true)"
+  if [[ -z "$version" ]]; then
+    echo "Missing required command for $label: node" >&2
+    exit 1
+  fi
+  node -e "const [major, minor] = process.versions.node.split('.').map(Number); process.exit(major > 20 || (major === 20 && minor >= 9) ? 0 : 1)" || {
+    echo "$label requires Node.js 20.9.0 or newer for Next.js 16. Current version: $version" >&2
+    exit 1
+  }
+}
+
 need_command ssh
 need_command rsync
 need_command git
+need_command node
 
 SSH_BASE=(ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new)
 RSYNC_BASE=(rsync -az --delete)
@@ -85,6 +100,7 @@ echo "Running local checks..."
   cd backend
   GOCACHE="${ROOT_DIR}/.dev/go-build" go test ./internal/httpapi -run '^$'
 )
+need_node_20_9 "Local frontend build"
 (
   cd frontend
   npm run build
@@ -117,6 +133,9 @@ run_remote "git config --global --add safe.directory '${REMOTE_TMP}' && cd '${RE
 
 echo "Running server-side backend compile check..."
 run_remote "cd '${REMOTE_TMP}/backend' && GOCACHE='${REMOTE_TMP}/.gocache' go test ./internal/httpapi -run '^$'"
+
+echo "Checking server-side Node.js version..."
+run_remote "node -e 'const [major, minor] = process.versions.node.split(\".\").map(Number); if (!(major > 20 || (major === 20 && minor >= 9))) { console.error(\"Server frontend runtime requires Node.js 20.9.0 or newer for Next.js 16. Current version: \" + process.versions.node); process.exit(1); } console.log(\"Server Node.js \" + process.versions.node + \" is compatible.\")'"
 
 echo "Committing and pushing..."
 run_remote "git config --global --add safe.directory '${REMOTE_TMP}' && cd '${REMOTE_TMP}' && if git diff --quiet && git diff --cached --quiet; then echo 'No changes to deploy.'; else git add . && git commit -m \"${COMMIT_MESSAGE//\"/\\\"}\" && git push origin '${BRANCH}'; fi"

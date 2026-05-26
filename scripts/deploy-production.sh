@@ -86,6 +86,20 @@ require_command() {
   fi
 }
 
+require_node_20_9() {
+  local label="$1"
+  local version
+  version="$(node -p "process.versions.node" 2>/dev/null || true)"
+  if [[ -z "$version" ]]; then
+    echo "Missing required command for $label: node" >&2
+    exit 1
+  fi
+  node -e "const [major, minor] = process.versions.node.split('.').map(Number); process.exit(major > 20 || (major === 20 && minor >= 9) ? 0 : 1)" || {
+    echo "$label requires Node.js 20.9.0 or newer for Next.js 16. Current version: $version" >&2
+    exit 1
+  }
+}
+
 public_smoke_check() {
   local method="$1"
   local label="$2"
@@ -154,6 +168,7 @@ fi
 
 if [[ "$RUN_FRONTEND_BUILD" == "1" ]]; then
   log "Running frontend build"
+  require_node_20_9 "Local frontend build"
   (cd frontend && npm run build)
 else
   log "Skipping frontend build"
