@@ -507,6 +507,7 @@ func (s *MemoryStore) BootstrapAdmin(ctx context.Context, input domain.AdminUser
 		CompanyName: strings.TrimSpace(input.CompanyName),
 		CountryCode: defaultString(strings.ToUpper(strings.TrimSpace(input.CountryCode)), "KE"),
 		Status:      "active",
+		EmailVerified: true,
 	}
 	s.users = append([]DemoUser{{User: user, Password: hash}}, s.users...)
 	return user, true, nil

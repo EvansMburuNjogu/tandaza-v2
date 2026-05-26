@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -877,8 +878,9 @@ func TestExhibitorActivationPaymentCreatesCommission(t *testing.T) {
 	handler := testServer()
 	exhibitorToken := loginForTest(t, handler, "exhibitor@tandaza.demo", "exhibitor123")
 	organizerToken := loginForTest(t, handler, "organizer@tandaza.demo", "organizer123")
+	expoID := createAssignedPayableExpoForTest(t, handler)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/expo_001/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"test_activation_001"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/"+expoID+"/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"test_activation_001"}`))
 	req.Header.Set("Authorization", "Bearer "+exhibitorToken)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -938,7 +940,8 @@ func TestVisitorCannotCreateActivationPayment(t *testing.T) {
 func TestPaystackWebhookConfirmsPayment(t *testing.T) {
 	handler := testServer()
 	exhibitorToken := loginForTest(t, handler, "exhibitor@tandaza.demo", "exhibitor123")
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/expo_001/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"webhook_activation_001"}`))
+	expoID := createAssignedPayableExpoForTest(t, handler)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/"+expoID+"/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"webhook_activation_001"}`))
 	req.Header.Set("Authorization", "Bearer "+exhibitorToken)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -961,7 +964,7 @@ func TestPaystackWebhookConfirmsPayment(t *testing.T) {
 		t.Fatalf("webhook confirm failed: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/expo_001/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"webhook_failed_001"}`))
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/"+expoID+"/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"webhook_failed_001"}`))
 	req.Header.Set("Authorization", "Bearer "+exhibitorToken)
 	rec = httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -988,8 +991,9 @@ func TestAdminCanRecordPaymentRefund(t *testing.T) {
 	handler := testServer()
 	adminToken := loginForTest(t, handler, "admin@tandaza.demo", "admin123")
 	exhibitorToken := loginForTest(t, handler, "exhibitor@tandaza.demo", "exhibitor123")
+	expoID := createAssignedPayableExpoForTest(t, handler)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/expo_001/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"admin_refund_001"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/"+expoID+"/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"admin_refund_001"}`))
 	req.Header.Set("Authorization", "Bearer "+exhibitorToken)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -1043,7 +1047,8 @@ func TestProviderModeInitializesPaystackAndRequiresSignedWebhook(t *testing.T) {
 	handler := NewServer(cfg, slog.Default(), mem, tokenService).Routes()
 
 	exhibitorToken := loginForTest(t, handler, "exhibitor@tandaza.demo", "exhibitor123")
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/expo_001/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"provider_activation_001"}`))
+	expoID := createAssignedPayableExpoForTest(t, handler)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/exhibitor/expos/"+expoID+"/activation-payments", bytes.NewBufferString(`{"idempotencyKey":"provider_activation_001"}`))
 	req.Header.Set("Authorization", "Bearer "+exhibitorToken)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
@@ -1165,7 +1170,7 @@ func TestVisitorRemoteExpoAccessBookingQRCodeAndLead(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+exhibitorToken)
 	rec = httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte("Called and booked product demo.")) {
+	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte("Introductory call completed.")) {
 		t.Fatalf("exhibitor leads missing captured lead: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
@@ -1563,6 +1568,46 @@ func loginForTest(t *testing.T, handler http.Handler, email string, password str
 		t.Fatalf("decode login: %v", err)
 	}
 	return login.Token
+}
+
+func createAssignedPayableExpoForTest(t *testing.T, handler http.Handler) string {
+	t.Helper()
+	adminToken := loginForTest(t, handler, "admin@tandaza.demo", "admin123")
+	suffix := time.Now().UnixNano()
+	payload := `{"name":"Payment Test Expo ` + strconv.FormatInt(suffix, 10) + `","description":"Payment test workspace.","organizerId":"usr_organizer_001","countryCode":"KE","city":"Nairobi","venue":"KICC","currencyCode":"KES","timezone":"Africa/Nairobi","exhibitorActivationFeeMinor":500000,"organizerCommissionBps":3000,"startDate":"2026-09-10","endDate":"2026-09-12","categoryIds":["cat_technology"]}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/expos", bytes.NewBufferString(payload))
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create payable expo failed: status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	var expo struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &expo); err != nil {
+		t.Fatalf("decode payable expo: %v", err)
+	}
+	if expo.ID == "" {
+		t.Fatalf("created payable expo missing id: body=%s", rec.Body.String())
+	}
+
+	req = httptest.NewRequest(http.MethodPatch, "/api/v1/admin/expos/"+expo.ID+"/status", bytes.NewBufferString(`{"status":"published"}`))
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("publish payable expo failed: status=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/admin/exhibitor-assignments", bytes.NewBufferString(`{"expoId":"`+expo.ID+`","exhibitorId":"usr_exhibitor_001","status":"invited"}`))
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("assign payable expo failed: status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	return expo.ID
 }
 
 func TestVisitorAggregatesIncludeProfileVisitsWithoutDuplicates(t *testing.T) {
