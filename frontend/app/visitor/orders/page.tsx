@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { ChevronDownIcon, SearchIcon } from "@/components/ui/icons"
+import { DataTable, DataTableColumn } from "@/components/admin/data-table"
 import { api } from "@/lib/api"
 import { VisitorPreOrder } from "@/lib/api/contracts"
 import { useSessionStore } from "@/store/session-store"
@@ -113,6 +114,78 @@ export default function VisitorOrdersPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
   const visibleOrders = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+  const columns = useMemo<DataTableColumn<VisitorPreOrder>[]>(() => [
+    {
+      key: "productName",
+      header: "Product",
+      sortable: true,
+      sortValue: (order) => order.productName || "",
+      render: (order) => (
+        <div className="min-w-0">
+          <p className="font-semibold text-foreground">{order.productName || "Product pre-order"}</p>
+          <p className="mt-1 text-xs text-muted">{order.exhibitorName || "Exhibitor"}</p>
+        </div>
+      )
+    },
+    {
+      key: "expoName",
+      header: "Expo",
+      sortable: true,
+      sortValue: (order) => order.expoName || "",
+      render: (order) => <span className="text-sm text-muted">{order.expoName || "N/A"}</span>
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      sortable: true,
+      sortValue: (order) => order.quantity || 1,
+      render: (order) => <span className="font-mono text-sm font-semibold text-foreground">{order.quantity || 1}</span>
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      sortable: true,
+      sortValue: (order) => orderAmount(order),
+      render: (order) => (
+        <span className="font-mono text-sm font-semibold text-foreground">
+          {formatCurrency(orderAmount(order), order.currency || "KES")}
+        </span>
+      )
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      sortValue: (order) => order.status,
+      render: (order) => (
+        <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1", statusClass(order.status))}>
+          {statusLabel(order.status)}
+        </span>
+      )
+    },
+    {
+      key: "date",
+      header: "Date",
+      sortable: true,
+      sortValue: (order) => orderDate(order),
+      render: (order) => <span className="text-sm text-muted">{formatDate(orderDate(order))}</span>
+    },
+    {
+      key: "action",
+      header: "Action",
+      render: (order) => {
+        const href = order.expoId && order.exhibitorId
+          ? `/visitor/expos/${order.expoId}/exhibitors/${order.exhibitorId}${order.productId ? `/products/${order.productId}` : ""}`
+          : "/visitor/expos"
+
+        return (
+          <Link href={href} className={buttonClasses({ variant: "secondary", className: "h-9 px-3" })}>
+            View
+          </Link>
+        )
+      }
+    }
+  ], [])
 
   if (isLoading || !data) {
     return (
@@ -184,10 +257,21 @@ export default function VisitorOrdersPage() {
           </div>
         </Card>
 
-        {visibleOrders.length ? (
-          <div className="grid gap-4">
-            {visibleOrders.map((order) => <OrderCard key={order.id} order={order} />)}
-          </div>
+        {filtered.length ? (
+          <>
+            <div className="hidden md:block">
+              <DataTable<VisitorPreOrder>
+                rows={filtered}
+                columns={columns}
+                pageSize={PAGE_SIZE}
+                emptyTitle="No pre-orders yet"
+                emptyDescription="Open an expo, choose an exhibitor product, and make a pre-order."
+              />
+            </div>
+            <div className="grid gap-4 md:hidden">
+              {visibleOrders.map((order) => <OrderCard key={order.id} order={order} />)}
+            </div>
+          </>
         ) : (
           <Card className="p-8 text-center sm:p-12">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-lg font-semibold text-primary">PO</div>
@@ -198,7 +282,7 @@ export default function VisitorOrdersPage() {
         )}
 
         {filtered.length > PAGE_SIZE ? (
-          <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-card px-3 py-2 text-sm">
+          <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-card px-3 py-2 text-sm md:hidden">
             <span className="text-xs font-semibold text-muted">Page {safePage} of {totalPages}</span>
             <div className="flex gap-2">
               <Button type="button" variant="secondary" disabled={safePage <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Previous</Button>
