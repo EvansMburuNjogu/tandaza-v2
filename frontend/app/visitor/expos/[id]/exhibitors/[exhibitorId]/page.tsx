@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
-import { BellIcon, CalendarIcon, ChatIcon, DownloadIcon, FeedbackIcon, HeartIcon } from "@/components/ui/icons"
+import { BellIcon, CalendarIcon, ChatIcon, DownloadIcon, FeedbackIcon, GlobeIcon, HeartIcon } from "@/components/ui/icons"
 import { VisitorPhoneInput, fullPhoneNumber } from "@/components/visitor/phone-input"
 import { api } from "@/lib/api"
 import { useSessionStore } from "@/store/session-store"
@@ -80,6 +80,13 @@ function QuickAction({
   )
 
   if (href) {
+    if (/^https?:\/\//i.test(href)) {
+      return (
+        <a href={href} target="_blank" rel="noreferrer" className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
+          {content}
+        </a>
+      )
+    }
     return (
       <Link href={href} className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card">
         {content}
@@ -264,6 +271,7 @@ export default function VisitorExhibitorPage() {
         <section>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
             <QuickAction label="Chat" icon={ChatIcon} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/chat`} badge={chatUnreadCount} />
+            {websiteHref ? <QuickAction label="Website" icon={GlobeIcon} href={websiteHref} /> : null}
             <QuickAction label="Interested" icon={HeartIcon} onClick={() => setDialog("interest")} />
             <QuickAction label="Meeting" icon={CalendarIcon} onClick={() => setDialog("meeting")} />
             <QuickAction label="Feedback" icon={FeedbackIcon} href={`/visitor/expos/${expoId}/exhibitors/${booth.id}/feedback`} />
