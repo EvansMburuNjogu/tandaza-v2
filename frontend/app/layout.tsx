@@ -14,13 +14,15 @@ export const metadata: Metadata = {
   },
   description:
     "Tandaza connects organizers, exhibitors, sponsors, and visitors in a single platform. End-to-end expo lifecycle management built for African markets.",
-  metadataBase: new URL("https://tandaza.com"),
+  metadataBase: new URL("https://tandaza.africa"),
   robots: { index: true, follow: true },
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/icon.png", type: "image/png" },
       { url: "/favicon.png", type: "image/png" },
     ],
+    shortcut: "/favicon.ico",
     apple: "/apple-icon.png",
   },
 }
