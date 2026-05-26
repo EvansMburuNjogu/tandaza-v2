@@ -42,6 +42,9 @@ type MemoryStore struct {
 	chatThreads              []domain.ExhibitorConversationThread
 	chatMessages             []domain.ChatMessageRecord
 	exhibitorLiveStreams     []domain.ExhibitorLiveStreamRecord
+	liveStreamChatSessions   map[string]memoryLiveStreamChatSession
+	liveStreamChatMessages   []domain.LiveStreamChatMessageRecord
+	tourProgress             []domain.UserTourProgressRecord
 	exhibitorFeedback        []domain.ExhibitorFeedbackRecord
 	organizerFeedback        []domain.OrganizerFeedbackRecord
 	exhibitorCampaignDrafts  []domain.ExhibitorCampaignDraftRecord
@@ -82,6 +85,15 @@ type MemoryStore struct {
 type memoryFavorite struct {
 	VisitorID string
 	Record    domain.VisitorFavoriteRecord
+}
+
+type memoryLiveStreamChatSession struct {
+	ID          string
+	ExpoID      string
+	ExhibitorID string
+	Active      bool
+	StartedAt   string
+	EndedAt     string
 }
 
 func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
@@ -131,6 +143,7 @@ func NewMemoryStore(tokenService auth.TokenService) *MemoryStore {
 		commissions: map[string]domain.CommissionSplit{
 			"pay_001": {GrossMinor: 600000, CommissionMinor: 180000, PlatformMinor: 420000, RateBps: 3000, CurrencyCode: "KES"},
 		},
+		liveStreamChatSessions: map[string]memoryLiveStreamChatSession{},
 		exhibitors: []domain.ExpoExhibitor{
 			{
 				ID: "exe_001", ExpoID: "expo_001", ExpoName: "Nairobi Tech Expo", ExpoDescription: "East Africa's premier technology exhibition.",
@@ -1591,11 +1604,144 @@ func (s *MemoryStore) UpdateExhibitorLiveStream(ctx context.Context, expoID stri
 	for i, existing := range s.exhibitorLiveStreams {
 		if existing.ExpoID == expoID && existing.ExhibitorID == exhibitorID {
 			s.exhibitorLiveStreams[i] = item
+			s.updateLiveStreamChatSessionLocked(expoID, exhibitorID, item.LiveChatEnabled, now)
 			return item, nil
 		}
 	}
 	s.exhibitorLiveStreams = append([]domain.ExhibitorLiveStreamRecord{item}, s.exhibitorLiveStreams...)
+	s.updateLiveStreamChatSessionLocked(expoID, exhibitorID, item.LiveChatEnabled, now)
 	return item, nil
+}
+
+func (s *MemoryStore) ListLiveStreamChatMessages(ctx context.Context, expoID string, exhibitorID string, actor domain.User) ([]domain.LiveStreamChatMessageRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	session, err := s.liveStreamChatSessionForActorLocked(expoID, exhibitorID, actor, false)
+	if err != nil {
+		return nil, err
+	}
+	items := []domain.LiveStreamChatMessageRecord{}
+	for _, message := range s.liveStreamChatMessages {
+		if message.SessionID == session.ID {
+			items = append(items, message)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool { return items[i].CreatedAt < items[j].CreatedAt })
+	return items, nil
+}
+
+func (s *MemoryStore) CreateLiveStreamChatMessage(ctx context.Context, expoID string, exhibitorID string, input domain.LiveStreamChatMessageInput, actor domain.User) (domain.LiveStreamChatMessageRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	message := strings.TrimSpace(input.Message)
+	if message == "" || len(message) > 1000 || (actor.Role != domain.RoleVisitor && actor.Role != domain.RoleExhibitor) {
+		return domain.LiveStreamChatMessageRecord{}, ErrInvalidCredentials
+	}
+	session, err := s.liveStreamChatSessionForActorLocked(expoID, exhibitorID, actor, true)
+	if err != nil {
+		return domain.LiveStreamChatMessageRecord{}, err
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	record := domain.LiveStreamChatMessageRecord{
+		ID: fmt.Sprintf("lsmsg_%06d", len(s.liveStreamChatMessages)+1), SessionID: session.ID, ExpoID: expoID, ExhibitorID: exhibitorID,
+		SenderID: actor.ID, SenderRole: actor.Role, SenderName: nonEmptyString(actor.CompanyName, actor.Name), Message: message, CreatedAt: now,
+	}
+	if actor.Role == domain.RoleVisitor {
+		record.VisitorID = actor.ID
+	}
+	s.liveStreamChatMessages = append(s.liveStreamChatMessages, record)
+	return record, nil
+}
+
+func (s *MemoryStore) liveStreamChatSessionForActorLocked(expoID string, exhibitorID string, actor domain.User, requireActive bool) (memoryLiveStreamChatSession, error) {
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	if !s.expoExhibitorExistsLocked(expoID, exhibitorID) {
+		return memoryLiveStreamChatSession{}, ErrNotFound
+	}
+	if actor.Role == domain.RoleExhibitor && actor.ID != exhibitorID {
+		return memoryLiveStreamChatSession{}, ErrInvalidCredentials
+	}
+	if actor.Role != domain.RoleVisitor && actor.Role != domain.RoleExhibitor {
+		return memoryLiveStreamChatSession{}, ErrInvalidCredentials
+	}
+	streamEnabled := false
+	for _, stream := range s.exhibitorLiveStreams {
+		if stream.ExpoID == expoID && stream.ExhibitorID == exhibitorID {
+			streamEnabled = stream.Enabled && stream.LiveChatEnabled
+			break
+		}
+	}
+	key := expoID + ":" + exhibitorID
+	session, ok := s.liveStreamChatSessions[key]
+	if !ok || session.ID == "" {
+		session = memoryLiveStreamChatSession{ID: fmt.Sprintf("lsc_%d", time.Now().UTC().UnixNano()), ExpoID: expoID, ExhibitorID: exhibitorID, Active: streamEnabled, StartedAt: time.Now().UTC().Format(time.RFC3339)}
+		s.liveStreamChatSessions[key] = session
+	}
+	if requireActive && (!streamEnabled || !session.Active) {
+		return memoryLiveStreamChatSession{}, ErrInvalidCredentials
+	}
+	return session, nil
+}
+
+func (s *MemoryStore) updateLiveStreamChatSessionLocked(expoID string, exhibitorID string, active bool, now string) {
+	key := strings.TrimSpace(expoID) + ":" + strings.TrimSpace(exhibitorID)
+	session := s.liveStreamChatSessions[key]
+	if active {
+		if session.ID == "" || !session.Active {
+			session = memoryLiveStreamChatSession{ID: fmt.Sprintf("lsc_%d", time.Now().UTC().UnixNano()), ExpoID: expoID, ExhibitorID: exhibitorID, Active: true, StartedAt: now}
+		}
+	} else if session.ID != "" && session.Active {
+		session.Active = false
+		session.EndedAt = now
+	}
+	if session.ID != "" {
+		s.liveStreamChatSessions[key] = session
+	}
+}
+
+func (s *MemoryStore) ListTourProgress(ctx context.Context, actor domain.User) ([]domain.UserTourProgressRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	items := []domain.UserTourProgressRecord{}
+	for _, item := range s.tourProgress {
+		if item.UserID == actor.ID && item.Role == actor.Role {
+			items = append(items, item)
+		}
+	}
+	return items, nil
+}
+
+func (s *MemoryStore) SaveTourProgress(ctx context.Context, actor domain.User, input domain.UserTourProgressInput) (domain.UserTourProgressRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	pageKey := strings.TrimSpace(input.PageKey)
+	if pageKey == "" || len(pageKey) > 80 {
+		return domain.UserTourProgressRecord{}, ErrInvalidCredentials
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	record := domain.UserTourProgressRecord{UserID: actor.ID, Role: actor.Role, PageKey: pageKey, Seen: input.Seen, UpdatedAt: now}
+	if input.Seen && !input.Skipped {
+		record.CompletedAt = now
+	}
+	if input.Skipped {
+		record.Seen = true
+		record.SkippedAt = now
+	}
+	for i, item := range s.tourProgress {
+		if item.UserID == actor.ID && item.Role == actor.Role && item.PageKey == pageKey {
+			if item.CompletedAt != "" && record.CompletedAt == "" {
+				record.CompletedAt = item.CompletedAt
+			}
+			if item.SkippedAt != "" && record.SkippedAt == "" {
+				record.SkippedAt = item.SkippedAt
+			}
+			s.tourProgress[i] = record
+			return record, nil
+		}
+	}
+	s.tourProgress = append(s.tourProgress, record)
+	return record, nil
 }
 
 func (s *MemoryStore) ListExhibitorFeedback(ctx context.Context, filter ExhibitorFeedbackFilter) ([]domain.ExhibitorFeedbackRecord, error) {

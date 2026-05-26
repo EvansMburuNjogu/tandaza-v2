@@ -788,6 +788,39 @@ type ExhibitorLiveStreamRecord struct {
 	UpdatedAt       string `json:"updatedAt"`
 }
 
+type LiveStreamChatMessageInput struct {
+	Message string `json:"message"`
+}
+
+type LiveStreamChatMessageRecord struct {
+	ID          string `json:"id"`
+	SessionID   string `json:"sessionId"`
+	ExpoID      string `json:"expoId"`
+	ExhibitorID string `json:"exhibitorId"`
+	VisitorID   string `json:"visitorId,omitempty"`
+	SenderID    string `json:"senderId"`
+	SenderRole  Role   `json:"senderRole"`
+	SenderName  string `json:"senderName"`
+	Message     string `json:"message"`
+	CreatedAt   string `json:"createdAt"`
+}
+
+type UserTourProgressInput struct {
+	PageKey string `json:"pageKey"`
+	Seen    bool   `json:"seen"`
+	Skipped bool   `json:"skipped"`
+}
+
+type UserTourProgressRecord struct {
+	UserID      string `json:"userId"`
+	Role        Role   `json:"role"`
+	PageKey     string `json:"pageKey"`
+	Seen        bool   `json:"seen"`
+	CompletedAt string `json:"completedAt,omitempty"`
+	SkippedAt   string `json:"skippedAt,omitempty"`
+	UpdatedAt   string `json:"updatedAt"`
+}
+
 type LeadActivityRecord struct {
 	ID          string `json:"id"`
 	LeadID      string `json:"leadId"`

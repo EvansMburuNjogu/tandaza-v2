@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { usePathname } from "next/navigation"
+import { api } from "@/lib/api"
+import { useSessionStore } from "@/store/session-store"
 
 type TourRole = "visitor" | "organizer" | "exhibitor"
 
@@ -163,12 +165,14 @@ function accountPageSteps(role: "organizer" | "exhibitor", pathname: string): To
 
 export function TandazaIntroTour({ role }: { role: TourRole }) {
   const pathname = usePathname()
+  const token = useSessionStore((s) => s.token)
+  const [seenPages, setSeenPages] = useState<Set<string>>(new Set())
+  const [loaded, setLoaded] = useState(false)
   const pageKey = role === "visitor"
     ? visitorPageKey(pathname)
     : role === "organizer"
       ? organizerPageKey(pathname)
       : exhibitorPageKey(pathname)
-  const storageKey = `tandaza:intro:${role}:${pageKey}:seen`
   const steps = useMemo(() => {
     if (role === "visitor") return visitorPageSteps(pathname)
     return accountPageSteps(role, pathname)
@@ -176,7 +180,27 @@ export function TandazaIntroTour({ role }: { role: TourRole }) {
 
   useEffect(() => {
     let cancelled = false
-    if (window.localStorage.getItem(storageKey) === "true") return
+    if (!token) return
+    setLoaded(false)
+    api.getTourProgress(token)
+      .then((items) => {
+        if (cancelled) return
+        setSeenPages(new Set(items.filter((item) => item.seen).map((item) => item.pageKey)))
+      })
+      .catch(() => {
+        if (!cancelled) setSeenPages(new Set())
+      })
+      .finally(() => {
+        if (!cancelled) setLoaded(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token])
+
+  useEffect(() => {
+    let cancelled = false
+    if (!token || !loaded || seenPages.has(pageKey)) return
 
     const timeout = window.setTimeout(() => {
       if (!cancelled) void startTour()
@@ -187,7 +211,17 @@ export function TandazaIntroTour({ role }: { role: TourRole }) {
       window.clearTimeout(timeout)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey, steps])
+  }, [loaded, pageKey, seenPages, steps, token])
+
+  async function markSeen(skipped: boolean) {
+    setSeenPages((current) => new Set([...current, pageKey]))
+    if (!token) return
+    try {
+      await api.saveTourProgress(token, { pageKey, seen: true, skipped })
+    } catch {
+      // Keep the guide quiet for this session even if persistence is briefly unavailable.
+    }
+  }
 
   async function startTour() {
     const availableSteps = steps.filter((step) => !step.element || document.querySelector(step.element))
@@ -207,8 +241,8 @@ export function TandazaIntroTour({ role }: { role: TourRole }) {
       tooltipClass: "tandaza-intro-tooltip",
       highlightClass: "tandaza-intro-highlight"
     })
-    tour.oncomplete(() => window.localStorage.setItem(storageKey, "true"))
-    tour.onexit(() => window.localStorage.setItem(storageKey, "true"))
+    tour.oncomplete(() => void markSeen(false))
+    tour.onexit(() => void markSeen(true))
     tour.start()
   }
 

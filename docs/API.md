@@ -255,6 +255,26 @@ Currently country-scoped admin collections include overview, reports, expos, org
 | `GET` | `/api/v1/organizer/sponsors/{id}` | View one sponsor relationship |
 | `PATCH` | `/api/v1/organizer/sponsors/{id}` | Update sponsor contact, commission rate, or status |
 
+## Account Guide Progress
+
+| Method | Path | Role | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/me/tour-progress` | authenticated | List intro guide pages already seen by the current user |
+| `PATCH` | `/api/v1/me/tour-progress` | authenticated | Save intro guide completion or skip state for a page key |
+
+## Live Stream Chat
+
+Live stream chat is separate from permanent visitor/exhibitor conversations. It is available only while the exhibitor has enabled live stream chat for an active live stream.
+
+| Method | Path | Role | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/exhibitor/expos/{id}/live-stream/chat` | exhibitor | List messages for the current active live stream chat session |
+| `POST` | `/api/v1/exhibitor/expos/{id}/live-stream/chat` | exhibitor | Send a message into the active live stream chat session |
+| `GET` | `/api/v1/exhibitor/expos/{id}/live-stream/chat/ws` | exhibitor | Websocket refresh channel for live stream chat |
+| `GET` | `/api/v1/visitor/expos/{id}/exhibitors/{exhibitorId}/live-stream/chat` | visitor | List live stream chat messages for the visitor-facing stream |
+| `POST` | `/api/v1/visitor/expos/{id}/exhibitors/{exhibitorId}/live-stream/chat` | visitor | Send a live stream chat message while chat is enabled |
+| `GET` | `/api/v1/visitor/expos/{id}/exhibitors/{exhibitorId}/live-stream/chat/ws` | visitor | Websocket refresh channel for visitor live stream chat |
+
 ## Expo Lifecycle
 
 Supported statuses:

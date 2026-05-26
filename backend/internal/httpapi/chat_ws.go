@@ -13,9 +13,10 @@ import (
 )
 
 type chatSocketEvent struct {
-	Type    string                             `json:"type"`
-	Thread  domain.ExhibitorConversationThread `json:"thread"`
-	Message domain.ChatMessageRecord           `json:"message,omitempty"`
+	Type              string                             `json:"type"`
+	Thread            domain.ExhibitorConversationThread `json:"thread,omitempty"`
+	Message           domain.ChatMessageRecord           `json:"message,omitempty"`
+	LiveStreamMessage domain.LiveStreamChatMessageRecord `json:"liveStreamMessage,omitempty"`
 }
 
 type chatHub struct {
@@ -100,6 +101,46 @@ func (s *Server) chatWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) liveStreamChatWebSocket(w http.ResponseWriter, r *http.Request) {
+	claims, ok := s.claimsFromWebSocket(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	actor, err := s.store.UserByID(r.Context(), claims.UserID)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if actor.Role == domain.RoleExhibitor {
+		actor = s.exhibitorWorkspaceUser(r.Context(), actor)
+	}
+	expoID := r.PathValue("id")
+	exhibitorID := r.PathValue("exhibitorId")
+	if actor.Role == domain.RoleExhibitor {
+		exhibitorID = actor.ID
+	}
+	if _, err := s.store.ListLiveStreamChatMessages(r.Context(), expoID, exhibitorID, actor); err != nil {
+		http.Error(w, "live stream chat not found", http.StatusNotFound)
+		return
+	}
+	channelID := liveStreamChatChannelID(expoID, exhibitorID)
+	conn, err := chatUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	s.chatHub.add(channelID, conn)
+	defer func() {
+		s.chatHub.remove(channelID, conn)
+		_ = conn.Close()
+	}()
+	for {
+		if _, _, err := conn.NextReader(); err != nil {
+			return
+		}
+	}
+}
+
 func (s *Server) claimsFromWebSocket(r *http.Request) (auth.Claims, bool) {
 	token := strings.TrimSpace(r.URL.Query().Get("token"))
 	if token == "" {
@@ -110,6 +151,10 @@ func (s *Server) claimsFromWebSocket(r *http.Request) (auth.Claims, bool) {
 		return auth.Claims{}, false
 	}
 	return claims, true
+}
+
+func liveStreamChatChannelID(expoID string, exhibitorID string) string {
+	return "live-stream:" + strings.TrimSpace(expoID) + ":" + strings.TrimSpace(exhibitorID)
 }
 
 func structToChatThreadFilter(expoID string, threadID string, actor domain.User) store.ChatThreadFilter {

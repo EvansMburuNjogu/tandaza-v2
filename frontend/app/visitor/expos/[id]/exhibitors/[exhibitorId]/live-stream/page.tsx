@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
@@ -11,7 +11,6 @@ import { BackLink } from "@/components/ui/back-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState } from "@/components/ui/error-state"
 import { api } from "@/lib/api"
-import { latestIncomingConversationMessages, notifyIncomingConversationMessage } from "@/lib/conversation-notifications"
 import { useSessionStore } from "@/store/session-store"
 import { findVisitorBooth } from "@/lib/visitor-expo"
 import { formatDate } from "@/lib/utils"
@@ -24,8 +23,6 @@ export default function VisitorLiveStreamPage() {
   const user = useSessionStore((s) => s.user)
   const queryClient = useQueryClient()
   const [message, setMessage] = useState("")
-  const seenConversationMessageIds = useRef<Set<string>>(new Set())
-  const conversationNotificationsReady = useRef(false)
   const sessionReady = Boolean(token && user?.role === "visitor")
   const { data, isLoading, error } = useQuery({
     queryKey: ["visitor-expo-details", expoId],
@@ -35,41 +32,45 @@ export default function VisitorLiveStreamPage() {
   const booth = findVisitorBooth(data, exhibitorId)
   const liveStream = booth?.liveStream
   const liveChatEnabled = Boolean(liveStream?.enabled && liveStream.liveChatEnabled)
-  const conversationsQuery = useQuery({
-    queryKey: ["visitor-expo-conversations", expoId],
-    queryFn: () => api.getVisitorExpoConversations(token || "", expoId),
+  const liveChatQuery = useQuery({
+    queryKey: ["visitor-live-stream-chat", expoId, booth?.exhibitorId],
+    queryFn: () => api.getVisitorLiveStreamChat(token || "", expoId, booth?.exhibitorId || ""),
     enabled: sessionReady && Boolean(expoId) && liveChatEnabled,
     refetchInterval: liveChatEnabled ? 5000 : false
   })
-  const thread = useMemo(() => conversationsQuery.data?.find((item) => item.exhibitorId === booth?.exhibitorId), [booth?.exhibitorId, conversationsQuery.data])
-  const messages = thread?.messages || []
+  const messages = liveChatQuery.data || []
 
   useEffect(() => {
-    const incoming = latestIncomingConversationMessages(thread ? [thread] : [], "exhibitor")
-    if (!incoming.length) return
-    if (!conversationNotificationsReady.current) {
-      incoming.forEach(({ messageId }) => seenConversationMessageIds.current.add(messageId))
-      conversationNotificationsReady.current = true
-      return
+    if (!sessionReady || !token || !booth?.exhibitorId || !liveChatEnabled) return
+    let socket: WebSocket | null = null
+    let cancelled = false
+    fetch("/api/auth/realtime-token", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => {
+        if (cancelled || !payload?.token || !booth?.exhibitorId) return
+        const base = process.env.NEXT_PUBLIC_API_BASE_URL || window.location.origin
+        const wsBase = base.replace(/^https:/, "wss:").replace(/^http:/, "ws:")
+        socket = new WebSocket(`${wsBase}/api/v1/visitor/expos/${encodeURIComponent(expoId)}/exhibitors/${encodeURIComponent(booth.exhibitorId)}/live-stream/chat/ws?token=${encodeURIComponent(payload.token)}`)
+        socket.onmessage = () => queryClient.invalidateQueries({ queryKey: ["visitor-live-stream-chat", expoId, booth.exhibitorId] })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+      socket?.close()
     }
-    incoming.forEach(({ thread: incomingThread, messageId }) => {
-      if (seenConversationMessageIds.current.has(messageId)) return
-      seenConversationMessageIds.current.add(messageId)
-      notifyIncomingConversationMessage(incomingThread)
-    })
-  }, [thread])
+  }, [booth?.exhibitorId, expoId, liveChatEnabled, queryClient, sessionReady, token])
 
   const chatMutation = useMutation({
     mutationFn: () => {
       if (!booth) throw new Error("Exhibitor not found")
       if (!liveChatEnabled) throw new Error("Live chat is not enabled for this stream.")
       if (message.trim().length < 2) throw new Error("Write a message first.")
-      return api.sendVisitorExpoChatMessage(token || "", expoId, booth.exhibitorId, { message: message.trim() })
+      return api.sendVisitorLiveStreamChatMessage(token || "", expoId, booth.exhibitorId, { message: message.trim() })
     },
     onSuccess: () => {
       setMessage("")
-      queryClient.invalidateQueries({ queryKey: ["visitor-expo-conversations", expoId] })
-      toast.success("Message sent.")
+      queryClient.invalidateQueries({ queryKey: ["visitor-live-stream-chat", expoId, booth?.exhibitorId] })
+      toast.success("Live message sent.")
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not send message.")
   })
@@ -124,7 +125,7 @@ export default function VisitorLiveStreamPage() {
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-elevated/35 p-4">
               {!liveChatEnabled ? (
                 <div className="flex min-h-[18rem] items-center justify-center text-center text-sm text-muted">Chat will appear here when the exhibitor enables it.</div>
-              ) : conversationsQuery.isLoading ? (
+              ) : liveChatQuery.isLoading ? (
                 <div className="flex min-h-[18rem] items-center justify-center text-center text-sm text-muted">Loading chat...</div>
               ) : messages.length ? messages.map((item) => (
                 <div key={item.id} className={`max-w-[88%] break-words rounded-2xl p-3 text-sm ${item.senderRole === "visitor" ? "ml-auto bg-primary text-white" : "border border-border/70 bg-card text-foreground"}`}>

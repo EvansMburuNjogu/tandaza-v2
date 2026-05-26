@@ -1117,6 +1117,35 @@ export interface ChatMessagePayload {
   message: string
 }
 
+export interface LiveStreamChatMessage {
+  id: string
+  sessionId: string
+  expoId: string
+  exhibitorId: string
+  visitorId?: string
+  senderId: string
+  senderRole: Role
+  senderName: string
+  message: string
+  createdAt: string
+}
+
+export interface TourProgressRecord {
+  userId: string
+  role: Role
+  pageKey: string
+  seen: boolean
+  completedAt?: string
+  skippedAt?: string
+  updatedAt: string
+}
+
+export interface TourProgressPayload {
+  pageKey: string
+  seen: boolean
+  skipped?: boolean
+}
+
 export interface ExhibitorLiveStream {
   expoId: string
   exhibitorId: string
@@ -1369,6 +1398,8 @@ export interface ApiDriver {
   sendExpoChatMessage(token: string, expoId: string, threadId: string, data: ChatMessagePayload): Promise<{ thread: ExhibitorConversationThread; message: ChatMessage }>
   getExpoLiveStream(token: string, expoId: string): Promise<ExhibitorLiveStream>
   updateExpoLiveStream(token: string, expoId: string, data: ExhibitorLiveStreamPayload): Promise<ExhibitorLiveStream>
+  getExpoLiveStreamChat(token: string, expoId: string): Promise<LiveStreamChatMessage[]>
+  sendExpoLiveStreamChatMessage(token: string, expoId: string, data: ChatMessagePayload): Promise<LiveStreamChatMessage>
   exportExpoLeads(token: string, expoId: string): Promise<Blob>
   getExpoPreOrders(token: string, expoId: string): Promise<PreOrder[]>
   updateExpoPreOrderStatus(token: string, expoId: string, orderId: string, status: PreOrder["status"]): Promise<PreOrder>
@@ -1424,6 +1455,10 @@ export interface ApiDriver {
   getVisitorExpoConversations(token: string, expoId: string): Promise<ExhibitorConversationThread[]>
   markVisitorExpoConversationRead(token: string, expoId: string, exhibitorId: string): Promise<{ updated: number }>
   sendVisitorExpoChatMessage(token: string, expoId: string, exhibitorId: string, data: ChatMessagePayload): Promise<{ thread: ExhibitorConversationThread; message: ChatMessage }>
+  getVisitorLiveStreamChat(token: string, expoId: string, exhibitorId: string): Promise<LiveStreamChatMessage[]>
+  sendVisitorLiveStreamChatMessage(token: string, expoId: string, exhibitorId: string, data: ChatMessagePayload): Promise<LiveStreamChatMessage>
+  getTourProgress(token: string): Promise<TourProgressRecord[]>
+  saveTourProgress(token: string, data: TourProgressPayload): Promise<TourProgressRecord>
   getVisitorFeedback(token: string): Promise<VisitorFeedback[]>
   submitFeedback(token: string, expoId: string, rating: number, comment: string, exhibitorId?: string): Promise<VisitorFeedback>
   getVisitorPreOrders(token: string): Promise<VisitorPreOrder[]>

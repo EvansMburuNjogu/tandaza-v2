@@ -47,6 +47,7 @@ import {
   LeadCreatePayload,
   LeadMessagePayload,
   LeadUpdatePayload,
+  LiveStreamChatMessage,
   MeetingSettings,
   MediaUpload,
   MyExpoRegistration,
@@ -102,6 +103,8 @@ import {
   VisitorPreOrder,
   VisitorSettings,
   WhatsappSettings,
+  TourProgressPayload,
+  TourProgressRecord,
   UserRecord
 } from "@/lib/api/contracts"
 import { httpOnlySessionToken } from "@/lib/auth/session-token"
@@ -641,6 +644,12 @@ export const httpApi: ApiDriver = {
   updateExpoLiveStream(token: string, expoId: string, data: ExhibitorLiveStreamPayload): Promise<ExhibitorLiveStream> {
     return request(`/api/v1/exhibitor/expos/${expoId}/live-stream`, { method: "PATCH", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
   },
+  getExpoLiveStreamChat(token: string, expoId: string): Promise<LiveStreamChatMessage[]> {
+    return requestItems(`/api/v1/exhibitor/expos/${expoId}/live-stream/chat`, { headers: { Authorization: `Bearer ${token}` } })
+  },
+  sendExpoLiveStreamChatMessage(token: string, expoId: string, data: ChatMessagePayload): Promise<LiveStreamChatMessage> {
+    return request(`/api/v1/exhibitor/expos/${expoId}/live-stream/chat`, { method: "POST", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
+  },
   exportExpoLeads(token: string, expoId: string): Promise<Blob> {
     return requestBlob(`/api/v1/exhibitor/expos/${expoId}/leads/export`, { headers: { Authorization: `Bearer ${token}` } })
   },
@@ -839,6 +848,18 @@ export const httpApi: ApiDriver = {
   },
   sendVisitorExpoChatMessage(token: string, expoId: string, exhibitorId: string, data: ChatMessagePayload): Promise<{ thread: ExhibitorConversationThread; message: ChatMessage }> {
     return request(`/api/v1/visitor/expos/${expoId}/conversations/${exhibitorId}/messages`, { method: "POST", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
+  },
+  getVisitorLiveStreamChat(token: string, expoId: string, exhibitorId: string): Promise<LiveStreamChatMessage[]> {
+    return requestItems(`/api/v1/visitor/expos/${expoId}/exhibitors/${exhibitorId}/live-stream/chat`, { headers: { Authorization: `Bearer ${token}` } })
+  },
+  sendVisitorLiveStreamChatMessage(token: string, expoId: string, exhibitorId: string, data: ChatMessagePayload): Promise<LiveStreamChatMessage> {
+    return request(`/api/v1/visitor/expos/${expoId}/exhibitors/${exhibitorId}/live-stream/chat`, { method: "POST", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
+  },
+  getTourProgress(token: string): Promise<TourProgressRecord[]> {
+    return requestItems("/api/v1/me/tour-progress", { headers: { Authorization: `Bearer ${token}` } })
+  },
+  saveTourProgress(token: string, data: TourProgressPayload): Promise<TourProgressRecord> {
+    return request("/api/v1/me/tour-progress", { method: "PATCH", body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } })
   },
   getVisitorFeedback(token): Promise<VisitorFeedback[]> {
     return request("/api/v1/visitor/feedback", { headers: { Authorization: `Bearer ${token}` } })

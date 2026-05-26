@@ -3825,6 +3825,175 @@ func (s *PostgresStore) UpdateExhibitorLiveStream(ctx context.Context, expoID st
 		return domain.ExhibitorLiveStreamRecord{}, err
 	}
 	item.UpdatedAt = updatedAt.Format(time.RFC3339)
+	if err := s.updateLiveStreamChatSession(ctx, expoID, exhibitorID, item.LiveChatEnabled); err != nil {
+		return domain.ExhibitorLiveStreamRecord{}, err
+	}
+	return item, nil
+}
+
+func (s *PostgresStore) ListLiveStreamChatMessages(ctx context.Context, expoID string, exhibitorID string, actor domain.User) ([]domain.LiveStreamChatMessageRecord, error) {
+	sessionID, err := s.liveStreamChatSessionForActor(ctx, expoID, exhibitorID, actor, false)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := s.pool.Query(ctx, `SELECT id, session_id, expo_id, exhibitor_id, COALESCE(visitor_id,''), sender_id, sender_role, sender_name, message, created_at
+		FROM live_stream_chat_messages WHERE session_id=$1 ORDER BY created_at ASC`, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []domain.LiveStreamChatMessageRecord{}
+	for rows.Next() {
+		var item domain.LiveStreamChatMessageRecord
+		var createdAt time.Time
+		if err := rows.Scan(&item.ID, &item.SessionID, &item.ExpoID, &item.ExhibitorID, &item.VisitorID, &item.SenderID, &item.SenderRole, &item.SenderName, &item.Message, &createdAt); err != nil {
+			return nil, err
+		}
+		item.CreatedAt = createdAt.Format(time.RFC3339)
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func (s *PostgresStore) CreateLiveStreamChatMessage(ctx context.Context, expoID string, exhibitorID string, input domain.LiveStreamChatMessageInput, actor domain.User) (domain.LiveStreamChatMessageRecord, error) {
+	message := strings.TrimSpace(input.Message)
+	if message == "" || len(message) > 1000 || (actor.Role != domain.RoleVisitor && actor.Role != domain.RoleExhibitor) {
+		return domain.LiveStreamChatMessageRecord{}, ErrInvalidCredentials
+	}
+	sessionID, err := s.liveStreamChatSessionForActor(ctx, expoID, exhibitorID, actor, true)
+	if err != nil {
+		return domain.LiveStreamChatMessageRecord{}, err
+	}
+	visitorID := any(nil)
+	if actor.Role == domain.RoleVisitor {
+		visitorID = actor.ID
+	}
+	id := fmt.Sprintf("lsmsg_%d", time.Now().UTC().UnixNano())
+	senderName := defaultString(strings.TrimSpace(actor.CompanyName), actor.Name)
+	var record domain.LiveStreamChatMessageRecord
+	var createdAt time.Time
+	err = s.pool.QueryRow(ctx, `INSERT INTO live_stream_chat_messages (id, session_id, expo_id, exhibitor_id, visitor_id, sender_id, sender_role, sender_name, message)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		RETURNING id, session_id, expo_id, exhibitor_id, COALESCE(visitor_id,''), sender_id, sender_role, sender_name, message, created_at`,
+		id, sessionID, strings.TrimSpace(expoID), strings.TrimSpace(exhibitorID), visitorID, actor.ID, string(actor.Role), senderName, message).
+		Scan(&record.ID, &record.SessionID, &record.ExpoID, &record.ExhibitorID, &record.VisitorID, &record.SenderID, &record.SenderRole, &record.SenderName, &record.Message, &createdAt)
+	if err != nil {
+		return domain.LiveStreamChatMessageRecord{}, err
+	}
+	record.CreatedAt = createdAt.Format(time.RFC3339)
+	return record, nil
+}
+
+func (s *PostgresStore) liveStreamChatSessionForActor(ctx context.Context, expoID string, exhibitorID string, actor domain.User, requireActive bool) (string, error) {
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	if actor.Role != domain.RoleVisitor && actor.Role != domain.RoleExhibitor {
+		return "", ErrInvalidCredentials
+	}
+	if actor.Role == domain.RoleExhibitor && actor.ID != exhibitorID {
+		return "", ErrInvalidCredentials
+	}
+	if err := s.ensureExpoDocumentAccess(ctx, expoID, exhibitorID); err != nil {
+		return "", err
+	}
+	var streamEnabled bool
+	if err := s.pool.QueryRow(ctx, `SELECT COALESCE(enabled,false) AND COALESCE(live_chat_enabled,false) FROM exhibitor_live_streams WHERE expo_id=$1 AND exhibitor_id=$2`, expoID, exhibitorID).Scan(&streamEnabled); err != nil {
+		if err == pgx.ErrNoRows {
+			streamEnabled = false
+		} else {
+			return "", err
+		}
+	}
+	sessionID := ""
+	err := s.pool.QueryRow(ctx, `SELECT id FROM live_stream_chat_sessions WHERE expo_id=$1 AND exhibitor_id=$2 AND active=true ORDER BY started_at DESC LIMIT 1`, expoID, exhibitorID).Scan(&sessionID)
+	if err == pgx.ErrNoRows && !requireActive {
+		sessionID = fmt.Sprintf("lsc_%d", time.Now().UTC().UnixNano())
+		if _, err := s.pool.Exec(ctx, `INSERT INTO live_stream_chat_sessions (id, expo_id, exhibitor_id, active) VALUES ($1,$2,$3,$4)`, sessionID, expoID, exhibitorID, streamEnabled); err != nil {
+			return "", err
+		}
+		err = nil
+	}
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return "", ErrInvalidCredentials
+		}
+		return "", err
+	}
+	if requireActive && (!streamEnabled || sessionID == "") {
+		return "", ErrInvalidCredentials
+	}
+	return sessionID, nil
+}
+
+func (s *PostgresStore) updateLiveStreamChatSession(ctx context.Context, expoID string, exhibitorID string, active bool) error {
+	expoID = strings.TrimSpace(expoID)
+	exhibitorID = strings.TrimSpace(exhibitorID)
+	if active {
+		var sessionID string
+		err := s.pool.QueryRow(ctx, `SELECT id FROM live_stream_chat_sessions WHERE expo_id=$1 AND exhibitor_id=$2 AND active=true LIMIT 1`, expoID, exhibitorID).Scan(&sessionID)
+		if err == nil {
+			_, err = s.pool.Exec(ctx, `UPDATE live_stream_chat_sessions SET updated_at=NOW() WHERE id=$1`, sessionID)
+			return err
+		}
+		if err != pgx.ErrNoRows {
+			return err
+		}
+		_, err = s.pool.Exec(ctx, `INSERT INTO live_stream_chat_sessions (id, expo_id, exhibitor_id, active) VALUES ($1,$2,$3,true)`, fmt.Sprintf("lsc_%d", time.Now().UTC().UnixNano()), expoID, exhibitorID)
+		return err
+	}
+	_, err := s.pool.Exec(ctx, `UPDATE live_stream_chat_sessions SET active=false, ended_at=COALESCE(ended_at,NOW()), updated_at=NOW() WHERE expo_id=$1 AND exhibitor_id=$2 AND active=true`, expoID, exhibitorID)
+	return err
+}
+
+func (s *PostgresStore) ListTourProgress(ctx context.Context, actor domain.User) ([]domain.UserTourProgressRecord, error) {
+	rows, err := s.pool.Query(ctx, `SELECT user_id, role, page_key, seen, COALESCE(completed_at::text,''), COALESCE(skipped_at::text,''), updated_at
+		FROM user_tour_progress WHERE user_id=$1 AND role=$2 ORDER BY page_key ASC`, actor.ID, string(actor.Role))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []domain.UserTourProgressRecord{}
+	for rows.Next() {
+		var item domain.UserTourProgressRecord
+		var updatedAt time.Time
+		if err := rows.Scan(&item.UserID, &item.Role, &item.PageKey, &item.Seen, &item.CompletedAt, &item.SkippedAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		item.UpdatedAt = updatedAt.Format(time.RFC3339)
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func (s *PostgresStore) SaveTourProgress(ctx context.Context, actor domain.User, input domain.UserTourProgressInput) (domain.UserTourProgressRecord, error) {
+	pageKey := strings.TrimSpace(input.PageKey)
+	if pageKey == "" || len(pageKey) > 80 {
+		return domain.UserTourProgressRecord{}, ErrInvalidCredentials
+	}
+	seen := input.Seen || input.Skipped
+	var item domain.UserTourProgressRecord
+	var completedAt, skippedAt *time.Time
+	var updatedAt time.Time
+	err := s.pool.QueryRow(ctx, `INSERT INTO user_tour_progress (user_id, role, page_key, seen, completed_at, skipped_at, updated_at)
+		VALUES ($1,$2,$3,$4,CASE WHEN $4 AND NOT $5 THEN NOW() ELSE NULL END,CASE WHEN $5 THEN NOW() ELSE NULL END,NOW())
+		ON CONFLICT (user_id, role, page_key) DO UPDATE SET
+			seen=EXCLUDED.seen,
+			completed_at=COALESCE(user_tour_progress.completed_at, EXCLUDED.completed_at),
+			skipped_at=COALESCE(user_tour_progress.skipped_at, EXCLUDED.skipped_at),
+			updated_at=NOW()
+		RETURNING user_id, role, page_key, seen, completed_at, skipped_at, updated_at`,
+		actor.ID, string(actor.Role), pageKey, seen, input.Skipped).
+		Scan(&item.UserID, &item.Role, &item.PageKey, &item.Seen, &completedAt, &skippedAt, &updatedAt)
+	if err != nil {
+		return domain.UserTourProgressRecord{}, err
+	}
+	if completedAt != nil {
+		item.CompletedAt = completedAt.Format(time.RFC3339)
+	}
+	if skippedAt != nil {
+		item.SkippedAt = skippedAt.Format(time.RFC3339)
+	}
+	item.UpdatedAt = updatedAt.Format(time.RFC3339)
 	return item, nil
 }
 

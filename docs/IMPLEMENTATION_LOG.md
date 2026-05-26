@@ -899,3 +899,13 @@
 - Added `scripts/setup-production-ssl.sh` as a separate one-time Certbot/Nginx SSL setup command for the production Tandaza hostnames.
 - Made SSL issuance idempotent: if `/etc/letsencrypt/live/tandaza.africa/fullchain.pem` already exists, the script reports the existing certificate and skips Certbot issuance.
 - Documented the SSL flow in `docs/PRODUCTION_DEPLOYMENT.md`, including the explicit `--force-renew` path for rare manual renewal cases.
+
+### Live Stream Chat And DB Tour Progress
+
+- Split live stream chat from permanent visitor/exhibitor conversations.
+- Added PostgreSQL-backed `live_stream_chat_sessions` and `live_stream_chat_messages` so live chat belongs to an active stream session and does not create normal conversation threads.
+- Closing or disabling live chat now closes the active live stream chat session; a later live stream starts a fresh session.
+- Added exhibitor and visitor live stream chat API routes plus websocket refresh channels dedicated to live-stream chat.
+- Updated visitor live stream and exhibitor workspace live stream UI to use the dedicated live stream chat endpoints.
+- Added PostgreSQL-backed `user_tour_progress` for intro guide completion by user, role, and page key.
+- Replaced intro guide `localStorage` completion tracking with authenticated API reads/writes so first-time guide state follows the user account across browsers.

@@ -81,6 +81,8 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("PATCH /api/v1/notifications/read-all", s.markMyNotificationsRead)
 	mux.HandleFunc("PATCH /api/v1/notifications/{id}/read", s.markMyNotificationRead)
 	mux.HandleFunc("DELETE /api/v1/notifications/{id}", s.dismissMyNotification)
+	mux.HandleFunc("GET /api/v1/me/tour-progress", s.myTourProgress)
+	mux.HandleFunc("PATCH /api/v1/me/tour-progress", s.saveMyTourProgress)
 	mux.HandleFunc("GET /api/v1/admin/countries", s.adminCountries)
 	mux.HandleFunc("POST /api/v1/ads/{id}/track", s.trackSponsorAd)
 	mux.HandleFunc("POST /api/v1/admin/countries", s.adminCreateCountry)
@@ -235,6 +237,9 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/conversations/ws", s.chatWebSocket)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/live-stream", s.exhibitorExpoLiveStream)
 	mux.HandleFunc("PATCH /api/v1/exhibitor/expos/{id}/live-stream", s.exhibitorUpdateExpoLiveStream)
+	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/live-stream/chat", s.exhibitorLiveStreamChat)
+	mux.HandleFunc("POST /api/v1/exhibitor/expos/{id}/live-stream/chat", s.exhibitorSendLiveStreamChatMessage)
+	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/live-stream/chat/ws", s.liveStreamChatWebSocket)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/campaigns", s.exhibitorExpoCampaigns)
 	mux.HandleFunc("POST /api/v1/exhibitor/expos/{id}/campaigns", s.exhibitorCreateExpoCampaign)
 	mux.HandleFunc("GET /api/v1/exhibitor/expos/{id}/documents", s.exhibitorExpoDocuments)
@@ -264,6 +269,9 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/conversations/{exhibitorId}/read", s.visitorMarkChatRead)
 	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/conversations/{exhibitorId}/messages", s.visitorSendChatMessage)
 	mux.HandleFunc("GET /api/v1/visitor/expos/{id}/conversations/ws", s.chatWebSocket)
+	mux.HandleFunc("GET /api/v1/visitor/expos/{id}/exhibitors/{exhibitorId}/live-stream/chat", s.visitorLiveStreamChat)
+	mux.HandleFunc("POST /api/v1/visitor/expos/{id}/exhibitors/{exhibitorId}/live-stream/chat", s.visitorSendLiveStreamChatMessage)
+	mux.HandleFunc("GET /api/v1/visitor/expos/{id}/exhibitors/{exhibitorId}/live-stream/chat/ws", s.liveStreamChatWebSocket)
 	mux.HandleFunc("GET /api/v1/visitor/feedback", s.visitorFeedback)
 	mux.HandleFunc("POST /api/v1/visitor/feedback", s.visitorSubmitFeedback)
 	mux.HandleFunc("GET /api/v1/visitor/orders", s.visitorOrders)
@@ -1511,6 +1519,47 @@ func (s *Server) myNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, s.notificationCollection(r, userFacingNotifications(notifications)))
+}
+
+func (s *Server) myTourProgress(w http.ResponseWriter, r *http.Request) {
+	claims, ok := s.requireAuth(w, r)
+	if !ok {
+		return
+	}
+	actor, err := s.store.UserByID(r.Context(), claims.UserID)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "user_not_found", "Authenticated user no longer exists.")
+		return
+	}
+	progress, err := s.store.ListTourProgress(r.Context(), actor)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "tour_progress_failed", "Could not load guide progress.")
+		return
+	}
+	writeJSON(w, http.StatusOK, paginatedItems(r, progress))
+}
+
+func (s *Server) saveMyTourProgress(w http.ResponseWriter, r *http.Request) {
+	claims, ok := s.requireAuth(w, r)
+	if !ok {
+		return
+	}
+	actor, err := s.store.UserByID(r.Context(), claims.UserID)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "user_not_found", "Authenticated user no longer exists.")
+		return
+	}
+	var input domain.UserTourProgressInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	record, err := s.store.SaveTourProgress(r.Context(), actor, input)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "tour_progress_failed", "Could not save guide progress.")
+		return
+	}
+	writeJSON(w, http.StatusOK, record)
 }
 
 func (s *Server) markMyNotificationRead(w http.ResponseWriter, r *http.Request) {
@@ -3957,6 +4006,41 @@ func (s *Server) exhibitorUpdateExpoLiveStream(w http.ResponseWriter, r *http.Re
 	writeJSON(w, http.StatusOK, stream)
 }
 
+func (s *Server) exhibitorLiveStreamChat(w http.ResponseWriter, r *http.Request) {
+	actor, ok := s.requireUser(w, r, domain.RoleExhibitor)
+	if !ok {
+		return
+	}
+	workspace := s.exhibitorWorkspaceUser(r.Context(), actor)
+	messages, err := s.store.ListLiveStreamChatMessages(r.Context(), r.PathValue("id"), workspace.ID, workspace)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "live_stream_chat_not_found", "Could not load live stream chat.")
+		return
+	}
+	writeJSON(w, http.StatusOK, paginatedItems(r, messages))
+}
+
+func (s *Server) exhibitorSendLiveStreamChatMessage(w http.ResponseWriter, r *http.Request) {
+	actor, ok := s.requireUser(w, r, domain.RoleExhibitor)
+	if !ok {
+		return
+	}
+	var input domain.LiveStreamChatMessageInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	workspace := s.exhibitorWorkspaceUser(r.Context(), actor)
+	message, err := s.store.CreateLiveStreamChatMessage(r.Context(), r.PathValue("id"), workspace.ID, input, workspace)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "live_stream_chat_failed", "Live stream chat is available only while the stream chat is enabled.")
+		return
+	}
+	s.chatHub.broadcast(liveStreamChatChannelID(message.ExpoID, message.ExhibitorID), chatSocketEvent{Type: "live_stream_message", LiveStreamMessage: message})
+	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, ExpoID: message.ExpoID, Action: "exhibitor_live_stream_chat_message_sent", EntityType: "live_stream_chat", EntityID: message.SessionID})
+	writeJSON(w, http.StatusCreated, message)
+}
+
 func (s *Server) exhibitorExpoQRCode(w http.ResponseWriter, r *http.Request) {
 	claims, ok := s.requireRole(w, r, domain.RoleExhibitor)
 	if !ok {
@@ -5193,6 +5277,39 @@ func (s *Server) visitorSendChatMessage(w http.ResponseWriter, r *http.Request) 
 	s.queueConversationMessageNotifications(r.Context(), thread, message)
 	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, ExpoID: thread.ExpoID, Action: "visitor_chat_message_sent", EntityType: "chat_thread", EntityID: thread.ID})
 	writeJSON(w, http.StatusCreated, map[string]any{"thread": thread, "message": message})
+}
+
+func (s *Server) visitorLiveStreamChat(w http.ResponseWriter, r *http.Request) {
+	actor, ok := s.requireUser(w, r, domain.RoleVisitor)
+	if !ok {
+		return
+	}
+	messages, err := s.store.ListLiveStreamChatMessages(r.Context(), r.PathValue("id"), r.PathValue("exhibitorId"), actor)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "live_stream_chat_not_found", "Could not load live stream chat.")
+		return
+	}
+	writeJSON(w, http.StatusOK, paginatedItems(r, messages))
+}
+
+func (s *Server) visitorSendLiveStreamChatMessage(w http.ResponseWriter, r *http.Request) {
+	actor, ok := s.requireUser(w, r, domain.RoleVisitor)
+	if !ok {
+		return
+	}
+	var input domain.LiveStreamChatMessageInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	message, err := s.store.CreateLiveStreamChatMessage(r.Context(), r.PathValue("id"), r.PathValue("exhibitorId"), input, actor)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "live_stream_chat_failed", "Live stream chat is available only while the stream chat is enabled.")
+		return
+	}
+	s.chatHub.broadcast(liveStreamChatChannelID(message.ExpoID, message.ExhibitorID), chatSocketEvent{Type: "live_stream_message", LiveStreamMessage: message})
+	s.recordAudit(r, domain.AuditLog{ActorID: actor.ID, Actor: actor.Name, ActorRole: actor.Role, ExpoID: message.ExpoID, Action: "visitor_live_stream_chat_message_sent", EntityType: "live_stream_chat", EntityID: message.SessionID})
+	writeJSON(w, http.StatusCreated, message)
 }
 
 func (s *Server) visitorFeedback(w http.ResponseWriter, r *http.Request) {
